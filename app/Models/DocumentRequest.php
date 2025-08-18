@@ -15,7 +15,8 @@ class DocumentRequest extends Model
         'province', 'city', 'barangay', 'mobile_number', 'email',
         'purpose', 'special_instructions', 'status', 'payment_status',
         'request_date', 'reference_number', 'year_level', 'alumni_school_year', 'school_years',
-        'alumni_id', 'graduation_year'
+        'alumni_id', 'graduation_year', 'registrar_notes', 'approved_at', 'rejected_at',
+        'approved_by', 'rejected_by'
     ];
 
     public $timestamps = false; // If you only have created_at, not updated_at
@@ -24,6 +25,8 @@ class DocumentRequest extends Model
         'created_at' => 'datetime',
         'request_date' => 'datetime',
         'school_years' => 'array',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     // Relationship to PersonalInformation

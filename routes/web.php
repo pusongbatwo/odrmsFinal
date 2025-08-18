@@ -34,6 +34,17 @@ Route::get('/', function () {
 Route::get('/request', [DocumentRequestController::class, 'index'])->name('request.form');
 Route::post('/submit-request', [DocumentRequestController::class, 'store'])->name('submit-request');
 Route::post('/submit-alumni-request', [DocumentRequestController::class, 'storeAlumni'])->name('submit-alumni-request');
+Route::post('/check-available-documents', [DocumentRequestController::class, 'checkAvailableDocumentTypes'])->name('check-available-documents');
+Route::get('/verify-document-request/{token}', [DocumentRequestController::class, 'verifyRequest'])->name('verify.document-request');
+
+// Registrar Approval Routes
+Route::get('/registrar/dashboard', [RegistrarController::class, 'registrarDashboard'])->name('registrar.dashboard');
+Route::post('/registrar/approve-request', [DocumentRequestController::class, 'approveRequest'])->name('registrar.approve-request');
+Route::post('/registrar/reject-request', [DocumentRequestController::class, 'rejectRequest'])->name('registrar.reject-request');
+Route::get('/registrar/pending-requests', [DocumentRequestController::class, 'getPendingApprovalRequests'])->name('registrar.pending-requests');
+Route::get('/registrar/dashboard-stats', [DocumentRequestController::class, 'getDashboardStats'])->name('registrar.dashboard-stats');
+Route::get('/registrar/all-requests', [DocumentRequestController::class, 'getAllRequests'])->name('registrar.all-requests');
+Route::get('/registrar/progress-data', [DocumentRequestController::class, 'getProgressData'])->name('registrar.progress-data');
 //Route::post('/request', [DocumentRequestController::class, 'store'])->name('request.submit');
 Route::get('/request/success/{reference}', [DocumentRequestController::class, 'success'])->name('request.success');
 
@@ -81,7 +92,6 @@ Route::post('/logout', function () {
     
 Route::middleware(['auth'])->group(function () {
     Route::get('/registrar/verify-modal/{id}', [RegistrarController::class, 'verifyModal']);
-    Route::get('/registrar/dashboard', [RegistrarController::class, 'registrarDashboard'])->name('registrar.dashboard');
     Route::post('/registrar/verify/{id}', [RegistrarController::class, 'verify'])->name('registrar.verify');
     Route::post('/registrar/approve/{id}', [RegistrarController::class, 'approve'])->name('registrar.approve');
     Route::post('/registrar/reject/{id}', [RegistrarController::class, 'reject'])->name('registrar.reject');

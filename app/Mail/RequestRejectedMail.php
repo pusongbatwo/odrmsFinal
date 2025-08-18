@@ -5,23 +5,61 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use App\Models\DocumentRequest;
 
 class RequestRejectedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $request;
+    public $documentRequest;
+    public $rejectionReason;
 
-    public function __construct(DocumentRequest $request)
+    /**
+     * Create a new message instance.
+     */
+    public function __construct($documentRequest, $rejectionReason)
     {
-        $this->request = $request;
+        $this->documentRequest = $documentRequest;
+        $this->rejectionReason = $rejectionReason;
     }
 
+    /**
+     * Get the message envelope.
+     */
+    public function envelope()
+    {
+        return new \Illuminate\Mail\Mailables\Envelope(
+            subject: 'Document Request Rejected - Action Required',
+        );
+    }
+
+    /**
+     * Get the message content definition.
+     */
+    public function content()
+    {
+        return new \Illuminate\Mail\Mailables\Content(
+            view: 'emails.request_rejected',
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     */
+    public function attachments()
+    {
+        return [];
+    }
+
+    /**
+     * Build the message.
+     */
     public function build()
     {
-        return $this->subject('Your Document Request Has Been Rejected')
-            ->view('emails.request_rejected');
+        return $this->view('emails.request_rejected')
+                    ->subject('Document Request Rejected - Action Required')
+                    ->with([
+                        'documentRequest' => $this->documentRequest,
+                        'rejectionReason' => $this->rejectionReason
+                    ]);
     }
 }

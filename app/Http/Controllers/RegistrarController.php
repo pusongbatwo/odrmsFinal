@@ -10,6 +10,9 @@ use App\Mail\RequestApprovedMail;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RequestRejectedMail;
 use App\Helpers\SystemLogHelper;
+use App\Models\SystemLog;
+use App\Models\Student;
+use App\Models\CashierLog;
 
 class RegistrarController extends Controller
 {
@@ -103,18 +106,13 @@ class RegistrarController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $analytics = DocumentRequest::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
-
-        $defaultAnalytics = [
-            'pending' => 0,
-            'approved' => 0,
-            'completed' => 0,
-            'rejected' => 0
+        // Get analytics with correct status mapping
+        $analytics = [
+            'pending' => DocumentRequest::where('status', 'pending_registrar_approval')->count(),
+            'approved' => DocumentRequest::where('status', 'approved')->count(),
+            'completed' => DocumentRequest::where('status', 'completed')->count(),
+            'rejected' => DocumentRequest::where('status', 'rejected')->count(),
         ];
-        $analytics = array_merge($defaultAnalytics, $analytics);
 
         // Load department logos from DB
         $departmentLogos = \App\Models\DepartmentLogo::all()->pluck('logo_path', 'department_name')->map(function($path) {
@@ -132,47 +130,110 @@ class RegistrarController extends Controller
 
     public function approve($id)
     {
-        $request = DocumentRequest::findOrFail($id);
+        $documentRequest = DocumentRequest::findOrFail($id);
 
-        // Example: Check if student info exists (customize as needed)
-        // $studentExists = Student::where('student_id', $request->student_id)->exists();
-        // if (!$studentExists) {
-        //     return back()->with('error', 'Student info not found.');
-        // }
+        // Backend enforcement: requester must exist in Student records (by student_id or by name)
+        $studentExists = false;
+        if (!empty($documentRequest->student_id)) {
+            $studentExists = Student::where('student_id', $documentRequest->student_id)->exists();
+        }
+        if (!$studentExists && !empty($documentRequest->first_name) && !empty($documentRequest->last_name)) {
+            $studentExists = Student::where('first_name', $documentRequest->first_name)
+                ->where('last_name', $documentRequest->last_name)
+                ->exists();
+        }
+        if (!$studentExists) {
+            return back()->with('error', 'This request cannot be approved because no matching student record was found in the database.');
+        }
 
-        $request->status = 'approved';
-        $request->save();
-        \App\Models\CashierLog::create([
+        // Optional registrar notes
+        $notes = request()->input('registrar_notes');
+        if (!empty($notes)) {
+            $documentRequest->registrar_notes = $notes;
+        }
+
+        // Generate unique reference number if missing
+        if (empty($documentRequest->reference_number)) {
+            $documentRequest->reference_number = $this->generateUniqueReferenceNumber();
+        }
+
+        $documentRequest->status = 'approved';
+        $documentRequest->approved_at = now();
+        $documentRequest->approved_by = auth()->id();
+        $documentRequest->save();
+
+        CashierLog::create([
             'type' => 'document_approved',
-            'message' => 'Document request #' . $request->reference_number . ' approved by registrar.'
+            'message' => 'Document request #' . $documentRequest->reference_number . ' approved by registrar.'
         ]);
 
-        // Send email
-        Mail::to($request->email)->send(new RequestApprovedMail($request));
+        // Send email with reference number
+        try {
+            Mail::to($documentRequest->email)->send(new RequestApprovedMail($documentRequest, $documentRequest->reference_number));
+        } catch (\Throwable $e) {
+            // Allow flow to continue even if email fails (logging only)
+            \Log::error('Failed to send RequestApprovedMail: ' . $e->getMessage());
+        }
 
         // Log approval
-        SystemLogHelper::log('approved', 'Request #' . $request->id . ' approved by registrar.');
+        SystemLogHelper::log('approved', 'Request #' . $documentRequest->id . ' approved by registrar.');
 
-        return back()->with('success', 'Request approved and email sent.');
+        return back()->with('success', 'Request approved. Email notification sent to requester.');
     }
 
     public function reject($id)
     {
-        $request = DocumentRequest::findOrFail($id);
-        $request->status = 'rejected';
-        $request->save();
-        // Send rejection email
-        Mail::to($request->email)->send(new RequestRejectedMail($request));
+        $documentRequest = DocumentRequest::findOrFail($id);
+
+        // Optional reason/notes
+        $reason = request()->input('registrar_notes');
+        if (!empty($reason)) {
+            $documentRequest->registrar_notes = $reason;
+        }
+
+        $documentRequest->status = 'rejected';
+        $documentRequest->rejected_at = now();
+        $documentRequest->rejected_by = auth()->id();
+        $documentRequest->save();
+        
+        // Send rejection email with reason
+        try {
+            Mail::to($documentRequest->email)->send(new RequestRejectedMail($documentRequest, $reason ?? ''));
+        } catch (\Throwable $e) {
+            \Log::error('Failed to send RequestRejectedMail: ' . $e->getMessage());
+        }
 
         // Log rejection
-        SystemLogHelper::log('rejected', 'Request #' . $request->id . ' rejected by registrar.');
-        return back()->with('success', 'Request rejected and email sent.');
+        SystemLogHelper::log('rejected', 'Request #' . $documentRequest->id . ' rejected by registrar.');
+        return back()->with('success', 'Request rejected. Email notification sent to requester.');
+    }
+
+    private function generateUniqueReferenceNumber(): string
+    {
+        do {
+            $candidate = 'REQ-' . now()->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+        } while (DocumentRequest::where('reference_number', $candidate)->exists());
+        return $candidate;
     }
 
     public function pendingCount()
     {
-        $pending = \App\Models\DocumentRequest::where('status', 'pending')->count();
-        return response()->json(['pending' => $pending]);
+        $today = now()->startOfDay();
+        
+        $stats = [
+            'pending' => \App\Models\DocumentRequest::where('status', 'pending_registrar_approval')->count(),
+            'approved_today' => \App\Models\DocumentRequest::where('status', 'approved')
+                ->whereDate('approved_at', $today)
+                ->count(),
+            'rejected_today' => \App\Models\DocumentRequest::where('status', 'rejected')
+                ->whereDate('rejected_at', $today)
+                ->count(),
+            'completed_today' => \App\Models\DocumentRequest::where('status', 'completed')
+                ->whereDate('updated_at', $today)
+                ->count(),
+        ];
+        
+        return response()->json($stats);
     }
 
     // Department logo upload/update

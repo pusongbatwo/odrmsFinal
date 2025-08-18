@@ -16,6 +16,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+        
+        // Clean up expired verifications daily at 2 AM
+        $schedule->command('verifications:cleanup --days=7')->dailyAt('02:00');
     }
 
     /**

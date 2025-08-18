@@ -61,12 +61,17 @@ function showVerifyModal(state, data = {}) {
             <div style='margin-bottom:1rem;'><b>Available Documents:</b><ul>${data.documents.map(doc => `<li>${doc}</li>`).join('')}</ul></div>
             <form method='POST' action='/registrar/approve/${data.request_id}'>
                 <input type='hidden' name='_token' value='${window.csrfToken || document.querySelector('meta[name="csrf-token"]').content}'>
-                <button type='submit' class='action-btn approve-btn' style='width:100%;margin-top:1rem;'>Approve</button>
+                <textarea name='registrar_notes' placeholder='Remarks (optional)' style='width:100%;min-height:80px;margin-top:.5rem;'></textarea>
+                <div style='display:flex;gap:.5rem;margin-top:1rem;'>
+                  <button type='submit' class='action-btn approve-btn' style='flex:1;'>Approve</button>
+                  <button type='button' class='action-btn reject-btn' style='flex:1;' onclick='switchToReject(${data.request_id})'>Reject</button>
+                </div>
             </form>`;
     } else if (state === 'notfound') {
-        body.innerHTML = `<div style='color:#8B0000;margin-bottom:1rem;'>No matching student record or documents found.</div>
+        body.innerHTML = `<div style='color:#8B0000;margin-bottom:1rem;'>This request cannot be approved because no matching student record was found in the database.</div>
             <form method='POST' action='/registrar/reject/${data.request_id}'>
                 <input type='hidden' name='_token' value='${window.csrfToken || document.querySelector('meta[name="csrf-token"]').content}'>
+                <textarea name='registrar_notes' placeholder='Rejection reason (optional)' style='width:100%;min-height:80px;margin-top:.5rem;'></textarea>
                 <button type='submit' class='action-btn reject-btn' style='width:100%;margin-top:1rem;'>Reject</button>
             </form>`;
     } else {
@@ -77,4 +82,21 @@ function showVerifyModal(state, data = {}) {
 function closeVerifyModal() {
     const modal = document.getElementById('verifyModal');
     if (modal) modal.style.display = 'none';
+}
+
+// Helper to switch to rejection UI from the "found" state
+function switchToReject(requestId) {
+    const modal = document.getElementById('verifyModal');
+    if (!modal) return;
+    const body = modal.querySelector('#verifyModalBody');
+    if (!body) return;
+    body.innerHTML = `<div style='color:#8B0000;margin-bottom:1rem;'>Please provide a rejection reason (optional) then confirm.</div>
+        <form method='POST' action='/registrar/reject/${requestId}'>
+            <input type='hidden' name='_token' value='${window.csrfToken || document.querySelector('meta[name="csrf-token"]').content}'>
+            <textarea name='registrar_notes' placeholder='Rejection reason (optional)' style='width:100%;min-height:80px;margin-top:.5rem;'></textarea>
+            <div style='display:flex;gap:.5rem;margin-top:1rem;'>
+              <button type='submit' class='action-btn reject-btn' style='flex:1;'>Confirm Reject</button>
+              <button type='button' class='action-btn approve-btn' style='flex:1;' onclick='closeVerifyModal()'>Cancel</button>
+            </div>
+        </form>`;
 }

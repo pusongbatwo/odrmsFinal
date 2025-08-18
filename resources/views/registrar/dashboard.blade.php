@@ -1258,7 +1258,7 @@
                                 @endforeach
                             </td>
                             <td>
-                                @if($req->status == 'pending')
+                                @if($req->status == 'pending_registrar_approval')
                                     <div class="action-btn-group">
                                         <button type="button" class="action-btn approve-btn verify-btn" 
                                             data-request-id="{{ $req->id }}" 
@@ -1343,7 +1343,7 @@
                             <td>{{ $req->created_at ? $req->created_at->format('m/d/Y') : ($req->request_date ? \Carbon\Carbon::parse($req->request_date)->format('m/d/Y') : '') }}</td>
                             <td><span class="status-badge status-{{ strtolower($req->status) }}">{{ ucfirst($req->status) }}</span></td>
                             <td>
-                                @if($req->status == 'pending')
+                                @if($req->status == 'pending_registrar_approval')
                                     <div style="display: flex; gap: 8px; align-items: center;">
                                         <button type="button" class="action-btn approve-btn verify-btn" 
                                             data-request-id="{{ $req->id }}" 
@@ -1977,14 +1977,26 @@ if (importBtn) importBtn.addEventListener('click', function() {
         });
         async function fetchData() {
             try {
-                const response = await fetch('fetch_requests.php');
+                // Fetch analytics from our API endpoint
+                const response = await fetch('/registrar/pending-count');
                 const data = await response.json();
-                populateTable(data.requests);
-                updateAnalytics(data.analytics);
+                
+                // Update analytics with the fetched data
+                const analytics = {
+                    pending: data.pending || 0,
+                    approved: data.approved_today || 0,
+                    completed: data.completed_today || 0,
+                    rejected: data.rejected_today || 0
+                };
+                
+                updateAnalytics(analytics);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         }
+
+        // Refresh analytics every 30 seconds
+        setInterval(fetchData, 30000);
         function populateTable(requests) {
             const tableBody = document.querySelector('#requestTable tbody');
             tableBody.innerHTML = '';

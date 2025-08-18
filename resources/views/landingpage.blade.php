@@ -1163,6 +1163,21 @@
             border-bottom: none;
         }
         
+        .doc-type-checkbox.on-cooldown {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        
+        .doc-type-checkbox.on-cooldown label {
+            color: #6c757d !important;
+            font-style: italic;
+        }
+        
+        .doc-type-checkbox.on-cooldown .quantity-selector {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
         .doc-type-checkbox input[type="checkbox"] {
             accent-color: var(--dark-red);
             width: 18px;
@@ -1766,6 +1781,22 @@
                             <label class="form-label">
                                 <i class="fas fa-file"></i> Select Document Type(s)
                             </label>
+                            <div class="cooldown-info" style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 0.9rem;">
+                                <i class="fas fa-info-circle" style="color: #2196f3; margin-right: 8px;"></i>
+                                <strong>Cooldown Policy:</strong> You can only request the same document type once every 40 days. Document types on cooldown will be disabled. You can still request different document types even if one is on cooldown.
+                            </div>
+                            <div class="verification-info" style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 0.9rem;">
+                                <i class="fas fa-envelope" style="color: #ffc107; margin-right: 8px;"></i>
+                                <strong>Email Verification Required:</strong> After submitting your request, you'll receive a verification email. Click the link in the email to complete your request. Verification links expire in 24 hours.
+                            </div>
+                            <div class="approval-info" style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 0.9rem;">
+                                <i class="fas fa-clock" style="color: #2196f3; margin-right: 8px;"></i>
+                                <strong>Registrar Approval Required:</strong> After email verification, your request will be reviewed by the Registrar. You'll receive an email notification once it's approved or rejected. Reference numbers are only generated after approval.
+                            </div>
+                            <div id="cooldownSummary" style="display: none; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                                <h5 style="color: #856404; margin: 0 0 8px 0;"><i class="fas fa-exclamation-triangle"></i> Current Cooldown Status</h5>
+                                <div id="cooldownSummaryContent"></div>
+                            </div>
                             <div class="doc-type-group" id="documentTypesGroup">
                                 <div class="doc-type-checkbox">
                                     <input type="checkbox" id="doc-tor" name="document_types" value="Transcript of Records">
@@ -1991,6 +2022,22 @@
                             <label class="form-label">
                                 <i class="fas fa-file"></i> Select Document Type(s)
                             </label>
+                            <div class="cooldown-info" style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 0.9rem;">
+                                <i class="fas fa-info-circle" style="color: #2196f3; margin-right: 8px;"></i>
+                                <strong>Cooldown Policy:</strong> You can only request the same document type once every 40 days. Document types on cooldown will be disabled. You can still request different document types even if one is on cooldown.
+                            </div>
+                            <div class="verification-info" style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 0.9rem;">
+                                <i class="fas fa-envelope" style="color: #ffc107; margin-right: 8px;"></i>
+                                <strong>Email Verification Required:</strong> After submitting your request, you'll receive a verification email. Click the link in the email to complete your request. Verification links expire in 24 hours.
+                            </div>
+                            <div class="approval-info" style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 0.9rem;">
+                                <i class="fas fa-clock" style="color: #2196f3; margin-right: 8px;"></i>
+                                <strong>Registrar Approval Required:</strong> After email verification, your request will be reviewed by the Registrar. You'll receive an email notification once it's approved or rejected. Reference numbers are only generated after approval.
+                            </div>
+                            <div id="alumniCooldownSummary" style="display: none; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                                <h5 style="color: #856404; margin: 0 0 8px 0;"><i class="fas fa-exclamation-triangle"></i> Current Cooldown Status</h5>
+                                <div id="alumniCooldownSummaryContent"></div>
+                            </div>
                             <div class="doc-type-group" id="alumniDocumentTypesGroup">
                                 <div class="doc-type-checkbox">
                                     <input type="checkbox" id="alumni-doc-tor" name="alumni_document_types" value="Transcript of Records">
@@ -2262,6 +2309,8 @@
             alumniForm.style.display = 'none';
             // Show back to selection button on first step
             document.getElementById('studentBackToSelectionBtn').style.display = 'block';
+            // Check available document types for student
+            checkAvailableDocumentTypes(document.getElementById('studentId').value, false);
         });
         
         document.getElementById('alumniOption').addEventListener('click', function() {
@@ -2272,6 +2321,12 @@
             initializeAlumniPSGC();
             // Reset alumni form to first step
             resetAlumniForm();
+            // Check available document types for alumni when email is entered
+            document.getElementById('alumniEmail').addEventListener('blur', function() {
+                if (this.value) {
+                    checkAvailableDocumentTypes(this.value, true);
+                }
+            });
         });
         
         // Back to Selection Button (Alumni)
@@ -2300,9 +2355,32 @@
             }
         });
 
+        // Check available documents when student ID changes
+        document.getElementById('studentId').addEventListener('blur', function() {
+            if (this.value && studentForm.style.display === 'block') {
+                checkAvailableDocumentTypes(this.value, false);
+            }
+        });
+
         // Hide school years group by default on page load
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('schoolYearsGroup').style.display = 'none';
+            
+            // Set up daily cooldown refresh (every 24 hours)
+            setInterval(function() {
+                // Check if any forms are currently displayed
+                if (studentForm.style.display === 'block') {
+                    const studentId = document.getElementById('studentId').value;
+                    if (studentId) {
+                        checkAvailableDocumentTypes(studentId, false);
+                    }
+                } else if (alumniForm.style.display === 'block') {
+                    const alumniEmail = document.getElementById('alumniEmail').value;
+                    if (alumniEmail) {
+                        checkAvailableDocumentTypes(alumniEmail, true);
+                    }
+                }
+            }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
         });
 
         // Form Step Navigation
@@ -2395,6 +2473,30 @@
                         }
                     }
                 });
+            } else if (step === 3) {
+                // Check if at least one document type is selected
+                const selectedDocs = document.querySelectorAll('#documentTypesGroup input[type="checkbox"]:checked');
+                if (selectedDocs.length === 0) {
+                    isValid = false;
+                    Swal.fire({
+                        title: "No Document Types Selected",
+                        text: "Please select at least one document type to request.",
+                        icon: "warning",
+                        confirmButtonText: "OK"
+                    });
+                }
+                
+                // Check if any selected documents are on cooldown
+                const cooldownDocs = document.querySelectorAll('#documentTypesGroup input[type="checkbox"]:checked.on-cooldown');
+                if (cooldownDocs.length > 0) {
+                    isValid = false;
+                    Swal.fire({
+                        title: "Document Types on Cooldown",
+                        text: "Some selected document types are currently on cooldown. Please deselect them or choose different document types.",
+                        icon: "warning",
+                        confirmButtonText: "OK"
+                    });
+                }
             }
             
             return isValid;
@@ -2501,11 +2603,16 @@
 
                 let resultText = await response.text();
                 let errorMessage = "Submission failed";
+                let cooldownViolations = null;
+                
                 try {
                     // Try to parse JSON error message if available
                     const json = JSON.parse(resultText);
                     if (json && json.message) {
                         errorMessage = json.message;
+                        if (json.cooldown_violations) {
+                            cooldownViolations = json.cooldown_violations;
+                        }
                     }
                 } catch (e) {
                     // Not JSON, fallback to text
@@ -2517,11 +2624,69 @@
                 document.body.style.overflow = 'auto';
 
                 if (response.ok) {
+                    const responseData = JSON.parse(resultText);
+                    if (responseData.verification_sent) {
+                        Swal.fire({
+                            title: "Verification Email Sent!",
+                            html: `
+                                <div style="text-align: center;">
+                                    <div style="font-size: 3rem; color: #28a745; margin-bottom: 20px;">
+                                        <i class="fas fa-envelope-open-text"></i>
+                                    </div>
+                                    <h3 style="color: #28a745; margin-bottom: 15px;">Check Your Email</h3>
+                                    <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
+                                        We've sent a verification link to <strong>${document.getElementById('email').value}</strong>
+                                    </p>
+                                    <div style="background: #e8f5e8; border: 1px solid #28a745; border-radius: 10px; padding: 15px; margin: 20px 0;">
+                                        <p style="color: #155724; margin: 0; font-size: 0.9rem;">
+                                            <i class="fas fa-info-circle"></i> 
+                                            <strong>Important:</strong> Click the verification link in your email to complete your request. The link expires in 24 hours.
+                                        </p>
+                                    </div>
+                                    <p style="color: #666; font-size: 0.9rem; margin-top: 15px;">
+                                        Didn't receive the email? Check your spam folder or contact support.
+                                    </p>
+                                </div>
+                            `,
+                            icon: "success",
+                            confirmButtonText: "I Understand",
+                            width: '500px'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Success!",
+                            text: "Your request has been submitted successfully.",
+                            icon: "success",
+                            confirmButtonText: "OK"
+                        });
+                    }
+                } else if (response.status === 429 && cooldownViolations) {
+                    // Handle cooldown violations with detailed information
+                    let cooldownHtml = '<div style="text-align: left; max-height: 300px; overflow-y: auto;">';
+                    cooldownHtml += '<h4 style="color: #d63031; margin-bottom: 15px;">⚠️ Cooldown Period Violations</h4>';
+                    
+                    cooldownViolations.forEach(violation => {
+                        cooldownHtml += `
+                            <div style="background: #f8f9fa; padding: 12px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                                <h5 style="color: #e74c3c; margin: 0 0 8px 0;">${violation.document_type}</h5>
+                                <p style="margin: 5px 0; color: #555;">
+                                    <strong>Last Request:</strong> ${violation.last_request_date}<br>
+                                    <strong>Remaining Days:</strong> ${violation.remaining_days} days<br>
+                                    <strong>Message:</strong> ${violation.message}
+                                </p>
+                            </div>
+                        `;
+                    });
+                    
+                    cooldownHtml += '<p style="margin-top: 15px; color: #666; font-style: italic;">💡 Tip: You can still request different document types even if you are on cooldown for another type.</p>';
+                    cooldownHtml += '</div>';
+                    
                     Swal.fire({
-                        title: "Success!",
-                        text: "Your request has been submitted successfully.",
-                        icon: "success",
-                        confirmButtonText: "OK"
+                        title: "Cooldown Period Active",
+                        html: cooldownHtml,
+                        icon: "warning",
+                        confirmButtonText: "I Understand",
+                        width: '600px'
                     });
                 } else {
                     Swal.fire({
@@ -2580,10 +2745,15 @@
 
                 let resultText = await response.text();
                 let errorMessage = "Submission failed";
+                let cooldownViolations = null;
+                
                 try {
                     const json = JSON.parse(resultText);
                     if (json && json.message) {
                         errorMessage = json.message;
+                        if (json.cooldown_violations) {
+                            cooldownViolations = json.cooldown_violations;
+                        }
                     }
                 } catch (e) {
                     if (resultText) errorMessage = resultText;
@@ -2593,11 +2763,69 @@
                 document.body.style.overflow = 'auto';
 
                 if (response.ok) {
+                    const responseData = JSON.parse(resultText);
+                    if (responseData.verification_sent) {
+                        Swal.fire({
+                            title: "Verification Email Sent!",
+                            html: `
+                                <div style="text-align: center;">
+                                    <div style="font-size: 3rem; color: #28a745; margin-bottom: 20px;">
+                                        <i class="fas fa-envelope-open-text"></i>
+                                    </div>
+                                    <h3 style="color: #28a745; margin-bottom: 15px;">Check Your Email</h3>
+                                    <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
+                                        We've sent a verification link to <strong>${document.getElementById('alumniEmail').value}</strong>
+                                    </p>
+                                    <div style="background: #e8f5e8; border: 1px solid #28a745; border-radius: 10px; padding: 15px; margin: 20px 0;">
+                                        <p style="color: #155724; margin: 0; font-size: 0.9rem;">
+                                            <i class="fas fa-info-circle"></i> 
+                                            <strong>Important:</strong> Click the verification link in your email to complete your request. The link expires in 24 hours.
+                                        </p>
+                                    </div>
+                                    <p style="color: #666; font-size: 0.9rem; margin-top: 15px;">
+                                        Didn't receive the email? Check your spam folder or contact support.
+                                    </p>
+                                </div>
+                            `,
+                            icon: "success",
+                            confirmButtonText: "I Understand",
+                            width: '500px'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Success!",
+                            text: "Your alumni request has been submitted successfully.",
+                            icon: "success",
+                            confirmButtonText: "OK"
+                        });
+                    }
+                } else if (response.status === 429 && cooldownViolations) {
+                    // Handle cooldown violations with detailed information
+                    let cooldownHtml = '<div style="text-align: left; max-height: 300px; overflow-y: auto;">';
+                    cooldownHtml += '<h4 style="color: #d63031; margin-bottom: 15px;">⚠️ Cooldown Period Violations</h4>';
+                    
+                    cooldownViolations.forEach(violation => {
+                        cooldownHtml += `
+                            <div style="background: #f8f9fa; padding: 12px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                                <h5 style="color: #e74c3c; margin: 0 0 8px 0;">${violation.document_type}</h5>
+                                <p style="margin: 5px 0; color: #555;">
+                                    <strong>Last Request:</strong> ${violation.last_request_date}<br>
+                                    <strong>Remaining Days:</strong> ${violation.remaining_days} days<br>
+                                    <strong>Message:</strong> ${violation.message}
+                                </strong>
+                            </div>
+                        `;
+                    });
+                    
+                    cooldownHtml += '<p style="margin-top: 15px; color: #666; font-style: italic;">💡 Tip: You can still request different document types even if you are on cooldown for another type.</p>';
+                    cooldownHtml += '</div>';
+                    
                     Swal.fire({
-                        title: "Success!",
-                        text: "Your alumni request has been submitted successfully.",
-                        icon: "success",
-                        confirmButtonText: "OK"
+                        title: "Cooldown Period Active",
+                        html: cooldownHtml,
+                        icon: "warning",
+                        confirmButtonText: "I Understand",
+                        width: '600px'
                     });
                 } else {
                     Swal.fire({
@@ -2614,7 +2842,7 @@
                     icon: "error",
                     confirmButtonText: "OK"
                 });
-            }
+    }
         });
 
         // Alumni Multi-Step Form Navigation
@@ -2706,6 +2934,30 @@
                         }
                     }
                 });
+            } else if (step === 3) {
+                // Check if at least one document type is selected
+                const selectedDocs = document.querySelectorAll('#alumniDocumentTypesGroup input[type="checkbox"]:checked');
+                if (selectedDocs.length === 0) {
+                    isValid = false;
+                    Swal.fire({
+                        title: "No Document Types Selected",
+                        text: "Please select at least one document type to request.",
+                        icon: "warning",
+                        confirmButtonText: "OK"
+                    });
+                }
+                
+                // Check if any selected documents are on cooldown
+                const cooldownDocs = document.querySelectorAll('#alumniDocumentTypesGroup input[type="checkbox"]:checked.on-cooldown');
+                if (cooldownDocs.length > 0) {
+                    isValid = false;
+                    Swal.fire({
+                        title: "Document Types on Cooldown",
+                        text: "Some selected document types are currently on cooldown. Please deselect them or choose different document types.",
+                        icon: "warning",
+                        confirmButtonText: "OK"
+                    });
+                }
             }
             
             return isValid;
@@ -2932,6 +3184,174 @@
                 if (this.checked && !qtyInput.value) qtyInput.value = 1;
             });
         });
+
+        // Check available document types for a user
+        async function checkAvailableDocumentTypes(identifier, isAlumni) {
+            if (!identifier) return;
+            
+            try {
+                const response = await fetch('/check-available-documents', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        identifier: identifier,
+                        is_alumni: isAlumni
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDocumentTypeAvailability(data.available_document_types, data.cooldown_information, isAlumni);
+                }
+            } catch (error) {
+                console.error('Error checking available documents:', error);
+            }
+        }
+
+        // Update document type availability in the UI
+        function updateDocumentTypeAvailability(availableTypes, cooldownInfo, isAlumni) {
+            const formId = isAlumni ? 'alumniDocumentTypesGroup' : 'documentTypesGroup';
+            const container = document.getElementById(formId);
+            
+            if (!container) return;
+            
+            // Update cooldown summary
+            updateCooldownSummary(cooldownInfo, isAlumni);
+            
+            // Get all document type checkboxes
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            
+            checkboxes.forEach(checkbox => {
+                const docType = checkbox.value;
+                const isAvailable = availableTypes.includes(docType);
+                const cooldownData = cooldownInfo[docType];
+                
+                if (isAvailable) {
+                    // Enable the checkbox and show as available
+                    checkbox.disabled = false;
+                    checkbox.parentElement.style.opacity = '1';
+                    checkbox.parentElement.style.filter = 'none';
+                    
+                    // Remove any cooldown styling
+                    checkbox.parentElement.classList.remove('on-cooldown');
+                    
+                    // Update label to show it's available
+                    const label = checkbox.parentElement.querySelector('label');
+                    if (label) {
+                        label.style.color = '#333';
+                        if (cooldownData && cooldownData.last_request_date) {
+                            label.textContent = `${docType} (Last requested: ${cooldownData.last_request_date})`;
+                        } else {
+                            label.textContent = docType;
+                        }
+                    }
+                    
+                    // Remove any cooldown info if it exists
+                    const existingInfo = checkbox.parentElement.querySelector('.cooldown-info');
+                    if (existingInfo) {
+                        existingInfo.remove();
+                    }
+                } else {
+                    // Disable the checkbox and show as on cooldown
+                    checkbox.disabled = true;
+                    checkbox.checked = false;
+                    checkbox.parentElement.style.opacity = '0.6';
+                    checkbox.parentElement.style.filter = 'grayscale(0.5)';
+                    
+                    // Add cooldown styling
+                    checkbox.parentElement.classList.add('on-cooldown');
+                    
+                    // Update label to show it's on cooldown
+                    const label = checkbox.parentElement.querySelector('label');
+                    if (label) {
+                        label.style.color = '#999';
+                        label.textContent = `${docType} (On Cooldown)`;
+                    }
+                    
+                    // Add detailed cooldown info below the label
+                    let cooldownInfo = checkbox.parentElement.querySelector('.cooldown-info');
+                    if (!cooldownInfo) {
+                        cooldownInfo = document.createElement('div');
+                        cooldownInfo.className = 'cooldown-info';
+                        cooldownInfo.style.cssText = 'font-size: 0.8rem; color: #e74c3c; margin-top: 5px; font-style: italic;';
+                        checkbox.parentElement.appendChild(cooldownInfo);
+                    }
+                    
+                    if (cooldownData && cooldownData.is_on_cooldown) {
+                        cooldownInfo.innerHTML = `
+                            <i class="fas fa-clock"></i> 
+                            <strong>Cooldown Active:</strong> Last requested on ${cooldownData.last_request_date}. 
+                            Available again in ${cooldownData.remaining_days} days.
+                        `;
+                    } else {
+                        cooldownInfo.innerHTML = '<i class="fas fa-clock"></i> This document type is currently on cooldown. Please wait 40 days from your last request.';
+                    }
+                    
+                    // Disable quantity selector
+                    const qtyInput = checkbox.parentElement.querySelector('.doc-qty');
+                    const minusBtn = checkbox.parentElement.querySelector('.qty-btn.minus');
+                    const plusBtn = checkbox.parentElement.querySelector('.qty-btn.plus');
+                    
+                    if (qtyInput) qtyInput.disabled = true;
+                    if (minusBtn) minusBtn.disabled = true;
+                    if (plusBtn) plusBtn.disabled = true;
+                }
+            });
+        }
+
+        // Update cooldown summary section
+        function updateCooldownSummary(cooldownInfo, isAlumni) {
+            const summaryId = isAlumni ? 'alumniCooldownSummary' : 'cooldownSummary';
+            const contentId = isAlumni ? 'alumniCooldownSummaryContent' : 'cooldownSummaryContent';
+            
+            const summaryContainer = document.getElementById(summaryId);
+            const contentContainer = document.getElementById(contentId);
+            
+            if (!summaryContainer || !contentContainer) return;
+            
+            // Find document types on cooldown
+            const onCooldown = [];
+            Object.keys(cooldownInfo).forEach(docType => {
+                if (cooldownInfo[docType].is_on_cooldown) {
+                    onCooldown.push({
+                        type: docType,
+                        ...cooldownInfo[docType]
+                    });
+                }
+            });
+            
+            if (onCooldown.length > 0) {
+                // Show cooldown summary
+                summaryContainer.style.display = 'block';
+                
+                let summaryHtml = '<div style="font-size: 0.9rem;">';
+                onCooldown.forEach(item => {
+                    const daysText = item.remaining_days === 1 ? 'day' : 'days';
+                    summaryHtml += `
+                        <div style="margin-bottom: 8px; padding: 8px; background: #fff; border-radius: 4px; border-left: 3px solid #ffc107;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>${item.type}:</strong> Available again in ${item.remaining_days} ${daysText}
+                                </div>
+                                <div style="font-size: 0.8rem; color: #856404;">
+                                    Last requested: ${item.last_request_date}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                summaryHtml += '<p style="margin-top: 10px; font-size: 0.8rem; color: #856404;"><i class="fas fa-lightbulb"></i> <strong>Tip:</strong> You can still request other document types that are not on cooldown!</p>';
+                summaryHtml += '</div>';
+                
+                contentContainer.innerHTML = summaryHtml;
+            } else {
+                // Hide cooldown summary if no cooldowns
+                summaryContainer.style.display = 'none';
+            }
+        }
 
         // Initialize Alumni PSGC Dropdowns
         function initializeAlumniPSGC() {
