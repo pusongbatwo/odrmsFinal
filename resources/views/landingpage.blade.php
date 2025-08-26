@@ -1236,8 +1236,8 @@
             font-size: 1rem;
         }
         
-        /* Floating FAQs */
-        .floating-faqs-bottom {
+        /* Floating Chatbot */
+        .floating-chatbot-bottom {
             position: fixed;
             right: 30px;
             bottom: 30px;
@@ -1252,23 +1252,24 @@
             transition: box-shadow 0.2s;
         }
         
-        .floating-faqs-bottom:hover {
+        .floating-chatbot-bottom:hover {
             box-shadow: 0 8px 24px rgba(0,0,0,0.22);
         }
         
-        .faqs-icon-label i {
+        .chatbot-icon-label i {
             font-size: 22px;
             color: #8B0000;
             margin-right: 10px;
         }
         
-        .faqs-icon-label span {
+        .chatbot-icon-label span {
             font-weight: 600;
             color: #333;
             font-size: 16px;
         }
         
-        #faqsModal {
+        /* Chatbot Modal Styles */
+        #chatbotModal {
             display: none;
             position: fixed;
             z-index: 10000;
@@ -1281,64 +1282,198 @@
             align-items: center;
         }
         
-        #faqsModal .modal-content {
+        .chatbot-modal {
             max-width: 500px;
             width: 90vw;
+            height: 80vh;
             background: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
-        #faqsModal .modal-header {
+        .chatbot-modal .modal-header {
+            background: var(--dark-red);
+            color: var(--white);
+            padding: 15px 20px;
+            border-radius: 12px 12px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
         }
         
-        #faqsModal .modal-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: #8B0000;
-        }
-        
-        #faqsModal .close-button {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #333;
-            cursor: pointer;
-        }
-        
-        #faqsModal .faq-container {
-            margin-top: 10px;
-        }
-        
-        #faqsModal .faq-item {
-            margin-bottom: 18px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-        
-        #faqsModal .faq-question {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .chatbot-modal .modal-title {
+            font-size: 18px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chatbot-modal .modal-body {
+            flex: 1;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        /* Chat Container */
+        .chat-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        /* Chat Suggestions Section */
+        .chat-suggestions {
+            background: var(--white);
+            border-top: 1px solid #e9ecef;
+            padding: 15px 20px;
+        }
+        
+        /* Message Styles */
+        .message {
+            margin-bottom: 15px;
+            animation: fadeInUp 0.3s ease;
+        }
+        
+        .message-content {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        
+        .bot-message .message-content {
+            justify-content: flex-start;
+        }
+        
+        .user-message .message-content {
+            justify-content: flex-end;
+            flex-direction: row-reverse;
+        }
+        
+        .bot-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--dark-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+        
+        .bot-message .message-bubble {
+            background: var(--white);
+            color: var(--dark-gray);
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .user-message .message-bubble {
+            background: var(--dark-red);
+            color: var(--white);
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message-bubble p {
+            margin: 0;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+        
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--white);
+            border: 1px solid #e9ecef;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            max-width: 70px;
+            margin-bottom: 15px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #6c757d;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* FAQ Question Bubbles */
+        .faq-questions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .faq-question-bubble {
+            background: var(--white);
+            border: 1px solid #e9ecef;
+            border-radius: 18px;
+            padding: 12px 16px;
             cursor: pointer;
-            color: #333;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 85%;
+            align-self: flex-start;
         }
         
-        #faqsModal .faq-answer {
-            display: none;
-            color: #555;
-            margin-top: 8px;
-            font-size: 15px;
+        .faq-question-bubble:hover {
+            background: #f8f9fa;
+            border-color: var(--dark-red);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(139, 0, 0, 0.1);
         }
         
-        #faqsModal .faq-item.active .faq-answer {
-            display: block;
+        .faq-question-bubble i {
+            color: var(--dark-red);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .faq-question-bubble span {
+            font-size: 14px;
+            color: var(--dark-gray);
+            line-height: 1.3;
         }
     </style>
 </head>
@@ -1460,66 +1595,60 @@
         </div>
     </section>
     
-    <!-- Floating FAQs Chat Icon -->
-    <div id="floatingFaqs" class="floating-faqs-bottom">
-        <div class="faqs-icon-label">
-            <i class="fas fa-comments"></i>
-            <span>FAQs</span>
+    <!-- Floating Chatbot Icon -->
+    <div id="floatingChatbot" class="floating-chatbot-bottom">
+        <div class="chatbot-icon-label">
+            <i class="fas fa-robot"></i>
+            <span>Chat Assistant</span>
         </div>
     </div>
     
-    <!-- FAQs Modal -->
-    <div class="modal" id="faqsModal">
-        <div class="modal-content">
+    <!-- Chatbot Modal -->
+    <div class="modal" id="chatbotModal">
+        <div class="modal-content chatbot-modal">
             <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-question-circle"></i> Frequently Asked Questions</h3>
-                <button class="close-button" id="closeFaqsModal">&times;</button>
+                <h3 class="modal-title"><i class="fas fa-robot"></i> iRequest Assistant</h3>
+                <button class="close-button" id="closeChatbotModal">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="faq-container">
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>How long does it take to process my document request?</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>Processing times vary depending on the type of document requested. Typically, requests are processed within 3-5 business days. You'll receive an email notification when your documents are ready.</p>
-                        </div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>What payment methods do you accept?</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>We accept all major credit cards, PayPal, and bank transfers. Payment is required at the time of request submission.</p>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Bot introduction message -->
+                        <div class="message bot-message">
+                            <div class="message-content">
+                                <div class="bot-avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message-bubble">
+                                    <p>👋 Hi! I'm your iRequest Assistant. How can I help you today?</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>Can I request multiple documents at once?</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>Yes, you can request multiple documents in a single request. Simply select all the documents you need during the request process.</p>
-                        </div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>How do I track my document request?</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>After submitting your request, you'll receive a reference number via email. Use this number to track your request status through our tracking system.</p>
-                        </div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question">
-                            <span>What if I need to cancel my request?</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>Requests can be canceled within 24 hours of submission if processing hasn't begun. Please contact our support team immediately if you need to cancel your request.</p>
+                    
+                    <!-- FAQ question bubbles at bottom -->
+                    <div class="chat-suggestions">
+                        <div class="faq-questions" id="faqQuestions">
+                            <div class="faq-question-bubble" data-question="How long does it take to process my document request?">
+                                <i class="fas fa-clock"></i>
+                                <span>How long does it take to process my document request?</span>
+                            </div>
+                            <div class="faq-question-bubble" data-question="What payment methods do you accept?">
+                                <i class="fas fa-credit-card"></i>
+                                <span>What payment methods do you accept?</span>
+                            </div>
+                            <div class="faq-question-bubble" data-question="Can I request multiple documents at once?">
+                                <i class="fas fa-files-o"></i>
+                                <span>Can I request multiple documents at once?</span>
+                            </div>
+                            <div class="faq-question-bubble" data-question="How do I track my document request?">
+                                <i class="fas fa-search"></i>
+                                <span>How do I track my document request?</span>
+                            </div>
+                            <div class="faq-question-bubble" data-question="What if I need to cancel my request?">
+                                <i class="fas fa-times-circle"></i>
+                                <span>What if I need to cancel my request?</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2183,20 +2312,20 @@
                 </h3>
                 <div class="contact-item">
                     <i class="fas fa-map-marker-alt contact-icon"></i>
-                    <span>123 University Ave, Academic City, Philippines</span>
+                    <span>TN Pepito Street, Poblacion, 8709 Valencia City, Bukidnon, Philippines</span>
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-phone-alt contact-icon"></i>
-                    <span>(+63) 912 345 6789</span>
+                    <span>09533179109</span>
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-envelope contact-icon"></i>
-                    <span>support@irequest.edu</span>
+                    <span>irequest.odrms@gmail.com</span>
                 </div>
             </div>
         </div>
         <div class="copyright">
-            <i class="far fa-copyright"></i> 2023 iRequest. All rights reserved.
+            <i class="far fa-copyright"></i> 2025 iRequest. All rights reserved.
         </div>
     </footer>
     
@@ -3147,30 +3276,132 @@
             });
         });
         
-        // Floating FAQs Modal Logic
-        const floatingFaqs = document.getElementById('floatingFaqs');
-        const faqsModal = document.getElementById('faqsModal');
-        const closeFaqsModal = document.getElementById('closeFaqsModal');
-        if (floatingFaqs) {
-            floatingFaqs.addEventListener('click', function() {
-                faqsModal.style.display = 'flex';
+        // FAQ Data - Easy to add/edit questions and answers
+        const faqData = {
+            "How long does it take to process my document request?": "Processing times vary depending on the type of document requested. Typically, requests are processed within 3-5 business days. You'll receive an email notification when your documents are ready.",
+            "What payment methods do you accept?": "We only accept cash payments. Payment must be made in person at our office when you pick up your documents. No online payments or bank transfers are available.",
+            "Can I request multiple documents at once?": "Yes, you can request multiple documents in a single request. Simply select all the documents you need during the request process.",
+            "How do I track my document request?": "After submitting your request, you'll receive a reference number via email. Use this number to track your request status through our tracking system.",
+            "What if I need to cancel my request?": "Requests can be canceled within 24 hours of submission if processing hasn't begun. Please contact our support team immediately if you need to cancel your request."
+        };
+
+        // Chatbot Modal Logic
+        const floatingChatbot = document.getElementById('floatingChatbot');
+        const chatbotModal = document.getElementById('chatbotModal');
+        const closeChatbotModal = document.getElementById('closeChatbotModal');
+        const chatMessages = document.getElementById('chatMessages');
+        const faqQuestions = document.getElementById('faqQuestions');
+        
+        if (floatingChatbot) {
+            floatingChatbot.addEventListener('click', function() {
+                chatbotModal.style.display = 'flex';
                 document.body.style.overflow = 'hidden';
+                // Scroll to bottom of chat
+                setTimeout(() => {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 100);
             });
         }
-        if (closeFaqsModal) {
-            closeFaqsModal.addEventListener('click', function() {
-                faqsModal.style.display = 'none';
+        
+        if (closeChatbotModal) {
+            closeChatbotModal.addEventListener('click', function() {
+                chatbotModal.style.display = 'none';
                 document.body.style.overflow = 'auto';
             });
         }
         
-        // FAQ Accordion in Modal
-        faqsModal.querySelectorAll('.faq-item').forEach(item => {
-            const question = item.querySelector('.faq-question');
-            question.addEventListener('click', () => {
-                item.classList.toggle('active');
-            });
+        // FAQ Question Click Handler
+        faqQuestions.addEventListener('click', function(e) {
+            const questionBubble = e.target.closest('.faq-question-bubble');
+            if (!questionBubble) return;
+            
+            const question = questionBubble.getAttribute('data-question');
+            const answer = faqData[question];
+            
+            if (!answer) return;
+            
+            // Add user message
+            addUserMessage(question);
+            
+            // Remove the question bubbles
+            faqQuestions.style.display = 'none';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Show bot response after delay
+            setTimeout(() => {
+                hideTypingIndicator();
+                addBotMessage(answer);
+                
+                            // Show question bubbles again after a short delay
+            setTimeout(() => {
+                faqQuestions.style.display = 'flex';
+            }, 1000);
+            }, 1500);
         });
+        
+        // Add user message to chat
+        function addUserMessage(message) {
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.innerHTML = `
+                <div class="message-content">
+                    <div class="message-bubble">
+                        <p>${message}</p>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(userMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Add bot message to chat
+        function addBotMessage(message) {
+            const botMessage = document.createElement('div');
+            botMessage.className = 'message bot-message';
+            botMessage.innerHTML = `
+                <div class="message-content">
+                    <div class="bot-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-bubble">
+                        <p>${message}</p>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(botMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'message bot-message';
+            typingIndicator.id = 'typingIndicator';
+            typingIndicator.innerHTML = `
+                <div class="message-content">
+                    <div class="bot-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingIndicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
 
         // Alumni Document Type Checkboxes
         document.querySelectorAll('#alumniDocumentTypesGroup input[type="checkbox"]').forEach(checkbox => {

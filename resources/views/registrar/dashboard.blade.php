@@ -415,6 +415,188 @@
             color: var(--danger);
         }
 
+        /* Unified Progress Card Styles */
+        .unified-progress-card {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            transition: transform 0.3s ease;
+            border-top: 3px solid var(--secondary);
+            position: relative;
+            grid-column: 1 / -1;
+        }
+
+        .unified-progress-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .unified-progress-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .unified-progress-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200px;
+            height: 200px;
+            transform: rotate(-90deg);
+        }
+
+        .progress-segment {
+            transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+        
+        .completed-segment {
+            animation: segment-animation 1.5s ease-out forwards;
+            animation-delay: 0s;
+        }
+        
+        .approved-segment {
+            animation: segment-animation 1.5s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+        
+        .pending-segment {
+            animation: segment-animation 1.5s ease-out forwards;
+            animation-delay: 0.4s;
+        }
+        
+        .rejected-segment {
+            animation: segment-animation 1.5s ease-out forwards;
+            animation-delay: 0.6s;
+        }
+        
+        @keyframes segment-animation {
+            from {
+                stroke-dasharray: 0 502.4;
+                opacity: 0;
+            }
+            to {
+                stroke-dasharray: var(--dash-array);
+                opacity: 1;
+            }
+        }
+
+        .pending-segment {
+            stroke: #FFC107;
+        }
+
+        .approved-segment {
+            stroke: #2196F3;
+        }
+
+        .completed-segment {
+            stroke: #4CAF50;
+        }
+
+        .rejected-segment {
+            stroke: #F44336;
+        }
+
+        .unified-progress-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .total-requests {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .total-label {
+            font-size: 14px;
+            color: var(--gray-dark);
+            margin-top: 4px;
+        }
+
+        .progress-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .legend-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .pending-color {
+            background: #FFC107;
+        }
+
+        .approved-color {
+            background: #2196F3;
+        }
+
+        .completed-color {
+            background: #4CAF50;
+        }
+
+        .rejected-color {
+            background: #F44336;
+        }
+
+        .legend-text {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .legend-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .legend-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .legend-percent {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-dark);
+            margin-top: 2px;
+        }
+        
+
+
         .progress-card {
             background: var(--light);
             border-radius: 12px;
@@ -696,6 +878,68 @@
                 width: 100%;
                 justify-content: flex-end;
             }
+            
+            /* Unified Progress Card Mobile Styles */
+            .unified-progress-container {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .unified-progress-svg {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .total-requests {
+                font-size: 24px;
+            }
+            
+            .total-label {
+                font-size: 12px;
+            }
+            
+            .progress-legend {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            
+            .legend-item {
+                padding: 10px;
+            }
+            
+            .legend-value {
+                font-size: 16px;
+            }
+            
+            /* Document Progress Bars Mobile Styles */
+            .document-progress-section {
+                margin: 1rem 0;
+                padding: 1rem;
+            }
+            
+            .progress-bars-container {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important;
+                gap: 0.75rem !important;
+                height: 200px !important;
+            }
+            
+            .progress-bar-container {
+                height: 140px !important;
+                width: 28px !important;
+            }
+            
+            .document-count {
+                font-size: 1rem !important;
+            }
+            
+            .document-percentage {
+                font-size: 0.7rem !important;
+            }
+            
+            .document-type-name {
+                font-size: 0.6rem !important;
+                max-width: 80px !important;
+            }
         }
         .empty-state {
             padding: 2rem;
@@ -830,14 +1074,7 @@
             gap: 8px;
         }
 
-        /* Dashboard sections that need to be hidden */
-        .dashboard-sections {
-            display: block;
-        }
-        
-        .dashboard-sections.hidden {
-            display: none;
-        }
+
 
         /* Import Button Styles */
         .import-btn {
@@ -1034,6 +1271,63 @@
             color: var(--gray-dark) !important;
             cursor: not-allowed !important;
         }
+
+        /* Progress Bar Styles */
+        .progress-bar-fill {
+            min-height: 4px !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        .progress-bar-container {
+            position: relative;
+            background: #e9ecef !important;
+            border-radius: 6px !important;
+            overflow: hidden !important;
+        }
+
+        .progress-bar-item {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .progress-bar-item:nth-child(1) { animation-delay: 0.1s; }
+        .progress-bar-item:nth-child(2) { animation-delay: 0.2s; }
+        .progress-bar-item:nth-child(3) { animation-delay: 0.3s; }
+        .progress-bar-item:nth-child(4) { animation-delay: 0.4s; }
+        .progress-bar-item:nth-child(5) { animation-delay: 0.5s; }
+        .progress-bar-item:nth-child(6) { animation-delay: 0.6s; }
+        .progress-bar-item:nth-child(7) { animation-delay: 0.7s; }
+        .progress-bar-item:nth-child(8) { animation-delay: 0.8s; }
+        
+        /* Ensure progress bars are visible and properly sized */
+        .progress-bar-fill {
+            min-height: 4px !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        
+        /* Force progress bar heights to be visible */
+        .progress-bar-container {
+            position: relative !important;
+            background: #e9ecef !important;
+            border-radius: 6px !important;
+            overflow: hidden !important;
+        }
+        
+
     </style>
 </head>
 <body>
@@ -1114,10 +1408,11 @@
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" placeholder="Search requests...">
             </div>
+
         </div>
 
         <!-- Dashboard Sections -->
-        <div class="dashboard-sections" id="dashboardSections">
+        <div class="dashboard-sections" id="dashboardSections" style="display: block;">
             <div class="dashboard-content">
                 <div class="analytics-card">
                     <div class="card-header">
@@ -1177,53 +1472,96 @@
                 </div>
             </div>
             <div class="dashboard-content">
-                <div class="progress-card">
-                    <div class="progress-container">
-                        <svg class="progress-svg">
-                            <circle class="progress-circle progress-pending" cx="60" cy="60" r="50" style="--dash-offset: 188.4;"></circle>
+                <div class="unified-progress-card">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary); font-size: 1.25rem; font-weight: 600;">
+                        📊 Request Status Overview
+                    </h3>
+                    <div class="unified-progress-container">
+                        <svg class="unified-progress-svg" viewBox="0 0 200 200">
+                            <!-- Background circle -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="16"/>
+                            
+                            @php
+                                $total = ($analytics['pending'] ?? 0) + ($analytics['approved'] ?? 0) + ($analytics['completed'] ?? 0) + ($analytics['rejected'] ?? 0);
+                                $pendingPercent = $total > 0 ? ($analytics['pending'] ?? 0) / $total * 100 : 0;
+                                $approvedPercent = $total > 0 ? ($analytics['approved'] ?? 0) / $total * 100 : 0;
+                                $completedPercent = $total > 0 ? ($analytics['completed'] ?? 0) / $total * 100 : 0;
+                                $rejectedPercent = $total > 0 ? ($analytics['rejected'] ?? 0) / $total * 100 : 0;
+                                
+                                $circumference = 2 * M_PI * 80;
+                                $pendingDash = $total > 0 ? ($pendingPercent / 100) * $circumference : 0;
+                                $approvedDash = $total > 0 ? ($approvedPercent / 100) * $circumference : 0;
+                                $completedDash = $total > 0 ? ($completedPercent / 100) * $circumference : 0;
+                                $rejectedDash = $total > 0 ? ($rejectedPercent / 100) * $circumference : 0;
+                            @endphp
+                            
+                            <!-- Completed Requests (Green) - Start from top -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#4CAF50" stroke-width="16" 
+                                    stroke-dasharray="{{ $completedDash }} {{ $circumference - $completedDash }}" 
+                                    stroke-dashoffset="0" 
+                                    class="progress-segment completed-segment" 
+                                    style="--dash-array: {{ $completedDash }} {{ $circumference - $completedDash }}; --percent: {{ $completedPercent }};"/>
+                            
+                            <!-- Approved Requests (Blue) - After completed -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#2196F3" stroke-width="16" 
+                                    stroke-dasharray="{{ $approvedDash }} {{ $circumference - $approvedDash }}" 
+                                    stroke-dashoffset="{{ -$completedDash }}" 
+                                    class="progress-segment approved-segment" 
+                                    style="--dash-array: {{ $approvedDash }} {{ $circumference - $approvedDash }}; --dash-offset: {{ -$completedDash }}; --percent: {{ $approvedPercent }};"/>
+                            
+                            <!-- Pending Requests (Yellow) - After approved -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#FFC107" stroke-width="16" 
+                                    stroke-dasharray="{{ $pendingDash }} {{ $circumference - $pendingDash }}" 
+                                    stroke-dashoffset="{{ -($completedDash + $approvedDash) }}" 
+                                    class="progress-segment pending-segment" 
+                                    style="--dash-array: {{ $pendingDash }} {{ $circumference - $pendingDash }}; --dash-offset: {{ -($completedDash + $approvedDash) }}; --percent: {{ $pendingPercent }};"/>
+                            
+                            <!-- Rejected Requests (Red) - After pending -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#F44336" stroke-width="16" 
+                                    stroke-dasharray="{{ $rejectedDash }} {{ $circumference - $rejectedDash }}" 
+                                    stroke-dashoffset="{{ -($completedDash + $approvedDash + $pendingDash) }}" 
+                                    class="progress-segment rejected-segment" 
+                                    style="--dash-array: {{ $rejectedDash }} {{ $circumference - $rejectedDash }}; --dash-offset: {{ -($completedDash + $approvedDash + $pendingDash) }}; --percent: {{ $rejectedPercent }};"/>
                         </svg>
-                        <div class="circular-progress">
-                            <div class="progress-number" id="pendingRequestsProgress">{{ $analytics['pending'] ?? 0 }}</div>
+                        <div class="unified-progress-center">
+                            <div class="total-requests" id="totalRequests">{{ ($analytics['pending'] ?? 0) + ($analytics['approved'] ?? 0) + ($analytics['completed'] ?? 0) + ($analytics['rejected'] ?? 0) }}</div>
+                            <div class="total-label">Total Requests</div>
                         </div>
                     </div>
-                    <h3 class="progress-title">Pending Requests</h3>
-                    <p class="progress-subtitle">Current active requests</p>
-                </div>
-                <div class="progress-card">
-                    <div class="progress-container">
-                        <svg class="progress-svg">
-                            <circle class="progress-circle progress-processing" cx="60" cy="60" r="50" style="--dash-offset: 125.6;"></circle>
-                        </svg>
-                        <div class="circular-progress">
-                            <div class="progress-number" id="approvedRequestsProgress">{{ $analytics['approved'] ?? 0 }}</div>
+                    <div class="progress-legend">
+                        <div class="legend-item">
+                            <div class="legend-color completed-color"></div>
+                            <div class="legend-text">
+                                <span class="legend-label">✅ Completed</span>
+                                <span class="legend-value" id="completedLegendValue">{{ $analytics['completed'] ?? 0 }}</span>
+                                <span class="legend-percent" id="completedLegendPercent">{{ $total > 0 ? round(($analytics['completed'] ?? 0) / $total * 100, 1) : 0 }}%</span>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color approved-color"></div>
+                            <div class="legend-text">
+                                <span class="legend-label">🟦 Approved</span>
+                                <span class="legend-value" id="approvedLegendValue">{{ $analytics['approved'] ?? 0 }}</span>
+                                <span class="legend-percent" id="approvedLegendPercent">{{ $total > 0 ? round(($analytics['approved'] ?? 0) / $total * 100, 1) : 0 }}%</span>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color pending-color"></div>
+                            <div class="legend-text">
+                                <span class="legend-label">🟨 Pending</span>
+                                <span class="legend-value" id="pendingLegendValue">{{ $analytics['pending'] ?? 0 }}</span>
+                                <span class="legend-percent" id="pendingLegendPercent">{{ $total > 0 ? round(($analytics['pending'] ?? 0) / $total * 100, 1) : 0 }}%</span>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color rejected-color"></div>
+                            <div class="legend-text">
+                                <span class="legend-label">❌ Rejected</span>
+                                <span class="legend-value" id="rejectedLegendValue">{{ $analytics['rejected'] ?? 0 }}</span>
+                                <span class="legend-percent" id="rejectedLegendPercent">{{ $total > 0 ? round(($analytics['rejected'] ?? 0) / $total * 100, 1) : 0 }}%</span>
+                            </div>
                         </div>
                     </div>
-                    <h3 class="progress-title">Approved Requests</h3>
-                    <p class="progress-subtitle">Requests approved by registrar</p>
-                </div>
-                <div class="progress-card">
-                    <div class="progress-container">
-                        <svg class="progress-svg">
-                            <circle class="progress-circle progress-completed" cx="60" cy="60" r="50" style="--dash-offset: 219.8;"></circle>
-                        </svg>
-                        <div class="circular-progress">
-                            <div class="progress-number" id="completedRequestsProgress">{{ $analytics['completed'] ?? 0 }}</div>
-                        </div>
-                    </div>
-                    <h3 class="progress-title">Completed</h3>
-                    <p class="progress-subtitle">This month</p>
-                </div>
-                <div class="progress-card">
-                    <div class="progress-container">
-                        <svg class="progress-svg">
-                            <circle class="progress-circle progress-rejected" cx="60" cy="60" r="50" style="--dash-offset: 282.6;"></circle>
-                        </svg>
-                        <div class="circular-progress">
-                            <div class="progress-number" id="rejectedRequestsProgress">{{ $analytics['rejected'] ?? 0 }}</div>
-                        </div>
-                    </div>
-                    <h3 class="progress-title">Rejected</h3>
-                    <p class="progress-subtitle">This month</p>
                 </div>
             </div>
             <div class="recent-requests">
@@ -1237,7 +1575,7 @@
                 <table id="requestTable">
                     <thead>
                         <tr>
-                            <th>Reference #</th>
+                            <th>Document Request ID</th>
                             <th>Student Name</th>
                             <th>Course</th>
                             <th>Status</th>
@@ -1248,7 +1586,7 @@
                     <tbody>
                         @foreach($dashboardRequests as $req)
                         <tr>
-                            <td>{{ $req->reference_number }}</td>
+                            <td>{{ $req->id }}</td>
                             <td>{{ $req->first_name }} {{ $req->last_name }}</td>
                             <td>{{ $req->course }}</td>
                             <td>{{ ucfirst($req->status) }}</td>
@@ -1267,12 +1605,14 @@
                                             title="Verify">
                                             <i class="fas fa-user-check"></i> Verify
                                         </button>
-                                        <form action="{{ route('registrar.complete', $req->id) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            <button type="submit" class="action-btn reject-btn" title="Complete">
-                                                <i class="fas fa-check-double"></i> Complete
-                                            </button>
-                                        </form>
+                                        @if($req->payment_status == 'paid')
+                                            <form action="{{ route('registrar.complete', $req->id) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                <button type="submit" class="action-btn reject-btn" title="Complete">
+                                                    <i class="fas fa-check-double"></i> Complete
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 @else
                                     <span>{{ ucfirst($req->status) }}</span>
@@ -1296,6 +1636,9 @@
                         <i class="fas fa-search search-icon"></i>
                         <input type="text" placeholder="Search documents...">
                     </div>
+                    <button class="action-btn secondary" id="clearFiltersBtn" style="margin-left: 10px;">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </button>
                 </div>
                 <div class="document-filters">
                     <div class="filter-tabs">
@@ -1318,7 +1661,7 @@
                 <table id="documentRequestsTable">
                     <thead>
                         <tr>
-                            <th>Request ID</th>
+                            <th>Document Request ID</th>
                             <th>Student</th>
                             <th>Document Type(s)</th>
                             <th>Date Requested</th>
@@ -1333,7 +1676,7 @@
                             data-documents="@foreach($req->requestedDocuments as $doc){{ strtolower($doc->document_type) }},@endforeach"
                             data-date="{{ $req->created_at ? $req->created_at->format('Y-m-d') : ($req->request_date ? \Carbon\Carbon::parse($req->request_date)->format('Y-m-d') : '') }}"
                         >
-                            <td>{{ $req->reference_number }}</td>
+                            <td>{{ $req->id }}</td>
                             <td>{{ $req->first_name }} {{ $req->last_name }}</td>
                             <td>
                                 @foreach($req->requestedDocuments as $doc)
@@ -1352,12 +1695,14 @@
                                             title="Verify">
                                             <i class="fas fa-user-check"></i> Verify
                                         </button>
-                                        <form action="{{ route('registrar.complete', $req->id) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            <button type="submit" class="action-btn reject-btn" title="Complete">
-                                                <i class="fas fa-check-double"></i> Complete
-                                            </button>
-                                        </form>
+                                        @if($req->payment_status == 'paid')
+                                            <form action="{{ route('registrar.complete', $req->id) }}" method="POST" style="display:inline;">
+                                                @csrf
+                                                <button type="submit" class="action-btn reject-btn" title="Complete">
+                                                    <i class="fas fa-check-double"></i> Complete
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 @endif
                             </td>
@@ -1402,7 +1747,7 @@
                 <div id="studentRecordsTableSection" style="display:none;">
                     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
                         <label for="schoolYearFilter" style="font-weight:600;color:#8B0000;">School Year:</label>
-                        <select id="schoolYearFilter" class="filter-select" style="min-width:140px; border:1.5px solid #8B0000; border-radius:8px; padding:6px 12px; font-size:1rem;">
+                        <select id="schoolYearFilter" name="schoolYearFilter" class="filter-select" style="min-width:140px; border:1.5px solid #8B0000; border-radius:8px; padding:6px 12px; font-size:1rem;">
                             @php
                                 $startYear = 2022;
                                 $currentYear = date('Y');
@@ -1466,25 +1811,25 @@
         <form method="POST" action="{{ route('students.store') }}">
             @csrf
             <div style="margin-bottom:1rem;">
-                <label for="student_id" style="font-weight:600;color:#8B0000;">Student ID</label>
+                <label for="student_id_modal" style="font-weight:600;color:#8B0000;">Student ID</label>
                 <input type="text" name="student_id" id="student_id_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;">
             </div>
             <div class="row" style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
                 <div class="col" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:0.5rem;">
-                    <label for="first_name" style="font-weight:600;color:#8B0000;">First Name</label>
+                    <label for="first_name_modal" style="font-weight:600;color:#8B0000;">First Name</label>
                     <input type="text" name="first_name" id="first_name_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
                 </div>
                 <div class="col" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:0.5rem;">
-                    <label for="middle_name" style="font-weight:600;color:#8B0000;">Middle Name</label>
+                    <label for="middle_name_modal" style="font-weight:600;color:#8B0000;">Middle Name</label>
                     <input type="text" name="middle_name" id="middle_name_modal" class="form-control" style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
                 </div>
                 <div class="col" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:0.5rem;">
-                    <label for="last_name" style="font-weight:600;color:#8B0000;">Last Name</label>
+                    <label for="last_name_modal" style="font-weight:600;color:#8B0000;">Last Name</label>
                     <input type="text" name="last_name" id="last_name_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
                 </div>
             </div>
             <div style="margin-bottom:1rem;display:flex;flex-direction:column;gap:0.5rem;">
-                <label for="program" style="font-weight:600;color:#8B0000;">Program</label>
+                <label for="program_modal" style="font-weight:600;color:#8B0000;">Program</label>
                 <select name="program" id="program_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
                     <option value="">Select Program</option>
                     <option value="BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY" {{ (isset($selectedDepartment) && $selectedDepartment == 'BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY') ? 'selected' : '' }}>BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY</option>
@@ -1497,7 +1842,7 @@
                 </select>
             </div>
             <div style="margin-bottom:1rem;">
-                <label for="year_level" style="font-weight:600;color:#8B0000;">Year Level</label>
+                <label for="year_level_modal" style="font-weight:600;color:#8B0000;">Year Level</label>
                 <select name="year_level" id="year_level_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;">
                     <option value="">Select Year Level</option>
                     <option value="1st Year">1st Year</option>
@@ -1507,7 +1852,7 @@
                 </select>
             </div>
             <div style="margin-bottom:1rem;">
-                <label for="school_year" style="font-weight:600;color:#8B0000;">School Year</label>
+                <label for="school_year_modal" style="font-weight:600;color:#8B0000;">School Year</label>
                 <select name="school_year" id="school_year_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;">
                     @php
                         $startYear = 2022;
@@ -1523,7 +1868,7 @@
                 </select>
             </div>
             <div style="margin-bottom:1.5rem;">
-                <label for="status" style="font-weight:600;color:#8B0000;">Status</label>
+                <label for="status_modal" style="font-weight:600;color:#8B0000;">Status</label>
                 <select name="status" id="status_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;">
                     <option value="active">Active</option>
                     <option value="on leave">On Leave</option>
@@ -1746,9 +2091,100 @@ if (importBtn) importBtn.addEventListener('click', function() {
                             </div>
                         </div>
                         <div class="chart-container">
-                            <h4>Requests by Type</h4>
-                            <div class="chart-placeholder" style="height: 300px; background: #f5f5f5; display: flex; align-items: center; justify-content: center;">
-                                [Chart: Document Requests by Type]
+                            <h4>Document Type Distribution</h4>
+                            
+                            <!-- Document Type Progress Bars -->
+                            <div class="document-progress-section" style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                                <div style="text-align: center; margin-bottom: 1rem; padding: 0.5rem; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #2196F3;">
+                                    <small style="color: #1976d2; font-weight: 500;">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Bar heights are scaled relative to the highest count for better visual comparison. 
+                                        Percentages show actual proportion of total requests.
+                                    </small>
+                                </div>
+                                
+                                <div class="progress-bars-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; align-items: end; height: 250px;">
+                                    @php
+                                        // Get document type counts from the database
+                                        $documentTypeCounts = \App\Models\RequestedDocument::selectRaw('document_type, COUNT(*) as count')
+                                            ->groupBy('document_type')
+                                            ->orderBy('count', 'desc')
+                                            ->get();
+                                        
+                                        $totalDocuments = $documentTypeCounts->sum('count');
+                                        $maxCount = $documentTypeCounts->max('count') ?? 1; // Get the highest count for relative scaling
+                                    @endphp
+                                    
+
+                                    
+                                    @foreach($documentTypeCounts as $docType)
+                                        @php
+                                            // Calculate relative percentage based on highest count, not total
+                                            $relativePercentage = $maxCount > 0 ? ($docType->count / $maxCount) * 100 : 0;
+                                            $barHeight = 180; // Fixed height for all bars
+                                            
+                                            // Enhanced color palette for each document type
+                                            $colors = [
+                                                'Transcript' => ['#8B0000', '#A52A2A', '#DC143C'],      // Dark Red variations
+                                                'Diploma' => ['#D4AF37', '#FFD700', '#FFA500'],         // Gold variations
+                                                'Certificate' => ['#2196F3', '#42A5F5', '#64B5F6'],     // Blue variations
+                                                'TOR' => ['#4CAF50', '#66BB6A', '#81C784'],            // Green variations
+                                                'Form 137' => ['#FF9800', '#FFB74D', '#FFCC02'],        // Orange variations
+                                                'Form 138' => ['#9C27B0', '#BA68C8', '#CE93D8'],        // Purple variations
+                                                'Good Moral' => ['#795548', '#8D6E63', '#A1887F'],      // Brown variations
+                                                'Enrollment Certificate' => ['#607D8B', '#78909C', '#90A4AE'], // Blue Grey variations
+                                                'Honorable Dismissal' => ['#E91E63', '#F06292', '#F8BBD9'], // Pink variations
+                                                'Transfer Credential' => ['#00BCD4', '#4DD0E1', '#B2EBF2'], // Cyan variations
+                                                'Authentication' => ['#FF5722', '#FF8A65', '#FFCCBC'],    // Deep Orange variations
+                                                'Verification' => ['#673AB7', '#9575CD', '#D1C4E9']      // Deep Purple variations
+                                            ];
+                                            
+                                            $colorSet = $colors[$docType->document_type] ?? ['#8B0000', '#A52A2A', '#DC143C']; // Default to primary color variations
+                                            $barColor = $colorSet[0]; // Main color for the bar
+                                        @endphp
+                                        
+                                        <div class="progress-bar-item" style="text-align: center; display: flex; flex-direction: column; align-items: center;">
+                                            <div class="progress-bar-container" style="position: relative; height: {{ $barHeight }}px; width: 35px; margin: 0 auto 0.5rem; background: #e9ecef; border-radius: 6px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                                                <div class="progress-bar-fill" 
+                                                     data-percentage="{{ $relativePercentage }}" 
+                                                     data-count="{{ $docType->count }}"
+                                                     data-color="{{ $barColor }}"
+                                                     style="position: absolute; bottom: 0; left: 0; width: 100%; height: {{ ($relativePercentage / 100) * 180 }}px; background: linear-gradient(180deg, {{ $colorSet[0] }} 0%, {{ $colorSet[1] }} 40%, {{ $colorSet[2] }} 100%); border-radius: 6px; transition: height 1.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                                    
+                                                    <!-- Internal color patterns -->
+                                                    <div class="bar-pattern" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 6px);"></div>
+                                                    
+                                                    <!-- Top highlight -->
+                                                    <div class="bar-highlight" style="position: absolute; top: 0; left: 0; width: 100%; height: 25%; background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 50%, transparent 100%); border-radius: 6px 6px 0 0;"></div>
+                                                    
+                                                    <!-- Side highlight -->
+                                                    <div class="bar-side-highlight" style="position: absolute; top: 0; left: 0; width: 35%; height: 100%; background: linear-gradient(90deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 50%, transparent 100%); border-radius: 6px 0 0 6px;"></div>
+                                                    
+                                                    <!-- Bottom shadow -->
+                                                    <div class="bar-bottom-shadow" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 20%; background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.1) 100%); border-radius: 0 0 6px 6px;"></div>
+                                                </div>
+                                            </div>
+                                            
+                                                                                            <div class="progress-stats" style="text-align: center;">
+                                                    <div class="document-count" style="font-size: 1.1rem; font-weight: 700; color: {{ $barColor }}; margin-bottom: 0.25rem;">
+                                                        {{ $docType->count }}
+                                                    </div>
+                                                    <div class="document-percentage" style="font-size: 0.75rem; color: var(--gray-dark); font-weight: 500; margin-bottom: 0.25rem;">
+                                                        {{ number_format(($docType->count / $totalDocuments) * 100, 1) }}% of total
+                                                    </div>
+                                                    <div class="document-type-name" style="font-size: 0.65rem; color: {{ $barColor }}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; max-width: 100px;">
+                                                        {{ $docType->document_type }}
+                                                    </div>
+                                                </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                
+                                @if($documentTypeCounts->isEmpty())
+                                    <div style="text-align: center; padding: 2rem; color: #666; font-style: italic;">
+                                        No document requests found.
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -1924,25 +2360,9 @@ if (importBtn) importBtn.addEventListener('click', function() {
                     if(selectedConvoId) fetchMessages();
                 }, 10000);
 
-                // Section navigation logic
-                document.querySelectorAll('.menu-link').forEach(link => {
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        document.querySelectorAll('.feature-ui').forEach(ui => ui.classList.remove('active'));
-                        const section = this.getAttribute('data-section');
-                        if(section) document.getElementById(section+"UI").classList.add('active');
-                        document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
-                        this.classList.add('active');
-                        if(section==='liveChat') {
-                            fetchConversations();
-                            chatHeaderTitle.textContent = 'Select a conversation';
-                            chatInput.value = '';
-                            chatInput.disabled = true;
-                            sendBtn.disabled = true;
-                            chatMessages.innerHTML = '';
-                        }
-                    });
-                });
+                // Live Chat specific initialization
+                // Note: Main navigation is handled in the main script section below
+                // This section only handles live chat specific setup when the section is activated
 
                 // Initial fetch
                 fetchConversations();
@@ -1956,15 +2376,13 @@ if (importBtn) importBtn.addEventListener('click', function() {
         });
         function setCircularProgress(selector, percent) {
             const circle = document.querySelector(selector);
-            const radius = 50;
-            const circumference = 2 * Math.PI * radius;
-            const offset = circumference - (percent / 100) * circumference;
-            circle.style.strokeDashoffset = offset;
+            if (circle) {
+                const radius = 50;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (percent / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+            }
         }
-        setCircularProgress('.progress-pending', 60);
-        setCircularProgress('.progress-processing', 40);
-        setCircularProgress('.progress-completed', 70);
-        setCircularProgress('.progress-rejected', 10);
         document.addEventListener('DOMContentLoaded', function() {
             const cards = document.querySelectorAll('.analytics-card, .progress-card');
             cards.forEach((card, index) => {
@@ -1973,8 +2391,10 @@ if (importBtn) importBtn.addEventListener('click', function() {
                     card.style.transform = 'translateY(0)';
                 }, index * 100);
             });
-            fetchData();
+            // fetchData(); // Temporarily disabled
         });
+        // Temporarily disabled due to API endpoint issues
+        /*
         async function fetchData() {
             try {
                 // Fetch analytics from our API endpoint
@@ -1997,6 +2417,69 @@ if (importBtn) importBtn.addEventListener('click', function() {
 
         // Refresh analytics every 30 seconds
         setInterval(fetchData, 30000);
+        */
+        
+        // Update unified progress card
+        function updateUnifiedProgressCard(analytics) {
+            const total = analytics.pending + analytics.approved + analytics.completed + analytics.rejected;
+            
+            // Update total requests
+            document.getElementById('totalRequests').textContent = total;
+            
+            // Calculate percentages
+            const pendingPercent = total > 0 ? (analytics.pending / total) * 100 : 0;
+            const approvedPercent = total > 0 ? (analytics.approved / total) * 100 : 0;
+            const completedPercent = total > 0 ? (analytics.completed / total) * 100 : 0;
+            const rejectedPercent = total > 0 ? (analytics.rejected / total) * 100 : 0;
+            
+            // Update legend values and percentages
+            document.getElementById('pendingLegendValue').textContent = analytics.pending;
+            document.getElementById('approvedLegendValue').textContent = analytics.approved;
+            document.getElementById('completedLegendValue').textContent = analytics.completed;
+            document.getElementById('rejectedLegendValue').textContent = analytics.rejected;
+            
+            document.getElementById('pendingLegendPercent').textContent = pendingPercent.toFixed(1) + '%';
+            document.getElementById('approvedLegendPercent').textContent = approvedPercent.toFixed(1) + '%';
+            document.getElementById('completedLegendPercent').textContent = completedPercent.toFixed(1) + '%';
+            document.getElementById('rejectedLegendPercent').textContent = rejectedPercent.toFixed(1) + '%';
+            
+            // Update progress segments with new donut structure
+            if (total > 0) {
+                const circumference = 2 * Math.PI * 80; // r=80
+                
+                // Calculate dash arrays
+                const completedDash = (completedPercent / 100) * circumference;
+                const approvedDash = (approvedPercent / 100) * circumference;
+                const pendingDash = (pendingPercent / 100) * circumference;
+                const rejectedDash = (rejectedPercent / 100) * circumference;
+                
+                // Update segments
+                const completedSegment = document.querySelector('.completed-segment');
+                const approvedSegment = document.querySelector('.approved-segment');
+                const pendingSegment = document.querySelector('.pending-segment');
+                const rejectedSegment = document.querySelector('.rejected-segment');
+                
+                if (completedSegment) {
+                    completedSegment.style.strokeDasharray = `${completedDash} ${circumference - completedDash}`;
+                }
+                
+                if (approvedSegment) {
+                    approvedSegment.style.strokeDasharray = `${approvedDash} ${circumference - approvedDash}`;
+                    approvedSegment.style.strokeDashoffset = -completedDash;
+                }
+                
+                if (pendingSegment) {
+                    pendingSegment.style.strokeDasharray = `${pendingDash} ${circumference - pendingDash}`;
+                    pendingSegment.style.strokeDashoffset = -(completedDash + approvedDash);
+                }
+                
+                if (rejectedSegment) {
+                    rejectedSegment.style.strokeDasharray = `${rejectedDash} ${circumference - rejectedDash}`;
+                    rejectedSegment.style.strokeDashoffset = -(completedDash + approvedDash + pendingDash);
+                }
+            }
+        }
+        
         function populateTable(requests) {
             const tableBody = document.querySelector('#requestTable tbody');
             tableBody.innerHTML = '';
@@ -2021,10 +2504,21 @@ if (importBtn) importBtn.addEventListener('click', function() {
             document.getElementById('approvedRequests').textContent = analytics.approved;
             document.getElementById('completedRequests').textContent = analytics.completed;
             document.getElementById('rejectedRequests').textContent = analytics.rejected;
-            document.getElementById('pendingRequestsProgress').textContent = analytics.pending;
-            document.getElementById('approvedRequestsProgress').textContent = analytics.approved;
-            document.getElementById('completedRequestsProgress').textContent = analytics.completed;
-            document.getElementById('rejectedRequestsProgress').textContent = analytics.rejected;
+            
+            // Update unified progress card
+            updateUnifiedProgressCard(analytics);
+            
+            // Update individual progress cards if they exist
+            const pendingProgress = document.getElementById('pendingRequestsProgress');
+            const approvedProgress = document.getElementById('approvedRequestsProgress');
+            const completedProgress = document.getElementById('completedRequestsProgress');
+            const rejectedProgress = document.getElementById('rejectedRequestsProgress');
+            
+            if (pendingProgress) pendingProgress.textContent = analytics.pending;
+            if (approvedProgress) approvedProgress.textContent = analytics.approved;
+            if (completedProgress) completedProgress.textContent = analytics.completed;
+            if (rejectedProgress) rejectedProgress.textContent = analytics.rejected;
+            
             setCircularProgress('.progress-pending', (analytics.pending / 100) * 60);
             setCircularProgress('.progress-processing', (analytics.approved / 100) * 60);
             setCircularProgress('.progress-completed', (analytics.completed / 100) * 60);
@@ -2079,80 +2573,117 @@ if (importBtn) importBtn.addEventListener('click', function() {
         }
 
         // Handle file selection display
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            if (this.files.length > 0) {
-                const fileName = this.files[0].name;
-                document.getElementById('fileName').textContent = fileName;
-                document.getElementById('fileInfo').style.display = 'block';
-            } else {
-                document.getElementById('fileInfo').style.display = 'none';
-            }
-        });
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                if (this.files.length > 0) {
+                    const fileName = this.files[0].name;
+                    const fileNameElement = document.getElementById('fileName');
+                    const fileInfo = document.getElementById('fileInfo');
+                    if (fileNameElement) fileNameElement.textContent = fileName;
+                    if (fileInfo) fileInfo.style.display = 'block';
+                } else {
+                    const fileInfo = document.getElementById('fileInfo');
+                    if (fileInfo) fileInfo.style.display = 'none';
+                }
+            });
+        }
 
         // Handle drag and drop
         const fileUpload = document.querySelector('.file-upload');
-        fileUpload.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            fileUpload.style.borderColor = 'var(--primary)';
-            fileUpload.style.backgroundColor = 'rgba(139, 0, 0, 0.05)';
-        });
-
-        fileUpload.addEventListener('dragleave', () => {
-            fileUpload.style.borderColor = 'var(--gray)';
-            fileUpload.style.backgroundColor = 'transparent';
-        });
-
-        fileUpload.addEventListener('drop', (e) => {
-            e.preventDefault();
-            fileUpload.style.borderColor = 'var(--gray)';
-            fileUpload.style.backgroundColor = 'transparent';
-            
-            if (e.dataTransfer.files.length) {
-                document.getElementById('fileInput').files = e.dataTransfer.files;
-                const fileName = e.dataTransfer.files[0].name;
-                document.getElementById('fileName').textContent = fileName;
-                document.getElementById('fileInfo').style.display = 'block';
-            }
-        });
-
-        // Navigation between sections
-        document.querySelectorAll('.menu-link').forEach(link => {
-            link.addEventListener('click', function(e) {
+        if (fileUpload) {
+            fileUpload.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                const section = this.getAttribute('data-section');
-                // Hide all feature UIs and show dashboard sections by default
-                document.querySelectorAll('.feature-ui').forEach(ui => {
-                    ui.style.display = 'none';
-                });
-                document.getElementById('dashboardSections').classList.remove('hidden');
-                // Update page title
-                const pageTitle = document.getElementById('pageTitle');
-                // Handle each section
-                if (section === 'dashboard') {
-                    document.getElementById('dashboardSections').classList.remove('hidden');
-                    pageTitle.textContent = 'Document Request Dashboard';
-                } else {
-                    document.getElementById('dashboardSections').classList.add('hidden');
-                    if (section === 'documentRequests') {
-                        document.getElementById('documentRequestsUI').style.display = 'block';
-                        pageTitle.textContent = 'Document Requests Management';
-                    } else if (section === 'studentRecords') {
-                        document.getElementById('studentRecordsUI').style.display = 'block';
-                        pageTitle.textContent = 'Student Records Management';
-                    } else if (section === 'reports') {
-                        document.getElementById('reportsUI').style.display = 'block';
-                        pageTitle.textContent = 'System Reports';
-                    } else if (section === 'systemLog') {
-                        document.getElementById('systemLogUI').style.display = 'block';
-                        pageTitle.textContent = 'System Log';
-                    } else if (section === 'liveChat') {
-                        document.getElementById('liveChatUI').style.display = 'block';
-                        pageTitle.textContent = 'Live Chat Inquiries';
+                fileUpload.style.borderColor = 'var(--primary)';
+                fileUpload.style.backgroundColor = 'rgba(139, 0, 0, 0.05)';
+            });
+
+            fileUpload.addEventListener('dragleave', () => {
+                fileUpload.style.borderColor = 'var(--gray)';
+                fileUpload.style.backgroundColor = 'transparent';
+            });
+
+            fileUpload.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUpload.style.borderColor = 'var(--gray)';
+                fileUpload.style.backgroundColor = 'transparent';
+                
+                if (e.dataTransfer.files.length) {
+                    const fileInput = document.getElementById('fileInput');
+                    if (fileInput) {
+                        fileInput.files = e.dataTransfer.files;
+                        const fileName = e.dataTransfer.files[0].name;
+                        const fileNameElement = document.getElementById('fileName');
+                        const fileInfo = document.getElementById('fileInfo');
+                        if (fileNameElement) fileNameElement.textContent = fileName;
+                        if (fileInfo) fileInfo.style.display = 'block';
                     }
                 }
-                // Update active menu item
-                document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
+            });
+        }
+
+
+
+        // Navigation between sections
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuLinks = document.querySelectorAll('.menu-link');
+            
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.getAttribute('data-section');
+                    
+                    // Hide ALL sections first
+                    document.querySelectorAll('.feature-ui').forEach(ui => {
+                        ui.classList.remove('active');
+                    });
+                    document.getElementById('dashboardSections').style.display = 'none';
+                    
+                    // Update page title
+                    const pageTitle = document.getElementById('pageTitle');
+                    
+                    // Show only the selected section
+                    if (section === 'dashboard') {
+                        document.getElementById('dashboardSections').style.display = 'block';
+                        pageTitle.textContent = 'Document Request Dashboard';
+                    } else if (section === 'documentRequests') {
+                        document.getElementById('documentRequestsUI').classList.add('active');
+                        pageTitle.textContent = 'Document Requests Management';
+                    } else if (section === 'studentRecords') {
+                        document.getElementById('studentRecordsUI').classList.add('active');
+                        pageTitle.textContent = 'Student Records Management';
+                    } else if (section === 'reports') {
+                        document.getElementById('reportsUI').classList.add('active');
+                        pageTitle.textContent = 'System Reports';
+                    } else if (section === 'systemLog') {
+                        document.getElementById('systemLogUI').classList.add('active');
+                        pageTitle.textContent = 'System Log';
+                    } else if (section === 'liveChat') {
+                        document.getElementById('liveChatUI').classList.add('active');
+                        pageTitle.textContent = 'Live Chat Inquiries';
+                        
+                        // Initialize live chat when section is activated
+                        if (typeof fetchConversations === 'function') {
+                            fetchConversations();
+                            const chatHeaderTitle = document.getElementById('chat-header-title');
+                            const chatInput = document.getElementById('chat-input');
+                            const sendBtn = document.querySelector('#chat-form button');
+                            const chatMessages = document.getElementById('chat-messages');
+                            
+                            if (chatHeaderTitle) chatHeaderTitle.textContent = 'Select a conversation';
+                            if (chatInput) {
+                                chatInput.value = '';
+                                chatInput.disabled = true;
+                            }
+                            if (sendBtn) sendBtn.disabled = true;
+                            if (chatMessages) chatMessages.innerHTML = '';
+                        }
+                    }
+                    
+                    // Update active menu item
+                    document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
             });
         });
         
@@ -2341,65 +2872,259 @@ if (importBtn) importBtn.addEventListener('click', function() {
             }
         });
 
-        // Document Requests Management Filters
-        document.addEventListener('DOMContentLoaded', function() {
-            const docTable = document.getElementById('documentRequestsTable');
-            if (!docTable) return;
-            function getDocRows() {
-                const tbody = docTable.querySelector('tbody');
-                if (!tbody) return [];
-                return Array.from(tbody.querySelectorAll('tr'));
-            }
-            const statusTabs = document.querySelectorAll('.filter-tab');
-            const docTypeSelect = document.querySelector('.filter-select');
-            const dateInput = document.querySelector('.filter-date');
-            const docSearchInput = document.querySelector('.document-actions .search-bar input');
-
-            let activeStatus = 'all';
-
-            function filterDocRequests() {
-                const selectedType = docTypeSelect && docTypeSelect.value ? docTypeSelect.value.toLowerCase() : '';
-                const selectedDate = dateInput && dateInput.value ? dateInput.value : '';
-                const search = docSearchInput && docSearchInput.value ? docSearchInput.value.toLowerCase() : '';
-                getDocRows().forEach(row => {
+        // Document Request Filters - Enhanced and Fixed
+        function setupDocumentRequestFilters() {
+            console.log('Setting up document request filters...');
+            
+            // Enhanced filter function
+            function filterTable() {
+                const table = document.getElementById('documentRequestsTable');
+                if (!table) {
+                    console.log('Document requests table not found');
+                    return;
+                }
+                
+                const rows = table.querySelectorAll('tbody tr');
+                const activeTab = document.querySelector('#documentRequestsUI .filter-tab.active');
+                const activeStatus = activeTab ? activeTab.textContent.trim().toLowerCase() : 'all requests';
+                const documentTypeFilter = document.querySelector('#documentRequestsUI .filter-select').value;
+                const dateFilter = document.querySelector('#documentRequestsUI .filter-date').value;
+                const searchQuery = document.querySelector('#documentRequestsUI .search-bar input').value.toLowerCase();
+                
+                console.log('Filtering by:', { status: activeStatus, documentType: documentTypeFilter, date: dateFilter, search: searchQuery });
+                console.log('Found rows:', rows.length);
+                
+                let visibleCount = 0;
+                rows.forEach(row => {
+                    const status = row.getAttribute('data-status');
+                    const documents = row.getAttribute('data-documents');
+                    const date = row.getAttribute('data-date');
+                    
                     let show = true;
+                    
                     // Status filter
-                    if (activeStatus !== 'all') {
-                        if (row.getAttribute('data-status') !== activeStatus) show = false;
+                    if (activeStatus === 'all requests') {
+                        show = true;
+                    } else if (activeStatus === 'pending') {
+                        show = status === 'pending_registrar_approval';
+                    } else if (activeStatus === 'approved') {
+                        show = status === 'approved';
+                    } else if (activeStatus === 'completed') {
+                        show = status === 'completed';
+                    } else if (activeStatus === 'rejected') {
+                        show = status === 'rejected';
                     }
+                    
                     // Document type filter
-                    if (selectedType && selectedType !== 'all document types') {
-                        const docs = row.getAttribute('data-documents') || '';
-                        if (!docs.includes(selectedType)) show = false;
+                    if (show && documentTypeFilter && documentTypeFilter !== 'All Document Types') {
+                        show = documents && documents.toLowerCase().includes(documentTypeFilter.toLowerCase());
                     }
+                    
                     // Date filter
-                    if (selectedDate) {
-                        if (row.getAttribute('data-date') !== selectedDate) show = false;
+                    if (show && dateFilter) {
+                        show = date === dateFilter;
                     }
+                    
                     // Search filter
-                    if (search) {
-                        if (!row.textContent.toLowerCase().includes(search)) show = false;
+                    if (show && searchQuery) {
+                        const rowText = row.textContent.toLowerCase();
+                        show = rowText.includes(searchQuery);
                     }
+                    
                     row.style.display = show ? '' : 'none';
+                    if (show) visibleCount++;
                 });
+                
+                console.log('Visible rows after filtering:', visibleCount);
+                
+                // Show message if no results
+                let noResultsRow = table.querySelector('.no-results-row');
+                if (visibleCount === 0) {
+                    if (!noResultsRow) {
+                        noResultsRow = document.createElement('tr');
+                        noResultsRow.className = 'no-results-row';
+                        noResultsRow.innerHTML = '<td colspan="6" style="text-align: center; padding: 2rem; color: #666; font-style: italic;">No requests found matching the selected filters.</td>';
+                        table.querySelector('tbody').appendChild(noResultsRow);
+                    }
+                    noResultsRow.style.display = '';
+                } else {
+                    if (noResultsRow) {
+                        noResultsRow.style.display = 'none';
+                    }
+                }
             }
-
-            statusTabs.forEach(tab => {
+            
+            // Add click handlers to filter tabs
+            const filterTabs = document.querySelectorAll('#documentRequestsUI .filter-tab');
+            console.log('Found filter tabs:', filterTabs.length);
+            
+            filterTabs.forEach(tab => {
+                console.log('Adding click handler to:', tab.textContent);
                 tab.addEventListener('click', function() {
-                    statusTabs.forEach(t => t.classList.remove('active'));
+                    console.log('Tab clicked:', this.textContent);
+                    
+                    // Remove active class from all tabs
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
                     this.classList.add('active');
-                    const label = this.textContent.trim().toLowerCase();
-                    if (label === 'all requests') activeStatus = 'all';
-                    else if (label === 'approved') activeStatus = 'approved';
-                    else activeStatus = label;
-                    filterDocRequests();
+                    // Filter the table
+                    filterTable();
                 });
             });
-            if (docTypeSelect) docTypeSelect.addEventListener('change', filterDocRequests);
-            if (dateInput) dateInput.addEventListener('change', filterDocRequests);
-            if (docSearchInput) docSearchInput.addEventListener('input', filterDocRequests);
-            // Initial filter on page load
-            filterDocRequests();
+            
+            // Add change handlers for document type and date filters
+            const documentTypeFilter = document.querySelector('#documentRequestsUI .filter-select');
+            const dateFilter = document.querySelector('#documentRequestsUI .filter-date');
+            
+            if (documentTypeFilter) {
+                documentTypeFilter.addEventListener('change', function() {
+                    console.log('Document type filter changed:', this.value);
+                    filterTable();
+                });
+            }
+            
+            if (dateFilter) {
+                dateFilter.addEventListener('change', function() {
+                    console.log('Date filter changed:', this.value);
+                    filterTable();
+                });
+            }
+            
+            // Add search functionality
+            const searchInput = document.querySelector('#documentRequestsUI .search-bar input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    console.log('Search input changed:', this.value);
+                    filterTable();
+                });
+            }
+            
+            // Add clear filters functionality
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', function() {
+                    console.log('Clearing all filters');
+                    
+                    // Reset filter tabs
+                    filterTabs.forEach(tab => tab.classList.remove('active'));
+                    filterTabs[0].classList.add('active'); // Set "All Requests" as active
+                    
+                    // Reset document type filter
+                    if (documentTypeFilter) {
+                        documentTypeFilter.value = 'All Document Types';
+                    }
+                    
+                    // Reset date filter
+                    if (dateFilter) {
+                        dateFilter.value = '';
+                    }
+                    
+                    // Reset search input
+                    if (searchInput) {
+                        searchInput.value = '';
+                    }
+                    
+                    // Re-filter the table
+                    filterTable();
+                });
+            }
+            
+            console.log('Document request filters setup complete');
+        }
+        
+        // Initialize filters when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, setting up filters...');
+            
+            // Setup filters immediately
+            setupDocumentRequestFilters();
+            
+            // Also setup filters when document requests section is activated
+            const documentRequestsLink = document.querySelector('.menu-link[data-section="documentRequests"]');
+            if (documentRequestsLink) {
+                console.log('Found document requests menu link');
+                documentRequestsLink.addEventListener('click', function() {
+                    console.log('Document requests section activated, setting up filters...');
+                    // Small delay to ensure the section is visible
+                    setTimeout(setupDocumentRequestFilters, 100);
+                });
+            } else {
+                console.log('Document requests menu link not found');
+            }
+            
+            // Debug: Check if elements exist
+            setTimeout(() => {
+                console.log('=== DEBUG: Checking filter elements ===');
+                console.log('Filter tabs found:', document.querySelectorAll('#documentRequestsUI .filter-tab').length);
+                console.log('Filter select found:', document.querySelector('#documentRequestsUI .filter-select'));
+                console.log('Filter date found:', document.querySelector('#documentRequestsUI .filter-date'));
+                console.log('Search input found:', document.querySelector('#documentRequestsUI .search-bar input'));
+                console.log('Clear button found:', document.getElementById('clearFiltersBtn'));
+                console.log('Table found:', document.getElementById('documentRequestsTable'));
+                console.log('=====================================');
+            }, 1000);
+        });
+        
+        // Document Type Progress Bar Animations
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up progress bar animations...');
+            
+            function animateProgressBars() {
+                const progressBars = document.querySelectorAll('.progress-bar-fill');
+                console.log('Found progress bars:', progressBars.length);
+                
+                if (progressBars.length === 0) {
+                    console.log('No progress bars found, checking if Reports section is visible...');
+                    return;
+                }
+                
+                progressBars.forEach((bar, index) => {
+                    const relativePercentage = parseFloat(bar.getAttribute('data-percentage'));
+                    const count = parseInt(bar.getAttribute('data-count'));
+                    const color = bar.getAttribute('data-color');
+                    
+                    console.log(`Bar ${index + 1}: ${relativePercentage}% relative, ${count} requests, color: ${color}`);
+                    
+                    // Calculate the height based on relative percentage (0-100% of max height)
+                    const barHeight = 180; // Match the PHP variable in Reports section
+                    const fillHeight = Math.max((relativePercentage / 100) * barHeight, 4); // Minimum 4px height
+                    
+                    // Ensure the bar has the proper color styling
+                    if (color) {
+                        // Add a subtle glow effect based on the color
+                        bar.style.boxShadow = `0 2px 8px rgba(0,0,0,0.2), 0 0 20px ${color}40`;
+                    }
+                    
+                    // Animate with delay for staggered effect
+                    setTimeout(() => {
+                        bar.style.height = fillHeight + 'px';
+                        console.log(`Animated bar ${index + 1}: ${relativePercentage}% relative (${count} requests) with color ${color}, final height: ${fillHeight}px`);
+                    }, index * 200); // 200ms delay between each bar
+                });
+            }
+            
+            // Animate when the Reports section comes into view
+            const reportsSection = document.getElementById('reportsUI');
+            if (reportsSection) {
+                console.log('Reports section found, setting up intersection observer...');
+                // Use Intersection Observer for better performance
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            console.log('Reports section is visible, starting progress bar animation...');
+                            // Small delay to ensure DOM is ready
+                            setTimeout(animateProgressBars, 100);
+                            observer.unobserve(entry.target); // Only animate once
+                        }
+                    });
+                }, { threshold: 0.3 });
+                
+                observer.observe(reportsSection);
+            } else {
+                // Fallback: animate immediately if section not found
+                console.log('Reports section not found, animating immediately...');
+                setTimeout(animateProgressBars, 500); // Small delay to ensure DOM is ready
+            }
         });
     </script>
 </body>
