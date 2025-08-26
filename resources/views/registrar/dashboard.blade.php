@@ -1,3 +1,14 @@
+@php
+    $departments = [
+        ["name" => "BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY", "img" => "/images/it.png"],
+        ["name" => "BACHELOR OF SCIENCE IN ENTREPRENEURSHIP", "img" => "/images/bse.png"],
+        ["name" => "BACHELOR OF SCIENCE IN CRIMINOLOGY", "img" => "/images/CRIM.png"],
+        ["name" => "BACHELOR OF ELEMENTARY EDUCATION", "img" => "/images/beed.png"],
+        ["name" => "BACHELOR OF EARLY CHILDHOOD EDUCATION", "img" => "/images/beced.png"],
+        ["name" => "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT", "img" => "/images/hm.png"],
+        ["name" => "BACHELOR OF PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
+    ];
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1331,6 +1342,17 @@
     </style>
 </head>
 <body>
+    @php
+        $departments = [
+            ["name" => "BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY", "img" => "/images/it.png"],
+            ["name" => "BACHELOR OF SCIENCE IN ENTREPRENEURSHIP", "img" => "/images/bse.png"],
+            ["name" => "BACHELOR OF SCIENCE IN CRIMINOLOGY", "img" => "/images/CRIM.png"],
+            ["name" => "BACHELOR OF ELEMENTARY EDUCATION", "img" => "/images/beed.png"],
+            ["name" => "BACHELOR OF EARLY CHILDHOOD EDUCATION", "img" => "/images/beced.png"],
+            ["name" => "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT", "img" => "/images/hm.png"],
+            ["name" => "BACHELOR OF PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
+        ];
+    @endphp
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo">
@@ -1365,6 +1387,10 @@
                         <span class="menu-text">Student Records</span>
                     </a>
                 </li>
+                <li class="menu-item">
+                    
+                </li>
+       
             </ul>
             <h3 class="menu-title">Administration</h3>
             <ul class="menu-items">
@@ -1632,13 +1658,11 @@
                     <h2 class="section-title">Document Requests Management</h2>
                 </div>
                 <div class="document-actions">
-                    <div class="search-bar" style="width: 300px; margin-right: auto;">
+                    <div class="search-bar" style="width: 300px; margin-right: auto; position: relative;">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" placeholder="Search documents...">
+                        <input type="text" placeholder="Search documents..." id="docSearchInput" autocomplete="off">
+                        <ul id="docSearchSuggestions" style="position:absolute;top:38px;left:0;width:100%;background:#fff;z-index:10;list-style:none;padding:0;margin:0;border-radius:0 0 8px 8px;box-shadow:0 4px 12px rgba(0,0,0,0.08);display:none;max-height:180px;overflow-y:auto;"></ul>
                     </div>
-                    <button class="action-btn secondary" id="clearFiltersBtn" style="margin-left: 10px;">
-                        <i class="fas fa-times"></i> Clear Filters
-                    </button>
                 </div>
                 <div class="document-filters">
                     <div class="filter-tabs">
@@ -2632,16 +2656,13 @@ if (importBtn) importBtn.addEventListener('click', function() {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const section = this.getAttribute('data-section');
-                    
                     // Hide ALL sections first
                     document.querySelectorAll('.feature-ui').forEach(ui => {
                         ui.classList.remove('active');
                     });
                     document.getElementById('dashboardSections').style.display = 'none';
-                    
                     // Update page title
                     const pageTitle = document.getElementById('pageTitle');
-                    
                     // Show only the selected section
                     if (section === 'dashboard') {
                         document.getElementById('dashboardSections').style.display = 'block';
@@ -2661,7 +2682,6 @@ if (importBtn) importBtn.addEventListener('click', function() {
                     } else if (section === 'liveChat') {
                         document.getElementById('liveChatUI').classList.add('active');
                         pageTitle.textContent = 'Live Chat Inquiries';
-                        
                         // Initialize live chat when section is activated
                         if (typeof fetchConversations === 'function') {
                             fetchConversations();
@@ -2669,7 +2689,6 @@ if (importBtn) importBtn.addEventListener('click', function() {
                             const chatInput = document.getElementById('chat-input');
                             const sendBtn = document.querySelector('#chat-form button');
                             const chatMessages = document.getElementById('chat-messages');
-                            
                             if (chatHeaderTitle) chatHeaderTitle.textContent = 'Select a conversation';
                             if (chatInput) {
                                 chatInput.value = '';
@@ -2679,7 +2698,6 @@ if (importBtn) importBtn.addEventListener('click', function() {
                             if (chatMessages) chatMessages.innerHTML = '';
                         }
                     }
-                    
                     // Update active menu item
                     document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
                     this.classList.add('active');
@@ -2698,6 +2716,125 @@ if (importBtn) importBtn.addEventListener('click', function() {
         });
 
         // Student Records Department Logo Grid Logic
+
+        // Document Request Filter Tabs, Document Type, Date, and Search Logic with Suggestions
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            const requestRows = document.querySelectorAll('#documentRequestsTable tbody tr');
+            const docTypeSelect = document.querySelector('.filter-select');
+            const dateInput = document.querySelector('.filter-date');
+            const searchInput = document.getElementById('docSearchInput');
+            const suggestionsBox = document.getElementById('docSearchSuggestions');
+
+            function applyFilters(searchOverride) {
+                const activeTab = document.querySelector('.filter-tab.active');
+                const statusFilter = activeTab ? activeTab.textContent.trim().toLowerCase() : 'all requests';
+                const docType = docTypeSelect ? docTypeSelect.value.trim().toLowerCase() : 'all document types';
+                const dateVal = dateInput ? dateInput.value : '';
+                const searchVal = typeof searchOverride === 'string' ? searchOverride : (searchInput ? searchInput.value.trim().toLowerCase() : '');
+
+                requestRows.forEach(row => {
+                    const status = row.getAttribute('data-status') || '';
+                    const documents = row.getAttribute('data-documents') || '';
+                    const date = row.getAttribute('data-date') || '';
+                    const rowText = row.textContent.toLowerCase();
+
+                    let statusMatch = (statusFilter === 'all requests') || (status && status.includes(statusFilter));
+                    let docTypeMatch = (docType === 'all document types') || (documents && documents.includes(docType));
+                    let dateMatch = (!dateVal) || (date === dateVal);
+                    let searchMatch = (!searchVal) || rowText.includes(searchVal);
+
+                    if (statusMatch && docTypeMatch && dateMatch && searchMatch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            // Suggestion logic
+            function getSuggestions(query) {
+                if (!query) return [];
+                const suggestions = new Set();
+                requestRows.forEach(row => {
+                    if (row.style.display === 'none') return; // Only suggest from visible rows
+                    const cells = row.querySelectorAll('td');
+                    cells.forEach(cell => {
+                        const val = cell.textContent.trim();
+                        if (val && val.toLowerCase().includes(query)) {
+                            suggestions.add(val);
+                        }
+                    });
+                });
+                return Array.from(suggestions).slice(0, 8); // Limit to 8 suggestions
+            }
+
+            function showSuggestions(list) {
+                suggestionsBox.innerHTML = '';
+                if (!list.length) {
+                    suggestionsBox.style.display = 'none';
+                    return;
+                }
+                list.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    li.style.padding = '8px 12px';
+                    li.style.cursor = 'pointer';
+                    li.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                        searchInput.value = item;
+                        suggestionsBox.style.display = 'none';
+                        applyFilters(item.toLowerCase());
+                    });
+                    li.addEventListener('mouseover', function() {
+                        li.style.background = '#f5f5f5';
+                    });
+                    li.addEventListener('mouseout', function() {
+                        li.style.background = '#fff';
+                    });
+                    suggestionsBox.appendChild(li);
+                });
+                suggestionsBox.style.display = 'block';
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const val = searchInput.value.trim().toLowerCase();
+                    if (val) {
+                        const suggestions = getSuggestions(val);
+                        showSuggestions(suggestions);
+                    } else {
+                        suggestionsBox.style.display = 'none';
+                        applyFilters();
+                    }
+                });
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        suggestionsBox.style.display = 'none';
+                        applyFilters();
+                    }
+                });
+                // Hide suggestions on blur
+                searchInput.addEventListener('blur', function() {
+                    setTimeout(() => { suggestionsBox.style.display = 'none'; }, 120);
+                });
+            }
+
+            filterTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    applyFilters();
+                });
+            });
+            if (docTypeSelect) {
+                docTypeSelect.addEventListener('change', applyFilters);
+            }
+            if (dateInput) {
+                dateInput.addEventListener('change', applyFilters);
+            }
+        });
         const departmentCards = document.querySelectorAll('.department-logo-card');
         const departmentGrid = document.getElementById('departmentGrid');
         const studentTableSection = document.getElementById('studentTableSection');
@@ -3004,26 +3141,21 @@ if (importBtn) importBtn.addEventListener('click', function() {
             if (clearFiltersBtn) {
                 clearFiltersBtn.addEventListener('click', function() {
                     console.log('Clearing all filters');
-                    
                     // Reset filter tabs
                     filterTabs.forEach(tab => tab.classList.remove('active'));
-                    filterTabs[0].classList.add('active'); // Set "All Requests" as active
-                    
+                    if (filterTabs.length > 0) filterTabs[0].classList.add('active'); // Set "All Requests" as active
                     // Reset document type filter
                     if (documentTypeFilter) {
                         documentTypeFilter.value = 'All Document Types';
                     }
-                    
                     // Reset date filter
                     if (dateFilter) {
                         dateFilter.value = '';
                     }
-                    
                     // Reset search input
                     if (searchInput) {
                         searchInput.value = '';
                     }
-                    
                     // Re-filter the table
                     filterTable();
                 });
@@ -3063,7 +3195,7 @@ if (importBtn) importBtn.addEventListener('click', function() {
                 console.log('Table found:', document.getElementById('documentRequestsTable'));
                 console.log('=====================================');
             }, 1000);
-        });
+    }); // <-- closes document.addEventListener('DOMContentLoaded', ...)
         
         // Document Type Progress Bar Animations
         document.addEventListener('DOMContentLoaded', function() {

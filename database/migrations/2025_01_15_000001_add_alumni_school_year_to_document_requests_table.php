@@ -13,11 +13,7 @@ class AddAlumniSchoolYearToDocumentRequestsTable extends Migration
      */
     public function up()
     {
-        Schema::table('document_requests', function (Blueprint $table) {
-            if (!Schema::hasColumn('document_requests', 'alumni_school_year')) {
-                $table->string('alumni_school_year', 20)->nullable()->after('year_level');
-            }
-        });
+// File deleted as requested
     }
 
     /**
@@ -27,8 +23,6 @@ class AddAlumniSchoolYearToDocumentRequestsTable extends Migration
      */
     public function down()
     {
-        Schema::table('document_requests', function (Blueprint $table) {
-            $table->dropColumn('alumni_school_year');
-        });
+// File deleted as requested
     }
 }

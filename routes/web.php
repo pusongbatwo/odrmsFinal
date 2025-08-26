@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\RegistrarController;
 use App\Http\Controllers\CashierController;
 
+use App\Http\Controllers\AlumniController;
+
 Route::post('/students/store', [RegistrarController::class, 'storeStudent'])->name('students.store');
 
 /*
@@ -48,11 +50,13 @@ Route::get('/registrar/progress-data', [DocumentRequestController::class, 'getPr
 //Route::post('/request', [DocumentRequestController::class, 'store'])->name('request.submit');
 Route::get('/request/success/{reference}', [DocumentRequestController::class, 'success'])->name('request.success');
 
-// ✅ **Document Tracking Routes**
 Route::get('/track', function () {
     return view('track');
 })->name('track.form');
 // Route::post('/track', [DocumentRequestController::class, 'track'])->name('track.submit'); // Uncomment if tracking logic exists
+
+// Alumni resource routes
+Route::resource('alumni', AlumniController::class);
 
 // ✅ **Authentication Routes (Only for Guests)**
 Route::middleware('guest')->group(function () {
