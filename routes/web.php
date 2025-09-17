@@ -50,6 +50,7 @@ Route::get('/registrar/progress-data', [DocumentRequestController::class, 'getPr
 //Route::post('/request', [DocumentRequestController::class, 'store'])->name('request.submit');
 Route::get('/request/success/{reference}', [DocumentRequestController::class, 'success'])->name('request.success');
 
+// ✅ **Document Tracking Routes**
 Route::get('/track', function () {
     return view('track');
 })->name('track.form');
@@ -97,6 +98,7 @@ Route::post('/logout', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/registrar/verify-modal/{id}', [RegistrarController::class, 'verifyModal']);
     Route::post('/registrar/verify/{id}', [RegistrarController::class, 'verify'])->name('registrar.verify');
+    Route::post('/registrar/profile/update', [RegistrarController::class, 'updateProfile'])->name('registrar.profile.update');
     Route::post('/registrar/approve/{id}', [RegistrarController::class, 'approve'])->name('registrar.approve');
     Route::post('/registrar/reject/{id}', [RegistrarController::class, 'reject'])->name('registrar.reject');
     Route::post('/registrar/backup', [RegistrarController::class, 'backup'])->name('registrar.backup');

@@ -445,9 +445,9 @@
 
         .unified-progress-container {
             position: relative;
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 1.5rem;
+            width: 320px;
+            height: 320px;
+            margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -457,8 +457,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 200px;
-            height: 200px;
+            width: 320px;
+            height: 320px;
             transform: rotate(-90deg);
         }
 
@@ -537,10 +537,10 @@
         }
 
         .progress-legend {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            display: flex;
+            flex-direction: row;
             gap: 1rem;
-            margin-top: 1.5rem;
+            margin-top: 0;
         }
 
         .legend-item {
@@ -1387,9 +1387,7 @@
                         <span class="menu-text">Student Records</span>
                     </a>
                 </li>
-                <li class="menu-item">
-                    
-                </li>
+               
        
             </ul>
             <h3 class="menu-title">Administration</h3>
@@ -1417,14 +1415,43 @@
         </div>
         <div class="sidebar-footer">
             <div class="user-profile">
-                <img src="https://randomuser.me/api/portraits/women/45.jpg" alt="User" class="avatar">
+                <img src="https://randomuser.me/api/portraits/women/45.jpg" alt="User" class="avatar" id="profileAvatar">
                 <div class="user-details">
-                    <div class="user-name">Sarah Johnson</div>
+                    <div class="user-name" id="profileUsername">Sarah Johnson</div>
                     <div class="user-role">Registrar Admin</div>
                 </div>
+                <button id="editProfileBtn" style="margin-left:8px; background:#8B0000; color:#fff; border:none; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:12px;">Edit</button>
             </div>
         </div>
     </aside>
+    <!-- Profile Edit Modal -->
+    <div id="profileEditModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:12px; padding:2rem; width:350px; max-width:95vw; position:relative; box-shadow:0 4px 24px rgba(0,0,0,0.15);">
+            <button id="closeProfileModal" style="position:absolute; top:12px; right:12px; background:none; border:none; font-size:22px; color:#8B0000; cursor:pointer;">&times;</button>
+            <h2 style="text-align:center; color:#8B0000; font-size:20px; margin-bottom:1.2rem;">Edit Profile</h2>
+            <form id="profileEditForm" enctype="multipart/form-data" method="POST" action="{{ route('registrar.profile.update') }}">
+                @csrf
+                <div style="text-align:center; margin-bottom:1rem;">
+                    <img id="editAvatarPreview" src="https://randomuser.me/api/portraits/women/45.jpg" alt="Avatar" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid #8B0000;">
+                    <br>
+                    <input type="file" name="avatar" id="avatarInput" accept="image/*" style="margin-top:8px;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label for="username" style="font-weight:600; color:#8B0000;">Username</label>
+                    <input type="text" name="username" id="editUsername" value="Sarah Johnson" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; margin-top:4px;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label for="password" style="font-weight:600; color:#8B0000;">New Password</label>
+                    <input type="password" name="password" id="editPassword" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; margin-top:4px;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label for="password_confirmation" style="font-weight:600; color:#8B0000;">Confirm Password</label>
+                    <input type="password" name="password_confirmation" id="editPasswordConfirm" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; margin-top:4px;">
+                </div>
+                <button type="submit" style="width:100%; background:#8B0000; color:#fff; border:none; border-radius:6px; padding:10px; font-size:15px; font-weight:600; cursor:pointer;">Save Changes</button>
+            </form>
+        </div>
+    </div>
     <main class="main-content">
         <div class="header">
             <div class="page-title">
@@ -1437,6 +1464,38 @@
 
         </div>
 
+        <script>
+        // Profile modal logic
+        document.addEventListener('DOMContentLoaded', function() {
+            var editBtn = document.getElementById('editProfileBtn');
+            var modal = document.getElementById('profileEditModal');
+            var closeBtn = document.getElementById('closeProfileModal');
+            var avatarInput = document.getElementById('avatarInput');
+            var avatarPreview = document.getElementById('editAvatarPreview');
+            var profileAvatar = document.getElementById('profileAvatar');
+            var profileUsername = document.getElementById('profileUsername');
+            var editUsername = document.getElementById('editUsername');
+
+            editBtn.onclick = function() {
+                modal.style.display = 'flex';
+                // Set current avatar and username
+                avatarPreview.src = profileAvatar.src;
+                editUsername.value = profileUsername.textContent;
+            };
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            };
+            avatarInput.onchange = function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(ev) {
+                        avatarPreview.src = ev.target.result;
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            };
+        });
+        </script>
         <!-- Dashboard Sections -->
         <div class="dashboard-sections" id="dashboardSections" style="display: block;">
             <div class="dashboard-content">
@@ -1498,95 +1557,152 @@
                 </div>
             </div>
             <div class="dashboard-content">
-                <div class="unified-progress-card">
-                    <h3 style="margin-bottom: 1.5rem; color: var(--primary); font-size: 1.25rem; font-weight: 600;">
-                        📊 Request Status Overview
-                    </h3>
-                    <div class="unified-progress-container">
-                        <svg class="unified-progress-svg" viewBox="0 0 200 200">
-                            <!-- Background circle -->
-                            <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="16"/>
-                            
-                            @php
-                                $total = ($analytics['pending'] ?? 0) + ($analytics['approved'] ?? 0) + ($analytics['completed'] ?? 0) + ($analytics['rejected'] ?? 0);
-                                $pendingPercent = $total > 0 ? ($analytics['pending'] ?? 0) / $total * 100 : 0;
-                                $approvedPercent = $total > 0 ? ($analytics['approved'] ?? 0) / $total * 100 : 0;
-                                $completedPercent = $total > 0 ? ($analytics['completed'] ?? 0) / $total * 100 : 0;
-                                $rejectedPercent = $total > 0 ? ($analytics['rejected'] ?? 0) / $total * 100 : 0;
-                                
-                                $circumference = 2 * M_PI * 80;
-                                $pendingDash = $total > 0 ? ($pendingPercent / 100) * $circumference : 0;
-                                $approvedDash = $total > 0 ? ($approvedPercent / 100) * $circumference : 0;
-                                $completedDash = $total > 0 ? ($completedPercent / 100) * $circumference : 0;
-                                $rejectedDash = $total > 0 ? ($rejectedPercent / 100) * $circumference : 0;
-                            @endphp
-                            
-                            <!-- Completed Requests (Green) - Start from top -->
-                            <circle cx="100" cy="100" r="80" fill="none" stroke="#4CAF50" stroke-width="16" 
-                                    stroke-dasharray="{{ $completedDash }} {{ $circumference - $completedDash }}" 
-                                    stroke-dashoffset="0" 
-                                    class="progress-segment completed-segment" 
-                                    style="--dash-array: {{ $completedDash }} {{ $circumference - $completedDash }}; --percent: {{ $completedPercent }};"/>
-                            
-                            <!-- Approved Requests (Blue) - After completed -->
-                            <circle cx="100" cy="100" r="80" fill="none" stroke="#2196F3" stroke-width="16" 
-                                    stroke-dasharray="{{ $approvedDash }} {{ $circumference - $approvedDash }}" 
-                                    stroke-dashoffset="{{ -$completedDash }}" 
-                                    class="progress-segment approved-segment" 
-                                    style="--dash-array: {{ $approvedDash }} {{ $circumference - $approvedDash }}; --dash-offset: {{ -$completedDash }}; --percent: {{ $approvedPercent }};"/>
-                            
-                            <!-- Pending Requests (Yellow) - After approved -->
-                            <circle cx="100" cy="100" r="80" fill="none" stroke="#FFC107" stroke-width="16" 
-                                    stroke-dasharray="{{ $pendingDash }} {{ $circumference - $pendingDash }}" 
-                                    stroke-dashoffset="{{ -($completedDash + $approvedDash) }}" 
-                                    class="progress-segment pending-segment" 
-                                    style="--dash-array: {{ $pendingDash }} {{ $circumference - $pendingDash }}; --dash-offset: {{ -($completedDash + $approvedDash) }}; --percent: {{ $pendingPercent }};"/>
-                            
-                            <!-- Rejected Requests (Red) - After pending -->
-                            <circle cx="100" cy="100" r="80" fill="none" stroke="#F44336" stroke-width="16" 
-                                    stroke-dasharray="{{ $rejectedDash }} {{ $circumference - $rejectedDash }}" 
-                                    stroke-dashoffset="{{ -($completedDash + $approvedDash + $pendingDash) }}" 
-                                    class="progress-segment rejected-segment" 
-                                    style="--dash-array: {{ $rejectedDash }} {{ $circumference - $rejectedDash }}; --dash-offset: {{ -($completedDash + $approvedDash + $pendingDash) }}; --percent: {{ $rejectedPercent }};"/>
-                        </svg>
-                        <div class="unified-progress-center">
-                            <div class="total-requests" id="totalRequests">{{ ($analytics['pending'] ?? 0) + ($analytics['approved'] ?? 0) + ($analytics['completed'] ?? 0) + ($analytics['rejected'] ?? 0) }}</div>
-                            <div class="total-label">Total Requests</div>
+                <div class="unified-progress-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 340px;">
+                    <div style="width: 100%; text-align: center; margin-bottom: 12px;">
+                        <span style="font-size: 24px; font-weight: 700; color: #8B0000; letter-spacing: 1px;">Request Status Overview</span>
+                    </div>
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; width: 100%; gap: 0.5rem;">
+                    @php
+                        $total = ($analytics['pending'] ?? 0) + ($analytics['approved'] ?? 0) + ($analytics['completed'] ?? 0) + ($analytics['rejected'] ?? 0);
+                        $pendingPercent = $total > 0 ? ($analytics['pending'] ?? 0) / $total * 100 : 0;
+                        $approvedPercent = $total > 0 ? ($analytics['approved'] ?? 0) / $total * 100 : 0;
+                        $completedPercent = $total > 0 ? ($analytics['completed'] ?? 0) / $total * 100 : 0;
+                        $rejectedPercent = $total > 0 ? ($analytics['rejected'] ?? 0) / $total * 100 : 0;
+                        $circumference = 2 * M_PI * 80;
+                        $pendingDash = $total > 0 ? ($pendingPercent / 100) * $circumference : 0;
+                        $approvedDash = $total > 0 ? ($approvedPercent / 100) * $circumference : 0;
+                        $completedDash = $total > 0 ? ($completedPercent / 100) * $circumference : 0;
+                        $rejectedDash = $total > 0 ? ($rejectedPercent / 100) * $circumference : 0;
+                    @endphp
+                        <div class="progress-legend" style="flex: 0.8; display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-center; justify-content: center; min-width: 120px; margin-right: 0.5rem; padding: 0 0.5rem;">
+                        <div class="legend-item" data-status="rejected" style="display: flex; align-items: center; gap: 6px; padding: 2px 4px; min-width: 120px; cursor: pointer; transition: background 0.2s;">
+                            <div class="legend-color rejected-color" style="width: 22px; height: 22px;"></div>
+                            <span class="legend-label" style="font-size: 18px; font-weight: 600; color: #F44336;">Rejected</span>
+                        </div>
+                        <div class="legend-item" data-status="pending" style="display: flex; align-items: center; gap: 6px; padding: 2px 4px; min-width: 120px; cursor: pointer; transition: background 0.2s;">
+                            <div class="legend-color pending-color" style="width: 22px; height: 22px;"></div>
+                            <span class="legend-label" style="font-size: 18px; font-weight: 600; color: #FFC107;">Pending</span>
+                        </div>
+                        <div class="legend-item" data-status="approved" style="display: flex; align-items: center; gap: 6px; padding: 2px 4px; min-width: 120px; cursor: pointer; transition: background 0.2s;">
+                            <div class="legend-color approved-color" style="width: 22px; height: 22px;"></div>
+                            <span class="legend-label" style="font-size: 18px; font-weight: 600; color: #2196F3;">Approved</span>
+                        </div>
+                        <div class="legend-item" data-status="completed" style="display: flex; align-items: center; gap: 6px; padding: 2px 4px; min-width: 120px; cursor: pointer; transition: background 0.2s;">
+                            <div class="legend-color completed-color" style="width: 22px; height: 22px;"></div>
+                            <span class="legend-label" style="font-size: 18px; font-weight: 600; color: #4CAF50;">Completed</span>
                         </div>
                     </div>
-                    <div class="progress-legend">
-                        <div class="legend-item">
-                            <div class="legend-color completed-color"></div>
-                            <div class="legend-text">
-                                <span class="legend-label">✅ Completed</span>
-                                <span class="legend-value" id="completedLegendValue">{{ $analytics['completed'] ?? 0 }}</span>
-                                <span class="legend-percent" id="completedLegendPercent">{{ $total > 0 ? round(($analytics['completed'] ?? 0) / $total * 100, 1) : 0 }}%</span>
+                        <div class="unified-progress-container" style="flex: 1.1; width: 320px; height: 320px; min-width: 320px; min-height: 320px; margin-left: 0.5rem; position: relative; display: flex; align-items: center; justify-content: center;">
+                        <svg class="unified-progress-svg" viewBox="0 0 200 200" style="width: 320px; height: 320px;">
+                            <!-- Background circle -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="16"/>
+                            <!-- Rejected Requests (Red) - First -->
+                            <circle id="rejectedSegment" cx="100" cy="100" r="80" fill="none" stroke="#F44336" stroke-width="16" 
+                                stroke-dasharray="{{ $rejectedDash }} {{ $circumference - $rejectedDash }}" 
+                                stroke-dashoffset="0" 
+                                class="progress-segment rejected-segment" 
+                                style="--dash-array: {{ $rejectedDash }} {{ $circumference - $rejectedDash }}; --percent: {{ $rejectedPercent }}; transition: opacity 0.5s;"/>
+                            <!-- Pending Requests (Yellow) - After rejected -->
+                            <circle id="pendingSegment" cx="100" cy="100" r="80" fill="none" stroke="#FFC107" stroke-width="16" 
+                                stroke-dasharray="{{ $pendingDash }} {{ $circumference - $pendingDash }}" 
+                                stroke-dashoffset="{{ -$rejectedDash }}" 
+                                class="progress-segment pending-segment" 
+                                style="--dash-array: {{ $pendingDash }} {{ $circumference - $pendingDash }}; --dash-offset: {{ -$rejectedDash }}; --percent: {{ $pendingPercent }}; transition: opacity 0.5s;"/>
+                            <!-- Approved Requests (Blue) - After pending -->
+                            <circle id="approvedSegment" cx="100" cy="100" r="80" fill="none" stroke="#2196F3" stroke-width="16" 
+                                stroke-dasharray="{{ $approvedDash }} {{ $circumference - $approvedDash }}" 
+                                stroke-dashoffset="{{ -($rejectedDash + $pendingDash) }}" 
+                                class="progress-segment approved-segment" 
+                                style="--dash-array: {{ $approvedDash }} {{ $circumference - $approvedDash }}; --dash-offset: {{ -($rejectedDash + $pendingDash) }}; --percent: {{ $approvedPercent }}; transition: opacity 0.5s;"/>
+                            <!-- Completed Requests (Green) - After approved -->
+                            <circle id="completedSegment" cx="100" cy="100" r="80" fill="none" stroke="#4CAF50" stroke-width="16" 
+                                stroke-dasharray="{{ $completedDash }} {{ $circumference - $completedDash }}" 
+                                stroke-dashoffset="{{ -($rejectedDash + $pendingDash + $approvedDash) }}" 
+                                class="progress-segment completed-segment" 
+                                style="--dash-array: {{ $completedDash }} {{ $circumference - $completedDash }}; --percent: {{ $completedPercent }}; transition: opacity 0.5s;"/>
+                        </svg>
+                            <div class="unified-progress-center" style="top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+                                <div class="total-requests" id="totalRequests" style="font-size: 64px; font-weight: bold; color: #8B0000; margin-bottom: 2px; text-align: center;">{{ $total }}</div>
+                                <div class="total-label" id="centerLabel" style="font-size: 16px; color: #616161; text-align: center;">Total Requests</div>
                             </div>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color approved-color"></div>
-                            <div class="legend-text">
-                                <span class="legend-label">🟦 Approved</span>
-                                <span class="legend-value" id="approvedLegendValue">{{ $analytics['approved'] ?? 0 }}</span>
-                                <span class="legend-percent" id="approvedLegendPercent">{{ $total > 0 ? round(($analytics['approved'] ?? 0) / $total * 100, 1) : 0 }}%</span>
-                            </div>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color pending-color"></div>
-                            <div class="legend-text">
-                                <span class="legend-label">🟨 Pending</span>
-                                <span class="legend-value" id="pendingLegendValue">{{ $analytics['pending'] ?? 0 }}</span>
-                                <span class="legend-percent" id="pendingLegendPercent">{{ $total > 0 ? round(($analytics['pending'] ?? 0) / $total * 100, 1) : 0 }}%</span>
-                            </div>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color rejected-color"></div>
-                            <div class="legend-text">
-                                <span class="legend-label">❌ Rejected</span>
-                                <span class="legend-value" id="rejectedLegendValue">{{ $analytics['rejected'] ?? 0 }}</span>
-                                <span class="legend-percent" id="rejectedLegendPercent">{{ $total > 0 ? round(($analytics['rejected'] ?? 0) / $total * 100, 1) : 0 }}%</span>
-                            </div>
-                        </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const legendItems = document.querySelectorAll('.legend-item');
+    const segments = {
+        rejected: document.getElementById('rejectedSegment'),
+        pending: document.getElementById('pendingSegment'),
+        approved: document.getElementById('approvedSegment'),
+        completed: document.getElementById('completedSegment')
+    };
+    const totalRequests = {
+        rejected: {{ $analytics['rejected'] ?? 0 }},
+        pending: {{ $analytics['pending'] ?? 0 }},
+        approved: {{ $analytics['approved'] ?? 0 }},
+        completed: {{ $analytics['completed'] ?? 0 }},
+        all: {{ $total }}
+    };
+    const centerLabel = document.getElementById('centerLabel');
+    const totalRequestsLabel = document.getElementById('totalRequests');
+    let activeStatus = null;
+
+    legendItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const status = item.getAttribute('data-status');
+            activeStatus = status;
+            // Hide all segments except selected, fill donut with selected color and keep it until reset
+            Object.keys(segments).forEach(key => {
+                if (key === status) {
+                    segments[key].style.display = '';
+                    segments[key].style.transition = 'stroke 0.6s, opacity 0.6s';
+                    segments[key].style.stroke = getStatusColor(key);
+                    segments[key].setAttribute('stroke-dasharray', '502.4 0'); // fill whole donut
+                    segments[key].style.opacity = '1';
+                } else {
+                    segments[key].style.display = 'none';
+                }
+            });
+            // Update center label and number
+            totalRequestsLabel.textContent = totalRequests[status];
+            centerLabel.textContent = item.querySelector('.legend-label').textContent + ' Requests';
+            // Highlight active legend
+            legendItems.forEach(li => li.style.background = '#f8f9fa');
+            item.style.background = '#e0e0e0';
+        });
+    });
+
+    function getStatusColor(status) {
+        switch(status) {
+            case 'rejected': return '#F44336';
+            case 'pending': return '#FFC107';
+            case 'approved': return '#2196F3';
+            case 'completed': return '#4CAF50';
+            default: return '#f0f0f0';
+        }
+    }
+
+    // Reset on double click anywhere in chart
+    document.querySelector('.unified-progress-svg').addEventListener('dblclick', function() {
+        Object.keys(segments).forEach(key => {
+            segments[key].style.display = '';
+            segments[key].style.transition = 'stroke 0.6s, opacity 0.6s';
+            segments[key].style.stroke = getStatusColor(key);
+            // Restore original dasharray
+            switch(key) {
+                case 'rejected': segments[key].setAttribute('stroke-dasharray', '{{ $rejectedDash }} {{ $circumference - $rejectedDash }}'); break;
+                case 'pending': segments[key].setAttribute('stroke-dasharray', '{{ $pendingDash }} {{ $circumference - $pendingDash }}'); break;
+                case 'approved': segments[key].setAttribute('stroke-dasharray', '{{ $approvedDash }} {{ $circumference - $approvedDash }}'); break;
+                case 'completed': segments[key].setAttribute('stroke-dasharray', '{{ $completedDash }} {{ $circumference - $completedDash }}'); break;
+            }
+            segments[key].style.opacity = '1';
+        });
+        totalRequestsLabel.textContent = totalRequests['all'];
+        centerLabel.textContent = 'Total Requests';
+        legendItems.forEach(li => li.style.background = '#f8f9fa');
+        activeStatus = null;
+    });
+});
+</script>
+                    </div>
                     </div>
                 </div>
             </div>

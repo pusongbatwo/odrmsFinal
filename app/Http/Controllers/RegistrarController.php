@@ -16,6 +16,38 @@ use App\Models\CashierLog;
 
 class RegistrarController extends Controller
 {
+    // Profile update handler
+    public function updateProfile(Request $request)
+    {
+        // TODO: Implement avatar, username, and password update logic
+        // Validate input
+        $request->validate([
+            'username' => 'required|string|max:255',
+            'password' => 'nullable|string|min:8|confirmed',
+            'avatar' => 'nullable|image|max:2048',
+        ]);
+
+        // Get current user
+        $user = auth()->user();
+
+        // Update username
+        $user->username = $request->input('username');
+
+        // Update password if provided
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->input('password'));
+        }
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $avatarPath;
+        }
+
+        $user->save();
+
+        return back()->with('success', 'Profile updated successfully.');
+    }
     // AJAX endpoint for Verify Modal
     public function verifyModal($id)
     {

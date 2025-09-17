@@ -17,6 +17,7 @@ class CreateUsersTable extends Migration
             $table->string('email', 100)->unique();
             $table->string('password', 255);
             $table->enum('role', ['admin', 'registrar', 'cashier']);
+            $table->string('avatar', 255)->nullable(); // Profile image path
             $table->timestamp('created_at')->useCurrent();
             // No updated_at for strict match, add if you want
         });
