@@ -41,4 +41,11 @@ return [
         'Other' => 250,
     ],
 
+'google_drive' => [
+    'credentials' => storage_path('app/student-records-472520-602ab733d3da.json'),
+],
+
+
+
+
 ];

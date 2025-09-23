@@ -17,6 +17,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Registrar Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #8B0000;
@@ -445,9 +447,10 @@
 
         .unified-progress-container {
             position: relative;
-            width: 320px;
-            height: 320px;
-            margin: 0;
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 1/1;
+            margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -457,8 +460,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 320px;
-            height: 320px;
+            width: 100%;
+            height: 100%;
             transform: rotate(-90deg);
         }
 
@@ -521,26 +524,64 @@
             transform: translate(-50%, -50%);
             text-align: center;
             z-index: 10;
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .total-requests {
-            font-size: 32px;
+            font-size: 3.5vw;
             font-weight: 700;
             color: var(--primary);
             line-height: 1;
+            word-break: break-word;
         }
 
         .total-label {
-            font-size: 14px;
+            font-size: 1.2vw;
             color: var(--gray-dark);
             margin-top: 4px;
+            word-break: break-word;
+        @media (max-width: 600px) {
+            .unified-progress-container {
+                max-width: 220px;
+            }
+            .unified-progress-svg {
+                max-width: 220px;
+                max-height: 220px;
+            }
+            .unified-progress-center {
+                width: 90%;
+            }
+            .total-requests {
+                font-size: 28px;
+            }
+            .total-label {
+                font-size: 12px;
+            }
+        }
         }
 
         .progress-legend {
             display: flex;
             flex-direction: row;
-            gap: 1rem;
-            margin-top: 0;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0;
+            align-items: center;
+        @media (max-width: 600px) {
+            .progress-legend {
+                flex-direction: column;
+                gap: 0.3rem;
+                margin-top: 0.3rem;
+                align-items: flex-start;
+            }
+            .legend-item {
+                min-width: 0;
+                font-size: 14px;
+            }
+        }
         }
 
         .legend-item {
@@ -1415,12 +1456,11 @@
         </div>
         <div class="sidebar-footer">
             <div class="user-profile">
-                <img src="https://randomuser.me/api/portraits/women/45.jpg" alt="User" class="avatar" id="profileAvatar">
+                <img src="{{ auth()->user() && auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : 'https://randomuser.me/api/portraits/women/45.jpg' }}" alt="User" class="avatar" id="profileAvatar">
                 <div class="user-details">
-                    <div class="user-name" id="profileUsername">Sarah Johnson</div>
-                    <div class="user-role">Registrar Admin</div>
+                    <div class="user-name" id="profileUsername">{{ auth()->user() ? auth()->user()->username : 'Guest' }}</div>
+                    <div class="user-role">{{ auth()->user() ? ucfirst(auth()->user()->role) : 'Role' }}</div>
                 </div>
-                <button id="editProfileBtn" style="margin-left:8px; background:#8B0000; color:#fff; border:none; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:12px;">Edit</button>
             </div>
         </div>
     </aside>
@@ -1432,13 +1472,13 @@
             <form id="profileEditForm" enctype="multipart/form-data" method="POST" action="{{ route('registrar.profile.update') }}">
                 @csrf
                 <div style="text-align:center; margin-bottom:1rem;">
-                    <img id="editAvatarPreview" src="https://randomuser.me/api/portraits/women/45.jpg" alt="Avatar" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid #8B0000;">
+                    <img id="editAvatarPreview" src="{{ auth()->user() && auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : 'https://randomuser.me/api/portraits/women/45.jpg' }}" alt="Avatar" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid #8B0000;">
                     <br>
                     <input type="file" name="avatar" id="avatarInput" accept="image/*" style="margin-top:8px;">
                 </div>
                 <div style="margin-bottom:1rem;">
                     <label for="username" style="font-weight:600; color:#8B0000;">Username</label>
-                    <input type="text" name="username" id="editUsername" value="Sarah Johnson" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; margin-top:4px;">
+                    <input type="text" name="username" id="editUsername" value="{{ auth()->user() ? auth()->user()->username : '' }}" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; margin-top:4px;">
                 </div>
                 <div style="margin-bottom:1rem;">
                     <label for="password" style="font-weight:600; color:#8B0000;">New Password</label>
@@ -1449,6 +1489,10 @@
                     <input type="password" name="password_confirmation" id="editPasswordConfirm" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; margin-top:4px;">
                 </div>
                 <button type="submit" style="width:100%; background:#8B0000; color:#fff; border:none; border-radius:6px; padding:10px; font-size:15px; font-weight:600; cursor:pointer;">Save Changes</button>
+            </form>
+            <form method="POST" action="{{ route('logout') }}" style="margin-top:1.2rem;">
+                @csrf
+                <button type="submit" style="width:100%; background:#F44336; color:#fff; border:none; border-radius:6px; padding:10px; font-size:15px; font-weight:600; cursor:pointer;">Logout</button>
             </form>
         </div>
     </div>
@@ -1467,7 +1511,6 @@
         <script>
         // Profile modal logic
         document.addEventListener('DOMContentLoaded', function() {
-            var editBtn = document.getElementById('editProfileBtn');
             var modal = document.getElementById('profileEditModal');
             var closeBtn = document.getElementById('closeProfileModal');
             var avatarInput = document.getElementById('avatarInput');
@@ -1476,12 +1519,15 @@
             var profileUsername = document.getElementById('profileUsername');
             var editUsername = document.getElementById('editUsername');
 
-            editBtn.onclick = function() {
-                modal.style.display = 'flex';
-                // Set current avatar and username
-                avatarPreview.src = profileAvatar.src;
-                editUsername.value = profileUsername.textContent;
-            };
+            // Show modal when user-profile is clicked
+            var userProfile = document.querySelector('.user-profile');
+            if (userProfile) {
+                userProfile.onclick = function() {
+                    modal.style.display = 'flex';
+                    avatarPreview.src = profileAvatar.src;
+                    editUsername.value = profileUsername.textContent;
+                };
+            }
             closeBtn.onclick = function() {
                 modal.style.display = 'none';
             };
@@ -1561,7 +1607,7 @@
                     <div style="width: 100%; text-align: center; margin-bottom: 12px;">
                         <span style="font-size: 24px; font-weight: 700; color: #8B0000; letter-spacing: 1px;">Request Status Overview</span>
                     </div>
-                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; width: 100%; gap: 0.5rem;">
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; max-width: 540px; width: 100%; margin: 0 auto 0.5rem auto; padding: 0.5rem 0; gap: 0.1rem;">
                     @php
                         $total = ($analytics['pending'] ?? 0) + ($analytics['approved'] ?? 0) + ($analytics['completed'] ?? 0) + ($analytics['rejected'] ?? 0);
                         $pendingPercent = $total > 0 ? ($analytics['pending'] ?? 0) / $total * 100 : 0;
@@ -1574,8 +1620,8 @@
                         $completedDash = $total > 0 ? ($completedPercent / 100) * $circumference : 0;
                         $rejectedDash = $total > 0 ? ($rejectedPercent / 100) * $circumference : 0;
                     @endphp
-                        <div class="progress-legend" style="flex: 0.8; display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-center; justify-content: center; min-width: 120px; margin-right: 0.5rem; padding: 0 0.5rem;">
-                        <div class="legend-item" data-status="rejected" style="display: flex; align-items: center; gap: 6px; padding: 2px 4px; min-width: 120px; cursor: pointer; transition: background 0.2s;">
+                        <div class="progress-legend" style="flex: 0.8; display: flex; flex-direction: column; gap: 0.1rem; align-items: flex-center; justify-content: center; min-width: 120px; margin-right: 0; padding: 0 0.2rem;">
+                        <div class="legend-item" data-status="rejected" style="display: flex; align-items: center; gap: 5px; padding: 2px 4px; min-width: 120px; cursor: pointer; transition: background 0.2s;">
                             <div class="legend-color rejected-color" style="width: 22px; height: 22px;"></div>
                             <span class="legend-label" style="font-size: 18px; font-weight: 600; color: #F44336;">Rejected</span>
                         </div>
@@ -1593,7 +1639,7 @@
                         </div>
                     </div>
                         <div class="unified-progress-container" style="flex: 1.1; width: 320px; height: 320px; min-width: 320px; min-height: 320px; margin-left: 0.5rem; position: relative; display: flex; align-items: center; justify-content: center;">
-                        <svg class="unified-progress-svg" viewBox="0 0 200 200" style="width: 320px; height: 320px;">
+                        <svg class="unified-progress-svg" viewBox="0 0 200 200">
                             <!-- Background circle -->
                             <circle cx="100" cy="100" r="80" fill="none" stroke="#f0f0f0" stroke-width="16"/>
                             <!-- Rejected Requests (Red) - First -->
@@ -1622,11 +1668,95 @@
                                 style="--dash-array: {{ $completedDash }} {{ $circumference - $completedDash }}; --percent: {{ $completedPercent }}; transition: opacity 0.5s;"/>
                         </svg>
                             <div class="unified-progress-center" style="top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
-                                <div class="total-requests" id="totalRequests" style="font-size: 64px; font-weight: bold; color: #8B0000; margin-bottom: 2px; text-align: center;">{{ $total }}</div>
-                                <div class="total-label" id="centerLabel" style="font-size: 16px; color: #616161; text-align: center;">Total Requests</div>
+                                <div class="total-requests" id="totalRequests">{{ $total }}</div>
+                                <div class="total-label" id="centerLabel">Total Requests</div>
                             </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Backup/Sync Student Records to Google Drive
+const backSyncBtn = document.getElementById('backSyncStudentRecordsBtn');
+
+backSyncBtn.addEventListener('click', function() {
+    backSyncBtn.disabled = true;
+    backSyncBtn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Syncing...';
+
+    fetch('/students/backup-google-drive', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        backSyncBtn.disabled = false;
+        backSyncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Back/Sync';
+
+        // Use server message directly
+        Swal.fire({
+            icon: data.success ? 'success' : 'error',
+            title: data.success ? 'Backup Successful!' : 'Backup Failed',
+            text: data.message || (data.success 
+                ? 'Student records have been synced to Google Drive.' 
+                : 'Could not sync student records to Google Drive.'),
+            confirmButtonColor: '#8B0000',
+        });
+    })
+    .catch(error => {
+        backSyncBtn.disabled = false;
+        backSyncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Back/Sync';
+        Swal.fire({
+            icon: 'error',
+            title: 'Backup Failed',
+            text: 'Network or server error occurred. Please try again.',
+            confirmButtonColor: '#8B0000',
+        });
+        console.error('Backup error:', error);
+    });
+});
+
+    // Print Student Records
+    const printBtn = document.getElementById('printStudentRecordsBtn');
+    printBtn.addEventListener('click', function() {
+        const tableSection = document.getElementById('studentRecordsTableSection');
+        const table = tableSection.querySelector('table');
+        if (!table) {
+            alert('No student records to print.');
+            return;
+        }
+        const printWindow = window.open('', '', 'width=900,height=700');
+        printWindow.document.write('<html><head><title>Print Student Records</title>');
+        printWindow.document.write('<style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #888;padding:8px;text-align:left;}th{background:#f5f5f5;}</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write('<h2>Student Records</h2>');
+        printWindow.document.write(table.outerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    });
+    // Export Student Records to CSV
+    const exportBtn = document.getElementById('exportStudentRecordsBtn');
+    exportBtn.addEventListener('click', function() {
+        let rows = Array.from(document.querySelectorAll('#studentRecordsTableSection table tbody tr'));
+        if (rows.length === 0) {
+            alert('No student records to export.');
+            return;
+        }
+        let csv = 'Student ID,Name,Program,Year Level,School Year\n';
+        rows.forEach(row => {
+            let cols = Array.from(row.querySelectorAll('td')).map(td => '"' + td.innerText.replace(/"/g, '""') + '"');
+            csv += cols.join(',') + '\n';
+        });
+        let blob = new Blob([csv], { type: 'text/csv' });
+        let link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'student_records.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
     const legendItems = document.querySelectorAll('.legend-item');
     const segments = {
         rejected: document.getElementById('rejectedSegment'),
@@ -1863,6 +1993,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="section-header">
                     <h2 class="section-title">Student Records Management</h2>
                 </div>
+                <!-- Student Table and Filters (hidden by default) -->
+<div id="studentTableSection" style="display: none;">
+    <div class="student-actions" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-bottom:1.5rem;">
+        <button class="action-btn primary" id="openAddStudentModalBtn" style="background:#8B0000;color:#fff;font-weight:600;letter-spacing:1px;">
+            <i class="fas fa-user-plus"></i> Add Student Manually
+        </button>
+        <button class="import-btn" id="openImportStudentModalBtn">
+            <i class="fas fa-file-import"></i> Import Student Records
+        </button>
+        <button class="action-btn secondary" id="backToGridBtn" style="margin-left: 10px;">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+    </div>
+</div>
                 <!-- Department Logo Grid -->
                 <div id="departmentGrid" style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; margin-bottom: 2rem;">
                     @php
@@ -1900,6 +2044,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <option value="{{ $sy }}">{{ $sy }}</option>
                             @endforeach
                         </select>
+                        <button id="exportStudentRecordsBtn" style="background:#4CAF50;color:#fff;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
+                            <i class="fas fa-file-export"></i> Export Records
+                        </button>
+                        <button id="printStudentRecordsBtn" style="background:#FFC107;color:#222;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
+                            <i class="fas fa-print"></i> Print Records
+                        </button>
+                        <button id="backSyncStudentRecordsBtn" style="background:#8B0000;color:#fff;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
+                            <i class="fas fa-sync-alt"></i> Back/Sync
+                        </button>
                     </div>
                     <div style="max-height:60vh;overflow-y:auto;">
                         <table style="width:100%;border-collapse:collapse;">
@@ -1925,22 +2078,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <!-- Hidden file input for logo upload -->
                 <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
-                <!-- Student Table and Filters (hidden by default) -->
-
-<div id="studentTableSection" style="display: none;">
-    <div class="student-actions" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-bottom:1.5rem;">
-        <button class="action-btn primary" id="openAddStudentModalBtn" style="background:#8B0000;color:#fff;font-weight:600;letter-spacing:1px;">
-            <i class="fas fa-user-plus"></i> Add Student Manually
-        </button>
-        <button class="import-btn" id="openImportStudentModalBtn">
-            <i class="fas fa-file-import"></i> Import Student Records
-        </button>
-        <button class="action-btn secondary" id="backToGridBtn" style="margin-left: 10px;">
-            <i class="fas fa-arrow-left"></i> Back
-        </button>
-    </div>
-</div>
-
 <!-- Add Student Modal -->
 <div id="addStudentModal" class="import-modal" style="display:none;z-index:2001;">
     <div class="import-modal-content" style="border-top:6px solid #8B0000;">
@@ -2191,18 +2328,58 @@ if (importBtn) importBtn.addEventListener('click', function() {
 
         <!-- Reports UI -->
         <div id="reportsUI" class="feature-ui">
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var exportReportBtn = document.getElementById('exportReportBtn');
+            if (exportReportBtn) {
+                exportReportBtn.addEventListener('click', function() {
+                    exportReportBtn.disabled = true;
+                    exportReportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+                    // Determine active tab
+                    var activeTab = document.querySelector('.report-tab.active');
+                    var tabType = 'document_requests';
+                    if (activeTab) {
+                        if (activeTab.textContent.includes('Student Records')) tabType = 'student_records';
+                        else if (activeTab.textContent.includes('User Activity')) tabType = 'user_activity';
+                    }
+                    fetch('/registrar/report/export?type=' + encodeURIComponent(tabType), {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/csv',
+                        },
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Export failed');
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = tabType + '_report.csv';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        exportReportBtn.disabled = false;
+                        exportReportBtn.innerHTML = '<i class="fas fa-file-export"></i> Export Report';
+                    })
+                    .catch(error => {
+                        exportReportBtn.disabled = false;
+                        exportReportBtn.innerHTML = '<i class="fas fa-file-export"></i> Export Report';
+                        alert('Failed to export report. Please try again.');
+                    });
+                });
+            }
+        });
+        </script>
             <div class="recent-requests">
                 <div class="section-header">
                     <h2 class="section-title">System Reports</h2>
                     <div class="report-actions">
-                        <button class="action-btn primary">
+                        <button class="action-btn primary" id="exportReportBtn">
                             <i class="fas fa-file-export"></i> Export Report
                         </button>
-                        <div class="date-range-picker">
-                            <input type="date" class="filter-date">
-                            <span>to</span>
-                            <input type="date" class="filter-date">
-                        </div>
+                        <!-- Date range picker removed as requested -->
                     </div>
                 </div>
                 <div class="report-tabs">
@@ -2211,24 +2388,62 @@ if (importBtn) importBtn.addEventListener('click', function() {
                     <button class="report-tab">User Activity</button>
                 </div>
                 <div class="report-content">
-                    <div class="report-filters">
-                        <select class="filter-select">
-                            <option>All Document Types</option>
-                            <option>Transcript</option>
-                            <option>Diploma</option>
-                        </select>
-                        <select class="filter-select">
-                            <option>All Statuses</option>
-                            <option>Pending</option>
-                            <option>Completed</option>
-                        </select>
-                    </div>
+                   
                     <div class="report-charts">
                         <div class="chart-container">
                             <h4>Requests by Month</h4>
-                            <div class="chart-placeholder" style="height: 300px; background: #f5f5f5; display: flex; align-items: center; justify-content: center;">
-                                [Chart: Document Requests by Month]
-                            </div>
+                            <canvas id="requestsByMonthChart" style="width: 100%; max-width: 600px; height: 300px; background: #f5f5f5; border-radius: 8px;"></canvas>
+@php
+    // Example: Get monthly request counts from the database
+    $monthlyRequests = \App\Models\DocumentRequest::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+        ->groupBy('month')
+        ->orderBy('month')
+        ->get();
+    $months = [];
+    $counts = [];
+    foreach ($monthlyRequests as $row) {
+        $months[] = date('M', mktime(0, 0, 0, $row->month, 1));
+        $counts[] = $row->count;
+    }
+@endphp
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('requestsByMonthChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @json($months),
+            datasets: [{
+                label: 'Requests by Month',
+                data: @json($counts),
+                borderColor: '#8B0000',
+                backgroundColor: 'rgba(139,0,0,0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#8B0000',
+                pointBorderColor: '#fff',
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, labels: { color: '#8B0000', font: { size: 14, weight: 'bold' } } },
+                title: { display: true, text: 'Requests by Month', color: '#8B0000', font: { size: 18, weight: 'bold' } }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#eee' },
+                    ticks: { stepSize: 5 }
+                }
+            }
+        }
+    });
+});
+</script>
                         </div>
                         <div class="chart-container">
                             <h4>Document Type Distribution</h4>
@@ -2243,7 +2458,7 @@ if (importBtn) importBtn.addEventListener('click', function() {
                                     </small>
                                 </div>
                                 
-                                <div class="progress-bars-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; align-items: end; height: 250px;">
+                                <div class="progress-bars-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 0.7rem; align-items: end; height: 220px; padding: 0 0.5rem;">
                                     @php
                                         // Get document type counts from the database
                                         $documentTypeCounts = \App\Models\RequestedDocument::selectRaw('document_type, COUNT(*) as count')
@@ -2283,13 +2498,13 @@ if (importBtn) importBtn.addEventListener('click', function() {
                                             $barColor = $colorSet[0]; // Main color for the bar
                                         @endphp
                                         
-                                        <div class="progress-bar-item" style="text-align: center; display: flex; flex-direction: column; align-items: center;">
-                                            <div class="progress-bar-container" style="position: relative; height: {{ $barHeight }}px; width: 35px; margin: 0 auto 0.5rem; background: #e9ecef; border-radius: 6px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                                        <div class="progress-bar-item" style="text-align: center; display: flex; flex-direction: column; align-items: center; min-width: 80px;">
+                                            <div class="progress-bar-container" style="position: relative; height: {{ $barHeight - 20 }}px; width: 28px; margin: 0 auto 0.3rem; background: #e9ecef; border-radius: 6px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
                                                 <div class="progress-bar-fill" 
                                                      data-percentage="{{ $relativePercentage }}" 
                                                      data-count="{{ $docType->count }}"
                                                      data-color="{{ $barColor }}"
-                                                     style="position: absolute; bottom: 0; left: 0; width: 100%; height: {{ ($relativePercentage / 100) * 180 }}px; background: linear-gradient(180deg, {{ $colorSet[0] }} 0%, {{ $colorSet[1] }} 40%, {{ $colorSet[2] }} 100%); border-radius: 6px; transition: height 1.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                                     style="position: absolute; bottom: 0; left: 0; width: 100%; height: {{ ($relativePercentage / 100) * 160 }}px; background: linear-gradient(180deg, {{ $colorSet[0] }} 0%, {{ $colorSet[1] }} 40%, {{ $colorSet[2] }} 100%); border-radius: 6px; transition: height 1.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
                                                     
                                                     <!-- Internal color patterns -->
                                                     <div class="bar-pattern" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 6px);"></div>
@@ -2306,13 +2521,13 @@ if (importBtn) importBtn.addEventListener('click', function() {
                                             </div>
                                             
                                                                                             <div class="progress-stats" style="text-align: center;">
-                                                    <div class="document-count" style="font-size: 1.1rem; font-weight: 700; color: {{ $barColor }}; margin-bottom: 0.25rem;">
+                                                    <div class="document-count" style="font-size: 1rem; font-weight: 700; color: {{ $barColor }}; margin-bottom: 0.15rem;">
                                                         {{ $docType->count }}
                                                     </div>
-                                                    <div class="document-percentage" style="font-size: 0.75rem; color: var(--gray-dark); font-weight: 500; margin-bottom: 0.25rem;">
+                                                    <div class="document-percentage" style="font-size: 0.7rem; color: var(--gray-dark); font-weight: 500; margin-bottom: 0.15rem;">
                                                         {{ number_format(($docType->count / $totalDocuments) * 100, 1) }}% of total
                                                     </div>
-                                                    <div class="document-type-name" style="font-size: 0.65rem; color: {{ $barColor }}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; max-width: 100px;">
+                                                    <div class="document-type-name" style="font-size: 0.6rem; color: {{ $barColor }}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; max-width: 80px;">
                                                         {{ $docType->document_type }}
                                                     </div>
                                                 </div>
@@ -2328,36 +2543,7 @@ if (importBtn) importBtn.addEventListener('click', function() {
                             </div>
                         </div>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Report</th>
-                                <th>Period</th>
-                                <th>Generated</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Document Requests - May 2023</td>
-                                <td>05/01/2023 - 05/31/2023</td>
-                                <td>06/02/2023</td>
-                                <td>
-                                    <button class="action-btn"><i class="fas fa-download"></i></button>
-                                    <button class="action-btn"><i class="fas fa-print"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Student Records - Spring 2023</td>
-                                <td>01/01/2023 - 05/31/2023</td>
-                                <td>06/05/2023</td>
-                                <td>
-                                    <button class="action-btn"><i class="fas fa-download"></i></button>
-                                    <button class="action-btn"><i class="fas fa-print"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    
                 </div>
             </div>
         </div>
@@ -2823,12 +3009,175 @@ if (importBtn) importBtn.addEventListener('click', function() {
         
 
         
-        // Report tab switching
-        document.querySelectorAll('.report-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
+
+        // Report tab switching with AJAX data loading
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.report-tab');
+            const reportContent = document.querySelector('.report-content');
+            const charts = document.querySelector('.report-charts');
+            const filters = document.querySelector('.report-filters');
+            let tableSection = null;
+            let logsSection = null;
+
+            function clearReportContent() {
+                if (charts) charts.style.display = 'none';
+                if (filters) filters.style.display = 'none';
+                if (tableSection) tableSection.remove();
+                if (logsSection) logsSection.remove();
+            }
+
+            function showDocumentRequests() {
+                if (charts) charts.style.display = '';
+                if (filters) filters.style.display = '';
+            }
+
+            function showStudentRecords(page = 1, sort = 'created_at', dir = 'desc', program = 'all', year = 'all', status = 'all') {
+                clearReportContent();
+                // Controls
+                tableSection = document.createElement('div');
+                tableSection.innerHTML = `
+                    <h4 style=\"margin:1rem 0;color:#8B0000;\">Student Records</h4>
+                    <div style=\"margin-bottom:1rem;display:flex;gap:1rem;\">
+                        <select id=\"studentProgramFilter\"><option value='all'>All Programs</option><option value='BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY'>BSIT</option><option value='BACHELOR OF SCIENCE IN ENTREPRENEURSHIP'>BSE</option><option value='BACHELOR OF SCIENCE IN CRIMINOLOGY'>Criminology</option></select>
+                        <select id=\"studentYearFilter\"><option value='all'>All Years</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option></select>
+                        <select id=\"studentStatusFilter\"><option value='all'>All Statuses</option><option value='active'>Active</option><option value='inactive'>Inactive</option></select>
+                    </div>
+                    <table style=\"width:100%;border-collapse:collapse;\">
+                        <thead>
+                            <tr>
+                                <th data-sort='student_id'>ID</th>
+                                <th data-sort='name'>Name</th>
+                                <th data-sort='program'>Program</th>
+                                <th data-sort='year_level'>Year Level</th>
+                                <th data-sort='status'>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id=\"studentTableBody\"></tbody>
+                    </table>
+                    <div id=\"studentPagination\" style=\"margin-top:1rem;text-align:right;\"></div>
+                `;
+                reportContent.appendChild(tableSection);
+                function load(page, sort, dir, program, year, status) {
+                    fetch(`/registrar/report/student-records?page=${page}&sort=${sort}&dir=${dir}&program=${program}&year_level=${year}&status=${status}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const tbody = document.getElementById('studentTableBody');
+                            tbody.innerHTML = data.data.map(s => `
+                                <tr>
+                                    <td>${s.student_id}</td>
+                                    <td>${s.first_name} ${s.middle_name ? s.middle_name + ' ' : ''}${s.last_name}</td>
+                                    <td>${s.program}</td>
+                                    <td>${s.year_level}</td>
+                                    <td>${s.status}</td>
+                                </tr>
+                            `).join('');
+                            // Pagination
+                            const pag = document.getElementById('studentPagination');
+                            let pagHtml = '';
+                            for (let i = 1; i <= data.last_page; i++) {
+                                pagHtml += `<button class='action-btn' data-page='${i}' style='${i===data.current_page?'background:#8B0000;color:#fff':'background:#eee;'}'>${i}</button>`;
+                            }
+                            pag.innerHTML = pagHtml;
+                            Array.from(pag.querySelectorAll('button')).forEach(btn => {
+                                btn.onclick = () => load(parseInt(btn.dataset.page), sort, dir, program, year, status);
+                            });
+                        });
+                }
+                // Initial load
+                load(page, sort, dir, program, year, status);
+                // Filter events
+                tableSection.querySelector('#studentProgramFilter').onchange = e => load(1, sort, dir, e.target.value, year, status);
+                tableSection.querySelector('#studentYearFilter').onchange = e => load(1, sort, dir, program, e.target.value, status);
+                tableSection.querySelector('#studentStatusFilter').onchange = e => load(1, sort, dir, program, year, e.target.value);
+                // Sorting events
+                Array.from(tableSection.querySelectorAll('th[data-sort]')).forEach(th => {
+                    th.style.cursor = 'pointer';
+                    th.onclick = () => {
+                        let newDir = dir === 'asc' ? 'desc' : 'asc';
+                        load(1, th.dataset.sort, newDir, program, year, status);
+                    };
+                });
+            }
+
+            function showUserActivity(page = 1, sort = 'created_at', dir = 'desc', type = 'all', user_id = 'all') {
+                clearReportContent();
+                logsSection = document.createElement('div');
+                logsSection.innerHTML = `
+                    <h4 style=\"margin:1rem 0;color:#8B0000;\">User Activity (System Logs)</h4>
+                    <div style=\"margin-bottom:1rem;display:flex;gap:1rem;\">
+                        <select id=\"logTypeFilter\"><option value='all'>All Types</option><option value='login'>Login</option><option value='request_received'>Request Received</option><option value='approved'>Approved</option><option value='rejected'>Rejected</option><option value='student_added'>Student Added</option></select>
+                        <input id=\"logUserFilter\" type=\"text\" placeholder=\"User ID\" style=\"padding:4px 8px;border-radius:4px;border:1px solid #ccc;\" />
+                    </div>
+                    <table style=\"width:100%;border-collapse:collapse;\">
+                        <thead>
+                            <tr>
+                                <th data-sort='type'>Type</th>
+                                <th data-sort='message'>Message</th>
+                                <th data-sort='user_id'>User</th>
+                                <th data-sort='created_at'>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id=\"logsTableBody\"></tbody>
+                    </table>
+                    <div id=\"logsPagination\" style=\"margin-top:1rem;text-align:right;\"></div>
+                `;
+                reportContent.appendChild(logsSection);
+                function load(page, sort, dir, type, user_id) {
+                    fetch(`/registrar/report/user-activity?page=${page}&sort=${sort}&dir=${dir}&type=${type}&user_id=${user_id}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const tbody = document.getElementById('logsTableBody');
+                            tbody.innerHTML = data.data.map(l => `
+                                <tr>
+                                    <td>${l.type}</td>
+                                    <td>${l.message}</td>
+                                    <td>${l.user_id ?? ''}</td>
+                                    <td>${l.created_at}</td>
+                                </tr>
+                            `).join('');
+                            // Pagination
+                            const pag = document.getElementById('logsPagination');
+                            let pagHtml = '';
+                            for (let i = 1; i <= data.last_page; i++) {
+                                pagHtml += `<button class='action-btn' data-page='${i}' style='${i===data.current_page?'background:#8B0000;color:#fff':'background:#eee;'}'>${i}</button>`;
+                            }
+                            pag.innerHTML = pagHtml;
+                            Array.from(pag.querySelectorAll('button')).forEach(btn => {
+                                btn.onclick = () => load(parseInt(btn.dataset.page), sort, dir, type, user_id);
+                            });
+                        });
+                }
+                // Initial load
+                load(page, sort, dir, type, user_id);
+                // Filter events
+                logsSection.querySelector('#logTypeFilter').onchange = e => load(1, sort, dir, e.target.value, user_id);
+                logsSection.querySelector('#logUserFilter').oninput = e => load(1, sort, dir, type, e.target.value);
+                // Sorting events
+                Array.from(logsSection.querySelectorAll('th[data-sort]')).forEach(th => {
+                    th.style.cursor = 'pointer';
+                    th.onclick = () => {
+                        let newDir = dir === 'asc' ? 'desc' : 'asc';
+                        load(1, th.dataset.sort, newDir, type, user_id);
+                    };
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    clearReportContent();
+                    if (this.textContent.includes('Document Requests')) {
+                        showDocumentRequests();
+                    } else if (this.textContent.includes('Student Records')) {
+                        showStudentRecords();
+                    } else if (this.textContent.includes('User Activity')) {
+                        showUserActivity();
+                    }
+                });
             });
+            // Show Document Requests by default
+            showDocumentRequests();
         });
 
         // Student Records Department Logo Grid Logic

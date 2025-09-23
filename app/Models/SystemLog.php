@@ -10,5 +10,7 @@ class SystemLog extends Model
     protected $fillable = [
         'type',
         'message',
+        'created_at',
+        'user_id',
     ];
 }

@@ -834,7 +834,7 @@
 
                 <div class="report-card">
                     <div class="report-details">
-                        <h3>Cashier Daily Summary</h3>
+                        <h3>Cashier Reports</h3>
                         <p>Total payments processed: 56, Total amount: $2,500</p>
                     </div>
                     <button class="view-report-btn">View Report</button>
@@ -1011,7 +1011,7 @@
 
             <div class="report-card">
                 <div class="report-details">
-                    <h3>Cashier Daily Summary</h3>
+                    <h3>Cashier Reports</h3>
                     <p>Total payments processed: 56, Total amount: $2,500</p>
                 </div>
                 <button class="view-report-btn">View Report</button>

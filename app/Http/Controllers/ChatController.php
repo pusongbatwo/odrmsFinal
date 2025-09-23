@@ -1,4 +1,48 @@
 <?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Message;
+use App\Models\DocumentRequest;
+
+class ChatController extends Controller
+{
+    public function fetch(Request $request)
+    {
+        $request->validate([
+            'reference_number' => 'required|string'
+        ]);
+        $doc = DocumentRequest::where('reference_number', $request->reference_number)->firstOrFail();
+        $messages = Message::where('document_request_id', $doc->id)
+            ->orderBy('created_at')
+            ->get(['sender_type','message','created_at']);
+        return response()->json(['success' => true, 'messages' => $messages]);
+    }
+
+    public function send(Request $request)
+    {
+        $validated = $request->validate([
+            'reference_number' => 'required|string',
+            'sender_type' => 'required|in:requester,registrar',
+            'message' => 'required|string|max:2000',
+        ]);
+        $doc = DocumentRequest::where('reference_number', $validated['reference_number'])->firstOrFail();
+        $msg = Message::create([
+            'document_request_id' => $doc->id,
+            'sender_type' => $validated['sender_type'],
+            'sender_id' => auth()->id(),
+            'message' => $validated['message'],
+        ]);
+        return response()->json(['success' => true, 'message' => [
+            'sender_type' => $msg->sender_type,
+            'message' => $msg->message,
+            'created_at' => $msg->created_at->toDateTimeString(),
+        ]]);
+    }
+}
+
+<?php
 namespace App\Http\Controllers;
 
 use App\Models\Message;

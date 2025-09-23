@@ -36,6 +36,24 @@ class DocumentTrackingController extends Controller
         return view('requester.dashboard', compact('document'));
     }
 
+    public function status($reference_number)
+    {
+        $doc = DocumentRequest::where('reference_number', $reference_number)->first();
+        if (!$doc) {
+            return response()->json(['success' => false, 'message' => 'Not found'], 404);
+        }
+        $humanStatus = ucwords(str_replace('_', ' ', (string) $doc->status));
+        return response()->json([
+            'success' => true,
+            'status' => $humanStatus,
+            'payment_status' => $doc->payment_status,
+            'amount' => $doc->amount_paid ?? 0,
+            'payment_method' => $doc->payment_method,
+            'created_at' => optional($doc->created_at)->format('Y-m-d H:i:s'),
+            'paid_at' => optional($doc->paid_at)->format('Y-m-d H:i:s'),
+        ]);
+    }
+
     public function processPayment(Request $request)
     {
         $validated = $request->validate([

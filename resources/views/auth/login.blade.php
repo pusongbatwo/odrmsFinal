@@ -32,7 +32,7 @@
     
     <!-- Right Column - Login Form -->
     <div class="form-column">
-        <form method="POST" action="{{ route('login') }}" class="login-form">
+        <form method="POST" action="{{ route('login') }}" class="login-form" autocomplete="off">
             @csrf
             
             <h2 class="form-title">LOGIN</h2>
@@ -49,7 +49,9 @@
                 <label for="username">Username</label>
                 <div class="input-with-icon">
                     <i class="fas fa-user"></i>
-                    <input type="text" id="username" name="username" required placeholder="Enter your username">
+                    <!-- Hidden dummy to defeat browser autofill -->
+                    <input type="text" style="display:none" autocomplete="username">
+                    <input type="text" id="username" name="username" required placeholder="Enter your username" autocomplete="off" inputmode="text">
                 </div>
             </div>
             
@@ -57,7 +59,9 @@
                 <label for="password">Password</label>
                 <div class="input-with-icon">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    <!-- Hidden dummy to defeat browser autofill -->
+                    <input type="password" style="display:none" autocomplete="new-password">
+                    <input type="password" id="password" name="password" required placeholder="Enter your password" autocomplete="new-password">
                 </div>
             </div>
             
@@ -70,6 +74,16 @@
             </div>
             
             <button type="submit" class="login-btn">Login</button>
+
+            <script>
+                // Clear any persisted values on load (extra safety against autofill)
+                document.addEventListener('DOMContentLoaded', function() {
+                    const u = document.getElementById('username');
+                    const p = document.getElementById('password');
+                    if (u) u.value = '';
+                    if (p) p.value = '';
+                });
+            </script>
             
             <div class="social-login">
                 <p class="divider"></p>

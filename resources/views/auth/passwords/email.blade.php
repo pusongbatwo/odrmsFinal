@@ -6,13 +6,13 @@
     <div class="welcome-column">
         <div class="welcome-content">
             <h1>Forgot your <span>Password?</span></h1>
-            <p class="tagline">Enter your email and we'll send a reset link</p>
+            <p class="tagline">We'll send a secure link to reset it</p>
             <div class="logo-animation">
                 <img src="{{ asset('images/logo.png') }}" alt="iRequest Logo" class="logo-img">
             </div>
             <div class="features">
-                <div class="feature-item"><i class="fas fa-envelope"></i><span>Check inbox and spam folder</span></div>
-                <div class="feature-item"><i class="fas fa-shield-alt"></i><span>Links expire for your safety</span></div>
+                <div class="feature-item"><i class="fas fa-envelope"></i><span>Check your inbox/spam</span></div>
+                <div class="feature-item"><i class="fas fa-shield-alt"></i><span>Link expires for your safety</span></div>
                 <div class="feature-item"><i class="fas fa-user-lock"></i><span>Use your registered email</span></div>
             </div>
         </div>
@@ -23,11 +23,11 @@
         <form method="POST" action="{{ route('password.email') }}" class="login-form" autocomplete="off">
             @csrf
             <h2 class="form-title" style="display:flex;align-items:center;gap:10px;"><i class="fas fa-paper-plane"></i> Reset Link</h2>
-            
+
             @if (session('status'))
                 <div class="alert alert-success">{{ session('status') }}</div>
             @endif
-            
+
             @error('email')
                 <div class="alert alert-danger">{{ $message }}</div>
             @enderror
@@ -36,7 +36,7 @@
                 <label for="email">Email Address</label>
                 <div class="input-with-icon">
                     <i class="fas fa-envelope"></i>
-                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus placeholder="Enter your email">
+                    <input type="email" id="email" name="email" required placeholder="Enter your email" autocomplete="email">
                 </div>
             </div>
 
@@ -53,3 +53,5 @@
     </div>
 </div>
 @endsection
+
+

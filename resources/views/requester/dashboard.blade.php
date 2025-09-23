@@ -14,6 +14,8 @@
             --light-gray: #F5F5F5;
             --dark-gray: #333333;
             --medium-gray: #666666;
+            --card-shadow: 0 8px 24px rgba(139, 0, 0, 0.08);
+            --transition: all 0.3s ease;
         }
         
         * {
@@ -27,142 +29,33 @@
             background-color: #f9f9f9;
             color: var(--dark-gray);
             line-height: 1.6;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
         
         .dashboard-container {
+            width: 100%;
             max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-    /* Everything above is CSS only */
-    </style>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-</head>
-<body>
-    <!-- ...existing dashboard content... -->
-    <div class="dashboard-container">
-        <!-- ...existing dashboard content... -->
-    </div>
-
-    <!-- Live Chat Widget -->
-    <div id="chat-widget" style="position:fixed;bottom:30px;right:30px;z-index:9999;width:350px;max-width:95vw;">
-        <div id="chat-header" style="background:linear-gradient(135deg,#8B0000,#6B0000);color:#fff;padding:12px 18px;border-radius:15px 15px 0 0;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.12);">
-            <i class="fas fa-comments"></i>
-            <span style="font-weight:600;flex:1;">Chat with Registrar</span>
-            <i id="chat-toggle" class="fas fa-chevron-down"></i>
-        </div>
-        <div id="chat-body" style="background:#fff;border-radius:0 0 15px 15px;box-shadow:0 8px 24px rgba(0,0,0,0.10);padding:0 0 10px 0;display:none;flex-direction:column;height:400px;max-height:60vh;">
-            <div id="chat-messages" style="flex:1;overflow-y:auto;padding:18px 12px 0 12px;display:flex;flex-direction:column;gap:10px;"></div>
-            <form id="chat-form" style="display:flex;gap:8px;padding:10px 12px 0 12px;">
-                <input id="chat-input" type="text" placeholder="Type your message..." style="flex:1;padding:10px 14px;border-radius:20px;border:1px solid #eee;background:#f9f9f9;outline:none;" autocomplete="off" />
-                <button type="submit" style="background:#8B0000;color:#fff;border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.2s;"><i class="fas fa-paper-plane"></i></button>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // --- Chat Widget Logic ---
-        document.addEventListener('DOMContentLoaded', function() {
-            const documentId = "{{ $document->id }}";
-            const chatHeader = document.getElementById('chat-header');
-            const chatBody = document.getElementById('chat-body');
-            const chatToggle = document.getElementById('chat-toggle');
-            const chatMessages = document.getElementById('chat-messages');
-            const chatForm = document.getElementById('chat-form');
-            const chatInput = document.getElementById('chat-input');
-            let chatOpen = false;
-
-            chatHeader.addEventListener('click', function() {
-                chatOpen = !chatOpen;
-                chatBody.style.display = chatOpen ? 'flex' : 'none';
-                chatToggle.className = chatOpen ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
-                if (chatOpen) fetchMessages();
-            });
-
-            function renderMessages(messages) {
-                chatMessages.innerHTML = '';
-                messages.forEach(msg => {
-                    const isMe = msg.sender_type === 'requester';
-                    const bubble = document.createElement('div');
-                    bubble.style.maxWidth = '80%';
-                    bubble.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
-                    bubble.style.background = isMe ? 'linear-gradient(135deg,#D4AF37,#F5E7C1)' : '#f1f1f1';
-                    bubble.style.color = isMe ? '#333' : '#333';
-                    bubble.style.borderRadius = isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px';
-                    bubble.style.padding = '10px 14px';
-                    bubble.style.marginBottom = '2px';
-                    bubble.style.boxShadow = '0 2px 6px rgba(0,0,0,0.04)';
-                    bubble.innerHTML = `<span style='font-size:15px;'>${msg.message}</span><br><span style='font-size:11px;color:#888;'>${new Date(msg.created_at).toLocaleString()}</span>`;
-                    chatMessages.appendChild(bubble);
-                });
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            function fetchMessages() {
-                fetch(`/api/document-requests/${documentId}/messages`, {
-                    headers: { 'Accept': 'application/json' }
-                })
-                .then(res => res.json())
-                .then(renderMessages);
-            }
-
-
-            chatForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const msg = chatInput.value.trim();
-                if (!msg) return;
-
-                // Optimistically show the message in the UI
-                const now = new Date();
-                const tempMsg = {
-                    sender_type: 'requester',
-                    message: msg,
-                    created_at: now.toISOString()
-                };
-                // Add to UI immediately
-                renderMessages([...Array.from(chatMessages.children).map(div => ({
-                    sender_type: div.style.alignSelf === 'flex-end' ? 'requester' : 'registrar',
-                    message: div.querySelector('span').innerText,
-                    created_at: div.querySelectorAll('span')[1].innerText // not used, just for mapping
-                })), tempMsg]);
-
-                chatInput.value = '';
-
-                fetch(`/api/document-requests/${documentId}/messages`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({ message: msg })
-                })
-                .then(res => res.json())
-                .then(() => {
-                    // After successful send, fetch the latest messages from server
-                    fetchMessages();
-                })
-                .catch(() => {
-                    // On error, optionally show a warning or revert the optimistic message
-                    fetchMessages();
-                });
-            });
-
-            // Optionally, poll for new messages every 10s when open
-            setInterval(() => { if (chatOpen) fetchMessages(); }, 10000);
-        });
-    </script>
-    <style>
+        
         .dashboard-header {
             background: linear-gradient(135deg, var(--dark-red), #6B0000);
             color: var(--white);
             padding: 25px;
-            border-radius: 10px 10px 0 0;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            width: 100%;
         }
         
         .dashboard-header h2 {
@@ -183,23 +76,53 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         
-        .card {
-            background-color: var(--white);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            margin-bottom: 25px;
-            border-left: 5px solid var(--gold);
-        }
-        
-        .card h3 {
-            color: var(--dark-red);
-            font-size: 20px;
-            margin-bottom: 20px;
+        .header-right {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+        }
+        
+        .logout-button {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 7px;
+            font-size: 15px;
+            cursor: pointer;
             font-weight: 600;
+            box-shadow: 0 2px 8px rgba(217,83,79,0.10);
+            transition: var(--transition);
+        }
+        
+        .logout-button:hover {
+            background-color: #c9302c;
+            box-shadow: 0 6px 18px rgba(217,83,79,0.18);
+            transform: translateY(-2px);
+        }
+        
+        /* Main content layout */
+        .dashboard-content {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+        }
+        
+        /* Status Card Styles */
+        .status-card {
+            background-color: var(--white);
+            border-radius: 14px;
+            box-shadow: var(--card-shadow);
+            padding: 28px;
+            border-left: 6px solid var(--gold);
+            transition: var(--transition);
+            flex: 1;
+            max-width: 400px;
+        }
+        
+        .status-card:hover {
+            box-shadow: 0 12px 32px rgba(139,0,0,0.10);
+            transform: translateY(-2px);
         }
         
         .status-header {
@@ -207,6 +130,15 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
+        }
+        
+        .status-card h3 {
+            color: var(--dark-red);
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
         }
         
         .status-badge {
@@ -281,6 +213,8 @@
             background-color: #E0E0E0;
             color: var(--medium-gray);
             font-size: 18px;
+            z-index: 2;
+            position: relative;
         }
         
         .step-label {
@@ -313,30 +247,132 @@
             box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
         }
         
+        .step.halfway .step-icon {
+            background: linear-gradient(90deg, var(--gold) 50%, var(--dark-red) 50%);
+            color: var(--white);
+            box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+        }
+        
         .step:first-child::before {
             display: none;
         }
         
-        .payment-details {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+        /* Tab Container */
+        .tab-container {
+            background: var(--white);
+            border-radius: 14px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            flex: 2;
+            min-width: 0;
         }
         
-        .payment-row {
+        .tab-header {
+            display: flex;
+            background: var(--light-gray);
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .tab-button {
+            padding: 16px 0;
+            flex: 1;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--medium-gray);
+            transition: var(--transition);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 0;
+        }
+        
+        .tab-button:hover {
+            color: var(--dark-red);
+            background: rgba(139, 0, 0, 0.05);
+        }
+        
+        .tab-button.active {
+            color: var(--dark-red);
+            background: var(--white);
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--dark-red);
+        }
+        
+        .tab-content {
+            padding: 0;
+        }
+        
+        .tab-pane {
+            display: none;
+            padding: 28px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Card Styles for Tab Content */
+        .tab-card {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .tab-card:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .tab-card h3 {
+            color: var(--dark-red);
+            font-size: 18px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .payment-details, .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .payment-row, .detail-item {
             display: flex;
             justify-content: space-between;
             padding: 10px 0;
-            border-bottom: 1px solid #EEE;
+            border-bottom: 1px solid #f0f0f0;
         }
         
-        .payment-label {
+        .payment-label, .detail-label {
             font-weight: 500;
             color: var(--medium-gray);
         }
         
-        .payment-value {
+        .payment-value, .detail-value {
             font-weight: 600;
+            text-align: right;
+            max-width: 60%;
         }
         
         .payment-pending {
@@ -364,16 +400,17 @@
         
         .pay-button {
             flex: 1;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: all 0.3s ease;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
         }
         
         .online-pay {
@@ -388,31 +425,90 @@
         
         .pay-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 16px rgba(139,0,0,0.12);
         }
         
-        .details-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+        /* Chat Widget */
+        #chat-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+            width: 350px;
+            max-width: 95vw;
         }
         
-        .detail-item {
+        #chat-header {
+            background: linear-gradient(135deg, #8B0000, #6B0000);
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 15px 15px 0 0;
             display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #EEE;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         }
         
-        .detail-label {
-            font-weight: 500;
-            color: var(--medium-gray);
+        #chat-body {
+            background: #fff;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+            padding: 0 0 10px 0;
+            display: none;
+            flex-direction: column;
+            height: 400px;
+            max-height: 60vh;
         }
         
-        .detail-value {
-            font-weight: 600;
-            text-align: right;
-            max-width: 60%;
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px 12px 0 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        #chat-form {
+            display: flex;
+            gap: 8px;
+            padding: 10px 12px 0 12px;
+        }
+        
+        #chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 20px;
+            border: 1px solid #eee;
+            background: #f9f9f9;
+            outline: none;
+        }
+        
+        /* Loading indicator */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(139, 0, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--dark-red);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .dashboard-content {
+                flex-direction: column;
+            }
+            
+            .status-card {
+                max-width: 100%;
+            }
         }
         
         @media (max-width: 768px) {
@@ -431,6 +527,11 @@
                 gap: 15px;
             }
             
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
             .progress-steps {
                 flex-wrap: wrap;
                 gap: 15px;
@@ -440,193 +541,587 @@
                 flex: none;
                 width: calc(50% - 15px);
             }
+            
+            .tab-header {
+                flex-wrap: wrap;
+            }
+            
+            .tab-button {
+                flex: 1;
+                min-width: 120px;
+                justify-content: center;
+            }
         }
-        .logout-container {
-    margin-left: auto;
-}
-
-.logout-button {
-    background-color: #d9534f;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.logout-button:hover {
-    background-color: #c9302c;
-}
-
-</style>
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
-        
         <div class="dashboard-header">
             <h2><i class="fas fa-file-alt"></i> Document Request Dashboard</h2>
-            <div class="reference-badge">
-                Reference: {{ $document->reference_number }}
+            <div class="header-right">
+                <div class="reference-badge" id="reference-number">
+                    Reference: {{ $document->reference_number }}
+                </div>
+                <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                    @csrf
+                    <button type="submit" class="logout-button">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
             </div>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST">
-        @csrf
-        <button type="submit" class="logout-button">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </form>
         </div>
 
-        <!-- Status Overview -->
-        <div class="card status-card">
-            <div class="status-header">
-                <h3><i class="fas fa-tasks"></i> Request Status</h3>
-                <div class="status-badge status-{{ strtolower(str_replace(' ', '-', $document->status)) }}">
-                    {{ $document->status }}
-                </div>
-            </div>
-            
-            <div class="status-progress">
-                @php
-                    $steps = [
-                        'Pending' => ['icon' => 'far fa-clock', 'label' => 'Submitted'],
-                        'Processing' => ['icon' => 'fas fa-cog', 'label' => 'Verification'],
-                        'Ready for Payment' => ['icon' => 'fas fa-money-bill-wave', 'label' => 'Payment'],
-                        'Ready for Pickup' => ['icon' => 'fas fa-box-open', 'label' => 'Proccessing'],
-                        'Completed' => ['icon' => 'fas fa-check-circle', 'label' => 'Completed']
-                    ];
-                    $currentStep = array_search($document->status, array_keys($steps));
-                @endphp
-                
-                <div class="progress-steps">
-                    @foreach($steps as $status => $step)
-                    <div class="step @if($loop->index < $currentStep) completed 
-                                  @elseif($loop->index == $currentStep) current 
-                                  @endif">
-                        <div class="step-icon">
-                            <i class="{{ $step['icon'] }}"></i>
-                        </div>
-                        <div class="step-label">{{ $step['label'] }}</div>
+        <div class="dashboard-content">
+            <!-- Status Card (remains in its position) -->
+            <div class="status-card">
+                <div class="status-header">
+                    <h3><i class="fas fa-tasks"></i> Request Status</h3>
+                    <div class="status-badge" id="status-badge">
+                        {{ $document->status }}
                     </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        <!-- Payment Status -->
-        <div class="card payment-card">
-            <h3><i class="fas fa-credit-card"></i> Payment Information</h3>
-            <div class="payment-details">
-                <div class="payment-row">
-                    <span class="payment-label">Status:</span>
-                    <span class="payment-value payment-{{ strtolower($document->payment_status) }}">
-                        {{ $document->payment_status }}
-                    </span>
-                </div>
-                <div class="payment-row">
-                    <span class="payment-label">Amount:</span>
-                    <span class="payment-value">₱{{ number_format($document->amount, 2) }}</span>
-                </div>
-                <div class="payment-row">
-                    <span class="payment-label">Method:</span>
-                    <span class="payment-value">
-                        {{ $document->payment_method ?? 'Not selected' }}
-                    </span>
                 </div>
                 
-                @if($document->status === 'Ready for Payment')
-                <div class="payment-actions">
-                    <button class="pay-button online-pay" onclick="handleOnlinePayment()">
-                        <i class="fas fa-globe"></i> Pay Online
-                    </button>
-                    <button class="pay-button walkin-pay" onclick="handleWalkInPayment()">
-                        <i class="fas fa-store"></i> Pay In Person
-                    </button>
+                <div class="status-progress">
+                    <div class="progress-steps">
+                        @php
+                        $steps = [
+                            ['icon' => 'far fa-clock', 'label' => 'Submitted', 'status' => 'Pending'],
+                            ['icon' => 'fas fa-cog', 'label' => 'Verification', 'status' => 'Processing'],
+                            ['icon' => 'fas fa-money-bill-wave', 'label' => 'Payment', 'status' => 'Approved'],
+                            ['icon' => 'fas fa-box-open', 'label' => 'Processing', 'status' => 'Ready for Pickup'],
+                            ['icon' => 'fas fa-check-circle', 'label' => 'Completed', 'status' => 'Completed'],
+                        ];
+                        $statusOrder = array_column($steps, 'status');
+                        $currentStep = array_search($document->status, $statusOrder);
+                        @endphp
+                        @foreach($steps as $i => $step)
+                            <div class="step @if($i < $currentStep) completed @elseif($i == $currentStep) current @endif">
+                                <div class="step-icon">
+                                    <i class="{{ $step['icon'] }}"></i>
+                                </div>
+                                <div class="step-label">{{ $step['label'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-                @endif
             </div>
-        </div>
 
-        <!-- Document Details -->
-        <div class="card details-card">
-            <h3><i class="fas fa-info-circle"></i> Request Details</h3>
-            <div class="details-grid">
-                <div class="detail-item">
-                    <span class="detail-label">Document Type:</span>
-                    <span class="detail-value">{{ $document->document_type }}</span>
+            <!-- Tab Container for other information -->
+            <div class="tab-container">
+                <div class="tab-header">
+                    <button class="tab-button active" data-tab="requester">
+                        <i class="fas fa-user"></i> Requester Info
+                    </button>
+                    <button class="tab-button" data-tab="details">
+                        <i class="fas fa-info-circle"></i> Details
+                    </button>
+                    <button class="tab-button" data-tab="payment">
+                        <i class="fas fa-credit-card"></i> Payment
+                    </button>
                 </div>
-                <div class="detail-item">
-                    <span class="detail-label">Request Date:</span>
-                    <span class="detail-value">{{ $document->created_at->format('M d, Y h:i A') }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Purpose:</span>
-                    <span class="detail-value">{{ $document->purpose }}</span>
-                </div>
-                @if($document->special_instructions)
-                <div class="detail-item">
-                    <span class="detail-label">Special Instructions:</span>
-                    <span class="detail-value">{{ $document->special_instructions }}</span>
-                </div>
-                @endif
-            </div>
-        </div>
-
-        <!-- Requester Information -->
-        <div class="card requester-card">
-            <h3><i class="fas fa-user"></i> Requester Information</h3>
-            <div class="details-grid">
-                <div class="detail-item">
-                    <span class="detail-label">Student ID:</span>
-                    <span class="detail-value">{{ $document->student_id }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Full Name:</span>
-                    <span class="detail-value">
-                        {{ $document->first_name }}
-                        {{ $document->middle_name }}
-                        {{ $document->last_name }}
-                    </span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Course:</span>
-                    <span class="detail-value">{{ $document->course }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Email:</span>
-                    <span class="detail-value">{{ $document->email }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Phone:</span>
-                    <span class="detail-value">{{ $document->mobile }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Address:</span>
-                    <span class="detail-value">
-                        {{ $document->barangay }}, 
-                        {{ $document->city }}, 
-                        {{ $document->province }}
-                    </span>
+                
+                <div class="tab-content">
+                    <!-- Requester Tab -->
+                    <div class="tab-pane active" id="requester-tab">
+                        <div class="tab-card">
+                            <h3><i class="fas fa-user"></i> Requester Information</h3>
+                            <div class="details-grid" id="requester-info">
+                                <div class="detail-item">
+                                    <span class="detail-label">Student ID:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Full Name:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Course:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Email:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Phone:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Address:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Details Tab -->
+                    <div class="tab-pane" id="details-tab">
+                        <div class="tab-card">
+                            <h3><i class="fas fa-info-circle"></i> Request Details</h3>
+                            <div class="details-grid" id="request-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Document Type:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Request Date:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Purpose:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Special Instructions:</span>
+                                    <span class="detail-value"><span class="loading"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Tab -->
+                    <div class="tab-pane" id="payment-tab">
+                        <div class="tab-card">
+                            <h3><i class="fas fa-credit-card"></i> Payment Information</h3>
+                            <div class="payment-details" id="payment-info">
+                                <div class="payment-row">
+                                    <span class="payment-label">Status:</span>
+                                    <span class="payment-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="payment-row">
+                                    <span class="payment-label">Amount:</span>
+                                    <span class="payment-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="payment-row">
+                                    <span class="payment-label">Method:</span>
+                                    <span class="payment-value"><span class="loading"></span></span>
+                                </div>
+                                <div class="payment-actions" id="payment-actions">
+                                    <!-- Payment buttons will be added here dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Live Chat Widget -->
+    <div id="chat-widget">
+        <div id="chat-header">
+            <i class="fas fa-comments"></i>
+            <span style="font-weight:600;flex:1;">Chat with Registrar</span>
+            <i id="chat-toggle" class="fas fa-chevron-down"></i>
+        </div>
+        <div id="chat-body">
+            <div id="chat-messages"></div>
+            <form id="chat-form">
+                <input id="chat-input" type="text" placeholder="Type your message..." autocomplete="off" />
+                <button type="submit" style="background:#8B0000;color:#fff;border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.2s;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script>
-        function handleOnlinePayment() {
-            alert('Redirecting to secure payment gateway...');
-            // In a real implementation, this would redirect to your payment processor
-            // window.location.href = '/payment/gateway';
+        // Simulated database (in a real application, this would be server-side)
+        const documentRequestsDB = {
+            "{{ $document->reference_number }}": {
+                reference_number: "{{ $document->reference_number }}",
+                status: "{{ ucwords(str_replace('_',' ', (string)$document->status)) }}",
+                student_id: "{{ $document->student_id }}",
+                first_name: "{{ $document->first_name }}",
+                middle_name: "{{ $document->middle_name }}",
+                last_name: "{{ $document->last_name }}",
+                course: "{{ $document->course }}",
+                email: "{{ $document->email }}",
+                mobile: "{{ $document->mobile_number }}",
+                barangay: "{{ $document->barangay }}",
+                city: "{{ $document->city }}",
+                province: "{{ $document->province }}",
+                document_type: "{{ $document->document_type }}",
+                created_at: "{{ optional($document->created_at)->format('c') }}",
+                purpose: "{{ $document->purpose }}",
+                special_instructions: "{{ $document->special_instructions }}",
+                payment_status: "{{ ucwords((string)$document->payment_status) }}",
+                amount: {{ (float)($document->amount ?? $document->amount_paid ?? 0) }},
+                payment_method: {{ json_encode($document->payment_method) }}
+            },
+            // demo entry remains optional
+            "DR-2023-0872": {
+                reference_number: "DR-2023-0872",
+                status: "Approved",
+                student_id: "2020-12345",
+                first_name: "Maria",
+                middle_name: "Santos",
+                last_name: "Dela Cruz",
+                course: "BS Computer Science",
+                email: "maria.cruz@example.com",
+                mobile: "+63 912 345 6789",
+                barangay: "Barangay 123",
+                city: "Manila",
+                province: "Metro Manila",
+                document_type: "Transcript of Records",
+                created_at: "2023-10-15T10:30:00",
+                purpose: "Graduate School Application",
+                special_instructions: "Please include course descriptions",
+                payment_status: "Pending",
+                amount: 350.00,
+                payment_method: null
+            }
+        };
+
+        // Simulate API calls with delay
+        function fetchDocumentData(documentId) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(documentRequestsDB[documentId] || null);
+                }, 1000); // Simulate network delay
+            });
+        }
+
+        // Update payment status (simulating server interaction)
+        function updatePaymentStatus(documentId, status, method = null) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    if (documentRequestsDB[documentId]) {
+                        documentRequestsDB[documentId].payment_status = status;
+                        if (method) {
+                            documentRequestsDB[documentId].payment_method = method;
+                        }
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+                }, 800); // Simulate network delay
+            });
+        }
+
+        // Main function to load and display document data
+        async function loadDocumentData(documentId) {
+            try {
+                const documentData = await fetchDocumentData(documentId);
+                
+                if (!documentData) {
+                    // If not found in simulated store, rely on Blade-rendered content and continue
+                    return;
+                }
+
+                // Update reference number
+                document.getElementById('reference-number').innerHTML = `Reference: ${documentData.reference_number}`;
+                
+                // Update status badge
+                const statusBadge = document.getElementById('status-badge');
+                statusBadge.textContent = documentData.status;
+                statusBadge.className = 'status-badge ';
+                
+                if (documentData.status === "Pending") {
+                    statusBadge.classList.add('status-pending');
+                } else if (documentData.status === "Processing") {
+                    statusBadge.classList.add('status-processing');
+                } else if (documentData.status === "Approved") {
+                    statusBadge.classList.add('status-ready-for-payment');
+                } else if (documentData.status === "Ready for Payment") {
+                    statusBadge.classList.add('status-ready-for-payment');
+                } else if (documentData.status === "Ready for Pickup") {
+                    statusBadge.classList.add('status-ready-for-pickup');
+                } else if (documentData.status === "Completed") {
+                    statusBadge.classList.add('status-completed');
+                }
+                
+                // Update progress steps based on status
+                const steps = document.querySelectorAll('.step');
+                
+                // Reset all steps
+                steps.forEach(step => {
+                    step.classList.remove('completed', 'current', 'halfway');
+                });
+                
+                // Set steps based on status
+                if (documentData.status === "Pending") {
+                    steps[0].classList.add('current');
+                } else if (documentData.status === "Processing") {
+                    steps[0].classList.add('completed');
+                    steps[1].classList.add('current');
+                } else if (documentData.status === "Approved") {
+                    steps[0].classList.add('completed');
+                    steps[1].classList.add('completed');
+                    steps[2].classList.add('halfway'); // Halfway through payment step
+                } else if (documentData.status === "Ready for Payment") {
+                    steps[0].classList.add('completed');
+                    steps[1].classList.add('completed');
+                    steps[2].classList.add('current');
+                } else if (documentData.status === "Ready for Pickup") {
+                    steps[0].classList.add('completed');
+                    steps[1].classList.add('completed');
+                    steps[2].classList.add('completed');
+                    steps[3].classList.add('current');
+                } else if (documentData.status === "Completed") {
+                    steps.forEach(step => {
+                        step.classList.add('completed');
+                    });
+                }
+                
+                // Update requester information
+                document.getElementById('requester-info').innerHTML = `
+                    <div class="detail-item">
+                        <span class="detail-label">Student ID:</span>
+                        <span class="detail-value">{{ $document->student_id }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Full Name:</span>
+                        <span class="detail-value">{{ $document->first_name }} {{ $document->middle_name }} {{ $document->last_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Course:</span>
+                        <span class="detail-value">{{ $document->course }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">{{ $document->email }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Phone:</span>
+                        <span class="detail-value">{{ $document->mobile_number }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Address:</span>
+                        <span class="detail-value">{{ $document->barangay }}, {{ $document->city }}, {{ $document->province }}</span>
+                    </div>
+                `;
+                
+                // Update request details
+                const requestDate = new Date(documentData.created_at);
+                document.getElementById('request-details').innerHTML = `
+                    <div class="detail-item">
+                        <span class="detail-label">Document Type:</span>
+                        <span class="detail-value">{{ $document->document_type }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Request Date:</span>
+                        <span class="detail-value">{{ $document->created_at ? $document->created_at->format('M d, Y h:i A') : '' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Purpose:</span>
+                        <span class="detail-value">{{ $document->purpose }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Special Instructions:</span>
+                        <span class="detail-value">{{ $document->special_instructions ?? 'None' }}</span>
+                    </div>
+                `;
+                
+                // Update payment information
+                const paymentStatusClass = documentData.payment_status === 'Paid' ? 'payment-paid' : 'payment-pending';
+                document.getElementById('payment-info').innerHTML = `
+                    <div class="payment-row">
+                        <span class="payment-label">Status:</span>
+                        <span class="payment-value payment-pending">{{ $document->payment_status }}</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="payment-label">Amount:</span>
+                        <span class="payment-value">₱{{ number_format($document->amount ?? 0, 2) }}</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="payment-label">Method:</span>
+                        <span class="payment-value">{{ $document->payment_method ?? 'Not selected' }}</span>
+                    </div>
+                `;
+                
+                // Add payment actions if needed
+                const paymentActions = document.getElementById('payment-actions');
+                paymentActions.innerHTML = '';
+                
+                if (documentData.status === 'Ready for Payment' || documentData.status === 'Approved') {
+                    paymentActions.innerHTML = `
+                        <button class="pay-button online-pay" onclick="handleOnlinePayment('${documentData.reference_number}')">
+                            <i class="fas fa-globe"></i> Pay Online
+                        </button>
+                        <button class="pay-button walkin-pay" onclick="handleWalkInPayment('${documentData.reference_number}')">
+                            <i class="fas fa-store"></i> Pay In Person
+                        </button>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error loading document data:', error);
+                // Removed JS error: Blade now handles all data rendering
+            }
+        }
+
+        // Realtime polling to update status/payment from server
+        async function pollStatus(reference) {
+            try {
+                const res = await fetch(`{{ url('/requester/status') }}/${reference}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data.success) return;
+                // Update status badge
+                const statusBadge = document.getElementById('status-badge');
+                statusBadge.textContent = data.status;
+                statusBadge.className = 'status-badge ';
+                if (data.status === 'Pending') {
+                    statusBadge.classList.add('status-pending');
+                } else if (data.status === 'Processing') {
+                    statusBadge.classList.add('status-processing');
+                } else if (data.status === 'Approved' || data.status === 'Ready for Payment') {
+                    statusBadge.classList.add('status-ready-for-payment');
+                } else if (data.status === 'Ready for Pickup') {
+                    statusBadge.classList.add('status-ready-for-pickup');
+                } else if (data.status === 'Completed') {
+                    statusBadge.classList.add('status-completed');
+                }
+                // Update payment info
+                const paymentInfo = document.getElementById('payment-info');
+                if (paymentInfo) {
+                    paymentInfo.querySelector('.payment-value.payment-pending')?.classList.remove('payment-pending', 'payment-paid');
+                    const statusEl = paymentInfo.querySelector('.payment-row .payment-value');
+                    if (statusEl) statusEl.textContent = data.payment_status || 'Unpaid';
+                    const amountEl = paymentInfo.querySelectorAll('.payment-row .payment-value')[1];
+                    if (amountEl) amountEl.textContent = '₱' + Number(data.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const methodEl = paymentInfo.querySelectorAll('.payment-row .payment-value')[2];
+                    if (methodEl) methodEl.textContent = data.payment_method || 'Not selected';
+                }
+            } catch (_) {}
+        }
+
+        // Payment functions
+        async function handleOnlinePayment(documentId) {
+            try {
+                const success = await updatePaymentStatus(documentId, 'Processing', 'Online');
+                if (success) {
+                    alert('Redirecting to secure payment gateway...');
+                    // In a real implementation, this would redirect to your payment processor
+                    // window.location.href = '/payment/gateway';
+                    
+                    // Reload data to reflect changes
+                    loadDocumentData(documentId);
+                } else {
+                    alert('Failed to process payment. Please try again.');
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                alert('An error occurred during payment processing.');
+            }
         }
         
-        function handleWalkInPayment() {
-            alert('Please visit the registrar\'s office during business hours to complete your payment.\n\nOffice Hours: Mon-Fri, 8:00 AM - 5:00 PM');
+        async function handleWalkInPayment(documentId) {
+            try {
+                const success = await updatePaymentStatus(documentId, 'Pending', 'In Person');
+                if (success) {
+                    alert('Please visit the registrar\'s office during business hours to complete your payment.\n\nOffice Hours: Mon-Fri, 8:00 AM - 5:00 PM');
+                    // Reload data to reflect changes
+                    loadDocumentData(documentId);
+                } else {
+                    alert('Failed to process payment request. Please try again.');
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                alert('An error occurred during payment processing.');
+            }
         }
-        
+
+        // Tab functionality
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    
+                    // Update active button
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Show active tab pane
+                    tabPanes.forEach(pane => pane.classList.remove('active'));
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+        }
+
+        // Chat Widget Logic
+        function setupChatWidget() {
+            const chatHeader = document.getElementById('chat-header');
+            const chatBody = document.getElementById('chat-body');
+            const chatToggle = document.getElementById('chat-toggle');
+            let chatOpen = false;
+            
+            chatHeader.addEventListener('click', function() {
+                chatOpen = !chatOpen;
+                chatBody.style.display = chatOpen ? 'flex' : 'none';
+                chatToggle.className = chatOpen ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            });
+
+            // Chat send
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const chatMessages = document.getElementById('chat-messages');
+            const reference = "{{ $document->reference_number }}";
+
+            async function fetchMessages() {
+                try {
+                    const res = await fetch(`{{ route('chat.fetch') }}?reference_number=${encodeURIComponent(reference)}`, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (!data.success) return;
+                    chatMessages.innerHTML = data.messages.map(m => `
+                        <div style="display:flex;${m.sender_type==='requester'?'justify-content:flex-end':'justify-content:flex-start'};">
+                            <div style="max-width:75%;padding:8px 12px;border-radius:12px;margin:4px 0;${m.sender_type==='requester'?'background:#8B0000;color:#fff;':'background:#f3f4f6;color:#111827;'}">
+                                ${m.message}
+                                <div style="font-size:11px;opacity:.7;margin-top:4px;">${new Date(m.created_at).toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } catch (_) {}
+            }
+
+            chatForm.addEventListener('submit', async function(e){
+                e.preventDefault();
+                const text = (chatInput.value || '').trim();
+                if (!text) return;
+                try {
+                    const res = await fetch(`{{ route('chat.send') }}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ reference_number: reference, sender_type: 'requester', message: text })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        chatInput.value = '';
+                        fetchMessages();
+                    }
+                } catch (_) {}
+            });
+
+            // Poll for new messages every 6s
+            setInterval(fetchMessages, 6000);
+            // initial fetch
+            fetchMessages();
+        }
+
+        // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            // Any additional JavaScript can go here
-            console.log('Dashboard loaded');
+            setupTabs();
+            setupChatWidget();
+            
+            // Use server-provided reference number
+            const documentId = "{{ $document->reference_number }}";
+            
+            // Load initial data
+            loadDocumentData(documentId);
+            // Poll server every 10 seconds for real-time status updates
+            setInterval(() => {
+                pollStatus(documentId);
+            }, 10000);
         });
     </script>
 </body>

@@ -54,6 +54,15 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
+
+        ],
+
+         
+        
+        'google' => [
+            'driver' => 'google',
+            'serviceAccount' => storage_path('app/google-drive-service-account.json'),
+             'folderId' => env('GOOGLE_DRIVE_FOLDER_ID', null), // null = root if not set
         ],
 
     ],
@@ -72,5 +81,8 @@ return [
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
+
+   
+
 
 ];

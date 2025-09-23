@@ -19,6 +19,7 @@
     <title>Document Request Cashier Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --primary: #8B0000; /* College dark red */
@@ -175,7 +176,19 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            cursor: pointer;
         }
+        .user-actions-footer { display: none; }
+        .footer-btn {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .footer-btn:hover { background: rgba(255,255,255,0.25); }
 
         .avatar {
             width: 36px;
@@ -788,6 +801,40 @@
             border-radius: 8px;
             margin-bottom: 1.5rem;
         }
+
+        /* Export: file format cards */
+        .payment-methods {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .payment-methods .method-card {
+            border: 1px solid var(--gray);
+            border-radius: 8px;
+            padding: 12px 14px;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer; /* make clickable */
+            user-select: none;
+            background: var(--light);
+            transition: all 0.15s ease-in-out;
+        }
+        .payment-methods .method-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .payment-methods .method-card.selected {
+            border-color: var(--primary);
+            background: rgba(139, 0, 0, 0.05);
+        }
+        .payment-methods .method-icon {
+            color: var(--primary);
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -840,7 +887,7 @@
                 <li class="menu-item">
                     <a href="#" class="menu-link" data-section="dailySummary">
                         <i class="fas fa-chart-bar menu-icon"></i>
-                        <span class="menu-text">Daily Summary</span>
+                        <span class="menu-text">Reports</span>
                     </a>
                 </li>
                 <li class="menu-item">
@@ -854,12 +901,13 @@
 
         <div class="sidebar-footer">
             <div class="user-profile">
-                <img src="https://randomuser.me/api/portraits/women/45.jpg" alt="User" class="avatar">
+                <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : 'https://randomuser.me/api/portraits/women/45.jpg' }}" alt="User" class="avatar">
                 <div class="user-details">
-                    <div class="user-name">Maria Garcia</div>
-                    <div class="user-role">Document Cashier</div>
+                    <div class="user-name">{{ Auth::user()->username }}</div>
+                    <div class="user-role">{{ ucfirst(Auth::user()->role) }}</div>
                 </div>
             </div>
+            <div class="user-actions-footer"></div>
         </div>
     </aside>
 
@@ -1168,30 +1216,42 @@
             </div>
         </div>
 
-        <!-- Daily Summary UI -->
+        <!-- Reports UI -->
         <div id="dailySummaryUI" class="feature-ui">
             <div class="reports-container">
                 <div class="section-header">
-                    <h2 class="section-title">Daily Summary Report</h2>
-                    <div class="date-range-picker">
-                        <input type="date" class="filter-select">
-                        <span>to</span>
-                        <input type="date" class="filter-select">
-                    </div>
+                    <h2 class="section-title">Reports</h2>
                 </div>
                 
                 <div class="report-tabs">
-                    <div class="report-tab active">Summary</div>
-                    <div class="report-tab">By Document Type</div>
-                   
+                    <div class="report-tab active" data-tab="trends">Daily Trends</div>
+                    <div class="report-tab" data-tab="status">Status Distribution</div>
+                    <div class="report-tab" data-tab="revenue">Revenue by Type</div>
                 </div>
                 
-                <div class="report-content active">
+                <!-- Daily Trends Tab -->
+                <div class="report-content active" id="trendsTab">
                     <div class="chart-placeholder">
-                        [Daily Summary Chart]
+                        <canvas id="dailyTrendsChart" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Status Distribution Tab -->
+                <div class="report-content" id="statusTab">
+                    <div class="chart-placeholder">
+                        <canvas id="statusDistributionChart" height="300"></canvas>
+                    </div>
                     </div>
                     
-                    <div class="dashboard-content">
+                <!-- Revenue by Type Tab -->
+                <div class="report-content" id="revenueTab">
+                    <div class="chart-placeholder">
+                        <canvas id="revenueByTypeChart" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Summary Cards -->
+                <div class="dashboard-content" style="margin-top: 1.5rem;">
                         <div class="summary-card">
                             <div class="card-header">
                                 <div class="card-icon amount">
@@ -1199,7 +1259,7 @@
                                 </div>
                                 <div>
                                     <div class="card-title">Total Collected</div>
-                                    <div class="card-value">₱1,245</div>
+                                <div class="card-value" id="reportTotalCollected">₱0.00</div>
                                 </div>
                             </div>
                         </div>
@@ -1211,7 +1271,7 @@
                                 </div>
                                 <div>
                                     <div class="card-title">Total Requests</div>
-                                    <div class="card-value">36</div>
+                                <div class="card-value" id="reportTotalRequests">0</div>
                                 </div>
                             </div>
                         </div>
@@ -1223,7 +1283,7 @@
                                 </div>
                                 <div>
                                     <div class="card-title">Completed</div>
-                                    <div class="card-value">24</div>
+                                <div class="card-value" id="reportCompleted">0</div>
                                 </div>
                             </div>
                         </div>
@@ -1235,8 +1295,7 @@
                                 </div>
                                 <div>
                                     <div class="card-title">Pending</div>
-                                    <div class="card-value">12</div>
-                                </div>
+                                <div class="card-value" id="reportPending">0</div>
                             </div>
                         </div>
                     </div>
@@ -1251,52 +1310,49 @@
                     <h2 class="section-title">Export Records</h2>
                 </div>
                 
+                <form id="exportForm">
                 <div class="form-row">
-                    <label class="form-label">Date Range</label>
+                        <label class="form-label">Date Range (Optional)</label>
                     <div style="display: flex; gap: 1rem;">
-                        <input type="date" class="form-control">
+                            <input type="date" class="form-control" name="start_date" id="exportStartDate">
                         <span style="align-self: center;">to</span>
-                        <input type="date" class="form-control">
+                            <input type="date" class="form-control" name="end_date" id="exportEndDate">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <label class="form-label">Report Type</label>
-                    <select class="form-control">
-                        <option>Transaction Records</option>
-                        <option>Document Requests</option>
-                        <option>Payment Summary</option>
-                        <option>Daily Totals</option>
+                        <select class="form-control" name="report_type" id="exportReportType" required>
+                            <option value="transaction_records">Transaction Records</option>
+                            <option value="document_requests">Document Requests</option>
+                            <option value="payment_summary">Payment Summary</option>
+                            <option value="daily_totals">Daily Totals</option>
                     </select>
                 </div>
                 
                 <div class="form-row">
                     <label class="form-label">File Format</label>
-                    <div class="payment-methods">
-                        <div class="method-card selected">
+                        <div class="payment-methods" id="formatSelection">
+                            <div class="method-card selected" data-format="xlsx">
                             <div class="method-icon">
                                 <i class="fas fa-file-excel"></i>
                             </div>
                             <div>Excel (.xlsx)</div>
                         </div>
-                        <div class="method-card">
+                            <div class="method-card" data-format="csv">
                             <div class="method-icon">
                                 <i class="fas fa-file-csv"></i>
                             </div>
                             <div>CSV (.csv)</div>
                         </div>
-                        <div class="method-card">
-                            <div class="method-icon">
-                                <i class="fas fa-file-pdf"></i>
                             </div>
-                            <div>PDF (.pdf)</div>
-                        </div>
-                    </div>
+                        <input type="hidden" name="file_format" id="selectedFormat" value="xlsx">
                 </div>
                 
-                <button class="submit-payment" style="margin-top: 1.5rem;">
+                    <button type="submit" class="submit-payment" style="margin-top: 1.5rem;" id="exportBtn">
                     <i class="fas fa-download"></i> Export Records
                 </button>
+                </form>
             </div>
         </div>
     </main>
@@ -1339,6 +1395,48 @@
         </div>
     </div>
 
+    <!-- Profile Modal -->
+    <div class="payment-modal" id="profileModal">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Profile</h3>
+                <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-input" name="username" value="{{ Auth::user()->username }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" class="form-input" name="current_password" placeholder="Enter current password to change">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-input" name="new_password" placeholder="Leave blank to keep current">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-input" name="new_password_confirmation" placeholder="Confirm new password">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Profile Picture</label>
+                        <input type="file" class="form-input" name="avatar" accept="image/*">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" action="{{ route('logout') }}" style="margin-right:auto;">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </form>
+                <button class="btn btn-secondary" onclick="closeProfileModal()">Cancel</button>
+                <button class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Toggle sidebar
         document.querySelector('.toggle-btn').addEventListener('click', function() {
@@ -1355,6 +1453,14 @@
         }
 
         // Select payment option
+        // Profile modal functions
+        function openProfileModal() {
+            document.getElementById('profileModal').style.display = 'flex';
+        }
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
        
         // Simulate loading animation
         document.addEventListener('DOMContentLoaded', function() {
@@ -1368,6 +1474,7 @@
             
             // Set dashboard as default view
             showSection('dashboard');
+
         });
 
         // Navigation between sections
@@ -1400,7 +1507,9 @@
                     pageTitle.textContent = 'System Logs';
                 } else if (sectionId === 'dailySummary') {
                     document.getElementById('dailySummaryUI').style.display = 'block';
-                    pageTitle.textContent = 'Daily Summary';
+                    pageTitle.textContent = 'Reports';
+                    // Auto-load reports when opening section
+                    loadAllReports();
                 } else if (sectionId === 'exportRecords') {
                     document.getElementById('exportRecordsUI').style.display = 'block';
                     pageTitle.textContent = 'Export Records';
@@ -1424,25 +1533,228 @@
                 showSection(section);
             });
         });
+
+        // Open profile modal by clicking on the user-profile area
+        const userProfileArea = document.querySelector('.sidebar-footer .user-profile');
+        if (userProfileArea) {
+            userProfileArea.addEventListener('click', function(e) {
+                e.preventDefault();
+                openProfileModal();
+            });
+        }
         
         // Report tab switching
         document.querySelectorAll('.report-tab').forEach(tab => {
             tab.addEventListener('click', function() {
-                // Remove active class from all tabs
-                document.querySelectorAll('.report-tab').forEach(t => {
-                    t.classList.remove('active');
-                });
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.report-content').forEach(c => c.classList.remove('active'));
                 
                 // Add active class to clicked tab
                 this.classList.add('active');
                 
-                // You can add logic here to show different report content
-                // based on which tab was clicked
+                // Show corresponding content
+                const tabId = this.getAttribute('data-tab');
+                const contentId = tabId + 'Tab';
+                const content = document.getElementById(contentId);
+                if (content) {
+                    content.classList.add('active');
+                }
             });
         });
 
-        // Prepare approved requests data for JS
-        const approvedRequests = JSON.parse('{!! json_encode($approved_requests) !!}');
+        async function loadAllReports() {
+            try {
+                const res = await fetch('/cashier/reports', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!res.ok) throw new Error('Failed to load reports');
+                const data = await res.json();
+
+                // Update summary cards
+                const peso = (n) => '₱' + (Number(n || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+                setText('reportTotalCollected', peso(data.total_collected));
+                setText('reportTotalRequests', (data.total_requests || 0).toString());
+                setText('reportCompleted', (data.completed || 0).toString());
+                setText('reportPending', (data.pending || 0).toString());
+
+                // Render charts
+                renderDailyTrendsChart(data.daily_trends || {});
+                renderStatusDistributionChart(data.status_distribution || {});
+                renderRevenueByTypeChart(data.revenue_by_type || {});
+            } catch (_) {
+                // noop for now
+            }
+        }
+
+        // Chart instances
+        let dailyTrendsChart = null;
+        let statusDistributionChart = null;
+        let revenueByTypeChart = null;
+
+        function renderDailyTrendsChart(data) {
+            const ctx = document.getElementById('dailyTrendsChart');
+            if (!ctx || !window.Chart) return;
+
+            const dates = Object.keys(data).sort();
+            const amounts = dates.map(date => data[date] || 0);
+
+            if (dailyTrendsChart) {
+                dailyTrendsChart.destroy();
+            }
+
+            dailyTrendsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates.map(date => new Date(date).toLocaleDateString()),
+                    datasets: [{
+                        label: 'Daily Revenue (₱)',
+                        data: amounts,
+                        borderColor: '#8B0000',
+                        backgroundColor: 'rgba(139, 0, 0, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: { 
+                            callbacks: {
+                                label: function(context) {
+                                    return '₱' + Number(context.parsed.y).toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            ticks: { autoSkip: false, maxRotation: 45 },
+                            title: { display: true, text: 'Date' }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { 
+                                callback: function(value) {
+                                    return '₱' + Number(value).toLocaleString();
+                                }
+                            },
+                            title: { display: true, text: 'Amount Collected' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderStatusDistributionChart(data) {
+            const ctx = document.getElementById('statusDistributionChart');
+            if (!ctx || !window.Chart) return;
+
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+            const colors = ['#4CAF50', '#FFC107', '#2196F3']; // Green, Yellow, Blue
+
+            if (statusDistributionChart) {
+                statusDistributionChart.destroy();
+            }
+
+            statusDistributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.map(label => label.charAt(0).toUpperCase() + label.slice(1)),
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: { padding: 20 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderRevenueByTypeChart(data) {
+            const ctx = document.getElementById('revenueByTypeChart');
+            if (!ctx || !window.Chart) return;
+
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+            const colors = ['#7f1d1d', '#b91c1c', '#dc2626', '#ef4444', '#f87171', '#c62828', '#8B0000', '#A52A2A'];
+
+            if (revenueByTypeChart) {
+                revenueByTypeChart.destroy();
+            }
+
+            revenueByTypeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue (₱)',
+                        data: values,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '₱' + Number(context.parsed.y).toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            ticks: { 
+                                autoSkip: false, 
+                                maxRotation: 45, 
+                                minRotation: 0 
+                            },
+                            title: { display: true, text: 'Document Type' }
+                        },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { 
+                                callback: function(value) {
+                                    return '₱' + Number(value).toLocaleString();
+                                }
+                            },
+                            title: { display: true, text: 'Revenue' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Prepare approved requests data for JS (safe embedding)
+        const approvedRequests = @json($approved_requests->values());
         const fees = JSON.parse('{!! json_encode($fees) !!}');
 
         function formatAmount(request) {
@@ -1475,10 +1787,10 @@
             }
             // Exclude requests with payment_status 'paid'
             const matches = approvedRequests.filter(req =>
-                req.payment_status !== 'paid' && (
+                (req.payment_status ?? req.paymentStatus ?? '').toLowerCase() !== 'paid' && (
                     req.reference_number.toLowerCase().includes(query) ||
-                    req.student_id?.toLowerCase().includes(query) ||
-                    (req.first_name + ' ' + req.last_name).toLowerCase().includes(query)
+                    (req.student_id || req.studentId || '').toLowerCase().includes(query) ||
+                    ((req.first_name || req.firstName || '') + ' ' + (req.last_name || req.lastName || '')).toLowerCase().includes(query)
                 )
             );
             if (matches.length === 0) {
@@ -1591,6 +1903,124 @@
                 searchResults.style.display = 'none';
             }
         });
+
+        // Export Records functionality
+        document.getElementById('exportForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const exportBtn = document.getElementById('exportBtn');
+            const originalText = exportBtn.innerHTML;
+            
+            // Show loading state
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+            exportBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/cashier/export', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                if (response.ok) {
+                    // Check if response is JSON (error) or file (success)
+                    const contentType = response.headers.get('Content-Type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const error = await response.json();
+                        alert('Export failed: ' + (error.error || 'Unknown error'));
+                    } else {
+                        // Get filename from response headers or create one
+                        const contentDisposition = response.headers.get('Content-Disposition');
+                        let filename = 'export.csv';
+                        if (contentDisposition) {
+                            const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                            if (filenameMatch) {
+                                filename = filenameMatch[1];
+                            }
+                        }
+                        
+                        // Create download link
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        
+                        // Show success message
+                        alert('Export completed successfully!');
+                    }
+                } else {
+                    // Try to parse as JSON first
+                    try {
+                        const error = await response.json();
+                        alert('Export failed: ' + (error.error || 'Unknown error'));
+                    } catch (e) {
+                        // If not JSON, show generic error
+                        alert('Export failed: Server error (Status: ' + response.status + ')');
+                    }
+                }
+            } catch (error) {
+                alert('Export failed: ' + error.message);
+            } finally {
+                // Reset button
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        });
+
+        // Format selection functionality
+        document.querySelectorAll('#formatSelection .method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove selected class from all cards
+                document.querySelectorAll('#formatSelection .method-card').forEach(c => c.classList.remove('selected'));
+                // Add selected class to clicked card
+                this.classList.add('selected');
+                // Update hidden input
+                document.getElementById('selectedFormat').value = this.getAttribute('data-format');
+            });
+        });
+
+        // Save Profile
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const profileForm = document.getElementById('profileForm');
+        if (saveProfileBtn && profileForm) {
+            saveProfileBtn.addEventListener('click', async function() {
+                const formData = new FormData(profileForm);
+                try {
+                    saveProfileBtn.disabled = true;
+                    saveProfileBtn.textContent = 'Saving...';
+                    const res = await fetch('{{ route('cashier.profile.update') }}', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.success) {
+                        alert(data.message || 'Failed to update profile');
+                    } else {
+                        // Update footer UI
+                        const nameEl = document.querySelector('.user-name');
+                        if (nameEl) nameEl.textContent = data.user.username;
+                        const avatarEl = document.querySelector('.avatar');
+                        if (avatarEl && data.user.avatar_url) avatarEl.src = data.user.avatar_url;
+                        closeProfileModal();
+                        alert('Profile updated successfully');
+                    }
+                } catch (_) {
+                    alert('Failed to update profile');
+                } finally {
+                    saveProfileBtn.disabled = false;
+                    saveProfileBtn.textContent = 'Save Changes';
+                }
+            });
+        }
     </script>
 </body>
 </html>

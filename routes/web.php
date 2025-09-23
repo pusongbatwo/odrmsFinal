@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -11,6 +10,7 @@ use App\Http\Controllers\LandingpageController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\RegistrarController;
 use App\Http\Controllers\CashierController;
+use App\Http\Controllers\GoogleDriveBackupController;
 
 use App\Http\Controllers\AlumniController;
 
@@ -27,6 +27,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/cashier/system-logs', [CashierLogController::class, 'index'])->name('cashier.system_logs');
 });
 
+use Illuminate\Support\Facades\Storage;
+
+
+Route::post('/students/backup-google-drive', [GoogleDriveBackupController::class, 'backupStudentRecords']);
+
+Route::get('/backup', [GoogleDriveBackupController::class, 'backupStudentRecords'])->name('backupStudentRecords');
+Route::get('/oauth/callback', [GoogleDriveBackupController::class, 'oauthCallback'])->name('oauthCallback');
+
+// AJAX endpoint for main reports table
+    Route::get('/registrar/report/main-reports', [RegistrarController::class, 'reportMainReports']);
+// Export report endpoint
+    Route::get('/registrar/report/export', [RegistrarController::class, 'exportReport']);
 // ✅ **Landing Page** (Loads when the project starts)
 Route::get('/', function () {
     return view('landingpage');
@@ -51,9 +63,9 @@ Route::get('/registrar/progress-data', [DocumentRequestController::class, 'getPr
 Route::get('/request/success/{reference}', [DocumentRequestController::class, 'success'])->name('request.success');
 
 // ✅ **Document Tracking Routes**
-Route::get('/track', function () {
-    return view('track');
-})->name('track.form');
+//Route::get('/track', function () {
+  //  return view('track');
+//})->name('track.form');
 // Route::post('/track', [DocumentRequestController::class, 'track'])->name('track.submit'); // Uncomment if tracking logic exists
 
 // Alumni resource routes
@@ -66,6 +78,12 @@ Route::middleware('guest')->group(function () {
     
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
+    
+    // Password Reset
+    Route::get('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('/reset-password/{token}', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->name('password.update');
     
     Route::get('/forgot-password', function () {
         return view('auth.forgot-password');
@@ -86,6 +104,10 @@ Route::post('/track', [DocumentTrackingController::class, 'trackDocument'])->nam
 Route::post('/process-payment', [DocumentTrackingController::class, 'processPayment'])->name('process.payment');
 Route::get('/requester/dashboard/{reference_number}', [DocumentTrackingController::class, 'showRequesterDashboard'])
     ->name('requester.dashboard');
+Route::get('/requester/status/{reference_number}', [DocumentTrackingController::class, 'status'])->name('requester.status');
+// Chat endpoints (requester <-> registrar)
+Route::post('/chat/send', [\App\Http\Controllers\ChatController::class, 'send'])->name('chat.send');
+Route::get('/chat/fetch', [\App\Http\Controllers\ChatController::class, 'fetch'])->name('chat.fetch');
    
    // Fix Logout Route
 Route::post('/logout', function () {
@@ -109,6 +131,16 @@ Route::middleware(['auth'])->group(function () {
     })->name('admin.dashboard');
 
     Route::get('/cashier/dashboard', [CashierController::class, 'dashboard'])->name('cashier.dashboard');
+    Route::get('/cashier/reports', [CashierController::class, 'reportsData'])->name('cashier.reports');
+    Route::post('/cashier/export', [CashierController::class, 'exportRecords'])->name('cashier.export');
+    Route::get('/cashier/test-export', [CashierController::class, 'testExport'])->name('cashier.test-export');
+    Route::post('/cashier/profile', [CashierController::class, 'updateProfile'])->name('cashier.profile.update');
+
+
+    // AJAX endpoints for report-tabs
+    Route::get('/registrar/report/document-requests', [RegistrarController::class, 'reportDocumentRequests']);
+    Route::get('/registrar/report/student-records', [RegistrarController::class, 'reportStudentRecords']);
+    Route::get('/registrar/report/user-activity', [RegistrarController::class, 'reportUserActivity']);
 
     Route::get('/registrar/pending-count', [RegistrarController::class, 'pendingCount']);
 
