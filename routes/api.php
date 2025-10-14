@@ -19,6 +19,7 @@ use App\Http\Controllers\ChatController;
 // Public chat endpoints
 Route::get('/document-requests/{id}/messages', [ChatController::class, 'index']);
 Route::post('/document-requests/{id}/messages', [ChatController::class, 'store']);
+// Registrar endpoints moved to web.php so they use session/web middleware (see web.php)
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });

@@ -221,9 +221,25 @@ class CashierController extends Controller
         }
     }
 
+
     public function exportRecords(Request $request)
     {
         try {
+            // Debug: Log the request data
+            \Log::info('Cashier export request', [
+                'has_csrf_token' => $request->has('_token'),
+                'csrf_token' => $request->input('_token'),
+                'headers' => $request->headers->all(),
+                'all_data' => $request->all(),
+                'method' => $request->method(),
+                'is_ajax' => $request->ajax()
+            ]);
+
+            // For debugging, let's also accept GET requests temporarily
+            if ($request->isMethod('get')) {
+                \Log::info('Export via GET request', $request->all());
+            }
+
             $request->validate([
                 'report_type' => 'required|string|in:transaction_records,document_requests,payment_summary,daily_totals',
                 'file_format' => 'required|string|in:xlsx,csv',
@@ -246,38 +262,196 @@ class CashierController extends Controller
 
             switch ($reportType) {
                 case 'transaction_records':
-                    $data = $query->where('payment_status', 'paid')->get()->map(function($request) {
+                    $paidRequests = $query->where('payment_status', 'paid')->get();
+                    $data = collect();
+                    
+                    // Add header information
+                    $data->push([
+                        'Reference Number' => 'TRANSACTION RECORDS REPORT',
+                        'Student Name' => 'DETAILED LOG',
+                        'Student ID' => 'OF ALL PAID',
+                        'Document Types' => 'TRANSACTIONS',
+                        'Amount' => 'SUMMARY',
+                        'Payment Date' => 'INFORMATION',
+                        'Status' => 'DETAILS',
+                        'Email' => 'CONTACT',
+                        'Notes' => 'ADDITIONAL INFO'
+                    ]);
+                    
+                    $data->push([
+                        'Reference Number' => '---',
+                        'Student Name' => '---',
+                        'Student ID' => '---',
+                        'Document Types' => '---',
+                        'Amount' => '---',
+                        'Payment Date' => '---',
+                        'Status' => '---',
+                        'Email' => '---',
+                        'Notes' => '---'
+                    ]);
+                    
+                    // Add detailed transaction records
+                    foreach ($paidRequests as $request) {
+                        $amount = 0;
+                        $documentTypes = [];
+                        $quantities = [];
+                        foreach ($request->requestedDocuments as $doc) {
+                            $fees = config('services.document_fees', []);
+                            $amount += ($fees[$doc->document_type] ?? 250) * $doc->quantity;
+                            $documentTypes[] = $doc->document_type;
+                            $quantities[] = $doc->quantity;
+                        }
+                        
+                        $data->push([
+                            'Reference Number' => $request->reference_number ?? 'N/A',
+                            'Student Name' => ($request->first_name ?? '') . ' ' . ($request->last_name ?? ''),
+                            'Student ID' => $request->student_id ?? 'N/A',
+                            'Document Types' => implode(', ', $documentTypes),
+                            'Amount' => '₱' . number_format($amount, 2),
+                            'Payment Date' => $this->formatDateTime($request->paid_at),
+                            'Status' => ucfirst($request->payment_status ?? ''),
+                            'Email' => $request->email ?? 'No email',
+                            'Notes' => 'Quantities: ' . implode(', ', $quantities)
+                        ]);
+                    }
+                    
+                    // Add summary footer
+                    $totalAmount = $paidRequests->sum(function($request) {
                         $amount = 0;
                         foreach ($request->requestedDocuments as $doc) {
                             $fees = config('services.document_fees', []);
                             $amount += ($fees[$doc->document_type] ?? 250) * $doc->quantity;
                         }
-                        return [
-                            'Reference Number' => $request->reference_number ?? '',
-                            'Student Name' => ($request->first_name ?? '') . ' ' . ($request->last_name ?? ''),
-                            'Student ID' => $request->student_id ?? '',
-                            'Document Types' => $request->requestedDocuments->pluck('document_type')->implode(', '),
-                            'Amount' => $amount,
-                            'Payment Date' => $this->formatDateTime($request->paid_at),
-                            'Status' => ucfirst($request->payment_status ?? ''),
-                        ];
+                        return $amount;
                     });
+                    
+                    $data->push([
+                        'Reference Number' => '---',
+                        'Student Name' => '---',
+                        'Student ID' => '---',
+                        'Document Types' => '---',
+                        'Amount' => '---',
+                        'Payment Date' => '---',
+                        'Status' => '---',
+                        'Email' => '---',
+                        'Notes' => '---'
+                    ]);
+                    
+                    $data->push([
+                        'Reference Number' => 'TOTAL SUMMARY',
+                        'Student Name' => 'N/A',
+                        'Student ID' => 'N/A',
+                        'Document Types' => 'N/A',
+                        'Amount' => '₱' . number_format($totalAmount, 2),
+                        'Payment Date' => 'N/A',
+                        'Status' => 'SUMMARY',
+                        'Email' => 'N/A',
+                        'Notes' => 'Total of ' . $paidRequests->count() . ' transactions'
+                    ]);
+                    
                     break;
 
                 case 'document_requests':
-                    $data = $query->get()->map(function($request) {
-                        return [
-                            'Reference Number' => $request->reference_number ?? '',
+                    $allRequests = $query->get();
+                    $data = collect();
+                    
+                    // Add header information
+                    $data->push([
+                        'Reference Number' => 'DOCUMENT REQUESTS REPORT',
+                        'Student Name' => 'COMPREHENSIVE',
+                        'Student ID' => 'OVERVIEW',
+                        'Email' => 'OF ALL',
+                        'Document Types' => 'DOCUMENT',
+                        'Quantities' => 'REQUESTS',
+                        'Status' => 'DETAILS',
+                        'Payment Status' => 'INFORMATION',
+                        'Request Date' => 'TIMELINE',
+                        'Amount Due' => 'CALCULATED',
+                        'Notes' => 'ADDITIONAL INFO'
+                    ]);
+                    
+                    $data->push([
+                        'Reference Number' => '---',
+                        'Student Name' => '---',
+                        'Student ID' => '---',
+                        'Email' => '---',
+                        'Document Types' => '---',
+                        'Quantities' => '---',
+                        'Status' => '---',
+                        'Payment Status' => '---',
+                        'Request Date' => '---',
+                        'Amount Due' => '---',
+                        'Notes' => '---'
+                    ]);
+                    
+                    // Add detailed document requests
+                    foreach ($allRequests as $request) {
+                        $amount = 0;
+                        $documentTypes = [];
+                        $quantities = [];
+                        foreach ($request->requestedDocuments as $doc) {
+                            $fees = config('services.document_fees', []);
+                            $amount += ($fees[$doc->document_type] ?? 250) * $doc->quantity;
+                            $documentTypes[] = $doc->document_type;
+                            $quantities[] = $doc->quantity;
+                        }
+                        
+                        $data->push([
+                            'Reference Number' => $request->reference_number ?? 'N/A',
                             'Student Name' => ($request->first_name ?? '') . ' ' . ($request->last_name ?? ''),
-                            'Student ID' => $request->student_id ?? '',
-                            'Email' => $request->email ?? '',
-                            'Document Types' => $request->requestedDocuments->pluck('document_type')->implode(', '),
-                            'Quantities' => $request->requestedDocuments->pluck('quantity')->implode(', '),
-                            'Status' => ucfirst($request->status ?? ''),
-                            'Payment Status' => ucfirst($request->payment_status ?? ''),
+                            'Student ID' => $request->student_id ?? 'N/A',
+                            'Email' => $request->email ?? 'No email',
+                            'Document Types' => implode(', ', $documentTypes),
+                            'Quantities' => implode(', ', $quantities),
+                            'Status' => ucfirst($request->status ?? 'Unknown'),
+                            'Payment Status' => ucfirst($request->payment_status ?? 'Unknown'),
                             'Request Date' => $this->formatDateTime($request->created_at),
-                        ];
+                            'Amount Due' => '₱' . number_format($amount, 2),
+                            'Notes' => 'Request ID: ' . ($request->id ?? 'N/A')
+                        ]);
+                    }
+                    
+                    // Add summary statistics
+                    $totalRequests = $allRequests->count();
+                    $paidRequests = $allRequests->where('payment_status', 'paid')->count();
+                    $pendingRequests = $allRequests->where('payment_status', 'unpaid')->count();
+                    $totalAmount = $allRequests->sum(function($request) {
+                        $amount = 0;
+                        foreach ($request->requestedDocuments as $doc) {
+                            $fees = config('services.document_fees', []);
+                            $amount += ($fees[$doc->document_type] ?? 250) * $doc->quantity;
+                        }
+                        return $amount;
                     });
+                    
+                    $data->push([
+                        'Reference Number' => '---',
+                        'Student Name' => '---',
+                        'Student ID' => '---',
+                        'Email' => '---',
+                        'Document Types' => '---',
+                        'Quantities' => '---',
+                        'Status' => '---',
+                        'Payment Status' => '---',
+                        'Request Date' => '---',
+                        'Amount Due' => '---',
+                        'Notes' => '---'
+                    ]);
+                    
+                    $data->push([
+                        'Reference Number' => 'SUMMARY STATISTICS',
+                        'Student Name' => 'N/A',
+                        'Student ID' => 'N/A',
+                        'Email' => 'N/A',
+                        'Document Types' => 'N/A',
+                        'Quantities' => 'N/A',
+                        'Status' => 'N/A',
+                        'Payment Status' => 'N/A',
+                        'Request Date' => 'N/A',
+                        'Amount Due' => '₱' . number_format($totalAmount, 2),
+                        'Notes' => 'Total: ' . $totalRequests . ', Paid: ' . $paidRequests . ', Pending: ' . $pendingRequests
+                    ]);
+                    
                     break;
 
                 case 'payment_summary':
@@ -285,26 +459,95 @@ class CashierController extends Controller
                     $totalAmount = $paidRequests->sum('amount_paid') ?? 0;
                     $totalRequests = $paidRequests->count();
                     
-                    $data = collect([
-                        [
-                            'Metric' => 'Total Revenue',
-                            'Value' => '₱' . number_format($totalAmount, 2),
-                        ],
-                        [
-                            'Metric' => 'Total Paid Requests',
-                            'Value' => $totalRequests,
-                        ],
-                        [
-                            'Metric' => 'Average Payment',
-                            'Value' => $totalRequests > 0 ? '₱' . number_format($totalAmount / $totalRequests, 2) : '₱0.00',
-                        ],
-                        [
-                            'Metric' => 'Date Range',
-                            'Value' => $startDate && $endDate ? 
-                                $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d') : 
-                                'All Time',
-                        ],
+                    // Create detailed transaction logs
+                    $data = collect();
+                    
+                    // Add summary metrics first
+                    $data->push([
+                        'Type' => 'SUMMARY',
+                        'Reference Number' => 'TOTAL REVENUE',
+                        'Student Name' => 'N/A',
+                        'Student ID' => 'N/A',
+                        'Document Types' => 'N/A',
+                        'Amount' => '₱' . number_format($totalAmount, 2),
+                        'Payment Date' => 'N/A',
+                        'Status' => 'SUMMARY',
+                        'Notes' => 'Total collected from all paid transactions'
                     ]);
+                    
+                    $data->push([
+                        'Type' => 'SUMMARY',
+                        'Reference Number' => 'TOTAL REQUESTS',
+                        'Student Name' => 'N/A',
+                        'Student ID' => 'N/A',
+                        'Document Types' => 'N/A',
+                        'Amount' => $totalRequests,
+                        'Payment Date' => 'N/A',
+                        'Status' => 'SUMMARY',
+                        'Notes' => 'Total number of paid requests'
+                    ]);
+                    
+                    $data->push([
+                        'Type' => 'SUMMARY',
+                        'Reference Number' => 'AVERAGE PAYMENT',
+                        'Student Name' => 'N/A',
+                        'Student ID' => 'N/A',
+                        'Document Types' => 'N/A',
+                        'Amount' => $totalRequests > 0 ? '₱' . number_format($totalAmount / $totalRequests, 2) : '₱0.00',
+                        'Payment Date' => 'N/A',
+                        'Status' => 'SUMMARY',
+                        'Notes' => 'Average payment per request'
+                    ]);
+                    
+                    $data->push([
+                        'Type' => 'SUMMARY',
+                        'Reference Number' => 'DATE RANGE',
+                        'Student Name' => 'N/A',
+                        'Student ID' => 'N/A',
+                        'Document Types' => 'N/A',
+                        'Amount' => 'N/A',
+                        'Payment Date' => 'N/A',
+                        'Status' => 'SUMMARY',
+                        'Notes' => $startDate && $endDate ? 
+                            $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d') : 
+                            'All Time'
+                    ]);
+                    
+                    // Add separator
+                    $data->push([
+                        'Type' => 'SEPARATOR',
+                        'Reference Number' => '--- DETAILED TRANSACTION LOGS ---',
+                        'Student Name' => '---',
+                        'Student ID' => '---',
+                        'Document Types' => '---',
+                        'Amount' => '---',
+                        'Payment Date' => '---',
+                        'Status' => '---',
+                        'Notes' => '---'
+                    ]);
+                    
+                    // Add detailed transaction logs
+                    foreach ($paidRequests as $request) {
+                        $amount = 0;
+                        $documentTypes = [];
+                        foreach ($request->requestedDocuments as $doc) {
+                            $fees = config('services.document_fees', []);
+                            $amount += ($fees[$doc->document_type] ?? 250) * $doc->quantity;
+                            $documentTypes[] = $doc->document_type . ' (x' . $doc->quantity . ')';
+                        }
+                        
+                        $data->push([
+                            'Type' => 'TRANSACTION',
+                            'Reference Number' => $request->reference_number ?? 'N/A',
+                            'Student Name' => ($request->first_name ?? '') . ' ' . ($request->last_name ?? ''),
+                            'Student ID' => $request->student_id ?? 'N/A',
+                            'Document Types' => implode(', ', $documentTypes),
+                            'Amount' => '₱' . number_format($amount, 2),
+                            'Payment Date' => $this->formatDateTime($request->paid_at),
+                            'Status' => ucfirst($request->payment_status ?? ''),
+                            'Notes' => 'Paid transaction - ' . ($request->email ?? 'No email')
+                        ]);
+                    }
                     break;
 
                 case 'daily_totals':
@@ -318,19 +561,75 @@ class CashierController extends Controller
                         ->orderBy('date')
                         ->get();
 
-                    $data = $dailyTotals->map(function($day) {
-                        return [
-                            'Date' => $day->date ?? '',
+                    $data = collect();
+                    
+                    // Add summary header
+                    $data->push([
+                        'Date' => 'DAILY TOTALS REPORT',
+                        'Total Amount' => 'SUMMARY',
+                        'Number of Payments' => 'DETAILS',
+                        'Average per Payment' => 'CALCULATED',
+                        'Notes' => 'Daily payment breakdown'
+                    ]);
+                    
+                    $data->push([
+                        'Date' => '---',
+                        'Total Amount' => '---',
+                        'Number of Payments' => '---',
+                        'Average per Payment' => '---',
+                        'Notes' => '---'
+                    ]);
+                    
+                    // Add daily totals
+                    foreach ($dailyTotals as $day) {
+                        $average = $day->count > 0 ? ($day->total / $day->count) : 0;
+                        $data->push([
+                            'Date' => $day->date ?? 'Unknown',
                             'Total Amount' => '₱' . number_format($day->total ?? 0, 2),
                             'Number of Payments' => $day->count ?? 0,
-                        ];
-                    });
+                            'Average per Payment' => '₱' . number_format($average, 2),
+                            'Notes' => 'Daily summary for ' . ($day->date ?? 'Unknown')
+                        ]);
+                    }
+                    
+                    // Add grand total
+                    $grandTotal = $dailyTotals->sum('total');
+                    $grandCount = $dailyTotals->sum('count');
+                    $grandAverage = $grandCount > 0 ? ($grandTotal / $grandCount) : 0;
+                    
+                    $data->push([
+                        'Date' => '---',
+                        'Total Amount' => '---',
+                        'Number of Payments' => '---',
+                        'Average per Payment' => '---',
+                        'Notes' => '---'
+                    ]);
+                    
+                    $data->push([
+                        'Date' => 'GRAND TOTAL',
+                        'Total Amount' => '₱' . number_format($grandTotal, 2),
+                        'Number of Payments' => $grandCount,
+                        'Average per Payment' => '₱' . number_format($grandAverage, 2),
+                        'Notes' => 'Overall summary for selected period'
+                    ]);
+                    
                     break;
             }
 
             return $this->exportToCsv($data, $reportType);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Cashier export validation error', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            return response()->json(['error' => 'Validation failed: ' . implode(', ', $e->errors())], 422);
         } catch (\Exception $e) {
+            \Log::error('Cashier export error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
             return response()->json(['error' => 'Export failed: ' . $e->getMessage()], 500);
         }
     }

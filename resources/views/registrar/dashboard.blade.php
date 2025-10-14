@@ -1445,13 +1445,7 @@
                         <span class="menu-text">System Log</span>
                     </a>
                 </li>
-                <li class="menu-item">
-                    <a href="#" class="menu-link" data-section="liveChat">
-                        <i class="fas fa-comments menu-icon"></i>
-                        <span class="menu-text">Live Chat</span>
-                        <span class="menu-badge" id="liveChatBadge" style="display:none;">0</span>
-                    </a>
-                </li>
+                <!-- Live Chat menu removed per request (UI-only change) -->
             </ul>
         </div>
         <div class="sidebar-footer">
@@ -2477,11 +2471,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                             // Calculate relative percentage based on highest count, not total
                                             $relativePercentage = $maxCount > 0 ? ($docType->count / $maxCount) * 100 : 0;
                                             $barHeight = 180; // Fixed height for all bars
-                                            
-                                            // Enhanced color palette for each document type
-                                            $colors = [
+
+                                            // Keep explicit mapping for known document types but provide a rotating
+                                            // palette fallback so each bar gets a distinct color when the mapping
+                                            // doesn't include the type or when there are many types.
+                                            $mapping = [
                                                 'Transcript' => ['#8B0000', '#A52A2A', '#DC143C'],      // Dark Red variations
-                                                'Diploma' => ['#D4AF37', '#FFD700', '#FFA500'],         // Gold variations
+                                                'Diploma' => ['#d43773ff', '#5f0f23ff', '#500d1dff'],         // Gold variations
                                                 'Certificate' => ['#2196F3', '#42A5F5', '#64B5F6'],     // Blue variations
                                                 'TOR' => ['#4CAF50', '#66BB6A', '#81C784'],            // Green variations
                                                 'Form 137' => ['#FF9800', '#FFB74D', '#FFCC02'],        // Orange variations
@@ -2493,8 +2489,31 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 'Authentication' => ['#FF5722', '#FF8A65', '#FFCCBC'],    // Deep Orange variations
                                                 'Verification' => ['#673AB7', '#9575CD', '#D1C4E9']      // Deep Purple variations
                                             ];
-                                            
-                                            $colorSet = $colors[$docType->document_type] ?? ['#8B0000', '#A52A2A', '#DC143C']; // Default to primary color variations
+
+                                            // A rotating palette of triads to ensure visually distinct bars
+                                            $rotatingPalette = [
+                                                ['#8B0000','#A52A2A','#DC143C'],
+                                                ['#D4AF37','#FFD700','#FFA500'],
+                                                ['#2196F3','#42A5F5','#64B5F6'],
+                                                ['#4CAF50','#66BB6A','#81C784'],
+                                                ['#FF9800','#FFB74D','#FFCC02'],
+                                                ['#9C27B0','#BA68C8','#CE93D8'],
+                                                ['#795548','#8D6E63','#A1887F'],
+                                                ['#607D8B','#78909C','#90A4AE'],
+                                                ['#E91E63','#F06292','#F8BBD9'],
+                                                ['#00BCD4','#4DD0E1','#B2EBF2'],
+                                                ['#FF5722','#FF8A65','#FFCCBC'],
+                                                ['#673AB7','#9575CD','#D1C4E9']
+                                            ];
+
+                                            // Prefer explicit mapping, otherwise pick from rotating palette using loop index
+                                            if (isset($mapping[$docType->document_type])) {
+                                                $colorSet = $mapping[$docType->document_type];
+                                            } else {
+                                                // Use Blade's $loop index to pick a palette entry so adjacent bars are different
+                                                $idx = isset($loop) ? $loop->index : 0;
+                                                $colorSet = $rotatingPalette[$idx % count($rotatingPalette)];
+                                            }
                                             $barColor = $colorSet[0]; // Main color for the bar
                                         @endphp
                                         
@@ -2586,115 +2605,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
-        <!-- Live Chat/Inquiries UI -->
-        <div id="liveChatUI" class="feature-ui">
-            <div style="display:flex;gap:0;height:600px;max-height:70vh;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;">
-                <!-- Conversation List -->
-                <div id="chat-convo-list" style="width:260px;background:#f9f9f9;border-right:1px solid #eee;overflow-y:auto;">
-                    <div style="padding:18px 16px 10px;font-weight:600;font-size:17px;color:#8B0000;border-bottom:1px solid #eee;">Conversations</div>
-                    <div id="convo-list-items" style="display:flex;flex-direction:column;"></div>
-                </div>
-                <!-- Chat Messages -->
-                <div style="flex:1;display:flex;flex-direction:column;">
-                    <div id="chat-header" style="background:linear-gradient(135deg,#8B0000,#6B0000);color:#fff;padding:14px 20px;font-weight:600;font-size:16px;display:flex;align-items:center;gap:10px;min-height:54px;">
-                        <i class="fas fa-user-circle"></i>
-                        <span id="chat-header-title">Select a conversation</span>
-                    </div>
-                    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:18px 12px 0 12px;display:flex;flex-direction:column;gap:10px;background:#fff;"></div>
-                    <form id="chat-form" style="display:flex;gap:8px;padding:10px 12px 10px 12px;border-top:1px solid #eee;background:#fafafa;" autocomplete="off">
-                        <input id="chat-input" type="text" placeholder="Type your message..." style="flex:1;padding:10px 14px;border-radius:20px;border:1px solid #eee;background:#f9f9f9;outline:none;" autocomplete="off" disabled />
-                        <button type="submit" style="background:#8B0000;color:#fff;border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.2s;" disabled><i class="fas fa-paper-plane"></i></button>
-                    </form>
-                </div>
-            </div>
-            <script>
-            // --- Registrar Live Chat Logic ---
-            document.addEventListener('DOMContentLoaded', function() {
-                let selectedConvoId = null;
-                const convoList = document.getElementById('convo-list-items');
-                const chatHeaderTitle = document.getElementById('chat-header-title');
-                const chatMessages = document.getElementById('chat-messages');
-                const chatForm = document.getElementById('chat-form');
-                const chatInput = document.getElementById('chat-input');
-                const sendBtn = chatForm.querySelector('button');
-                const liveChatBadge = document.getElementById('liveChatBadge');
-
-                function fetchConversations() {
-                    fetch('/api/registrar/conversations', { headers: { 'Accept': 'application/json' } })
-                        .then(res => res.json())
-                        .then(data => {
-                            convoList.innerHTML = '';
-                            let unreadCount = 0;
-                            data.forEach(convo => {
-                                const item = document.createElement('div');
-                                item.className = 'convo-list-item';
-                                item.style = 'padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid #eee;background:' + (selectedConvoId===convo.id?'#f5e7c1':'#fff') + ';';
-                                item.innerHTML = `<div style='flex:1;'><div style='font-weight:600;color:#8B0000;'>${convo.requester_name||'Requester'}</div><div style='font-size:13px;color:#666;'>${convo.last_message?convo.last_message.substring(0,32):''}</div></div>` + (convo.unread_count>0?`<span style='background:#D4AF37;color:#8B0000;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;'>${convo.unread_count}</span>`:'');
-                                item.onclick = () => selectConversation(convo.id, convo.requester_name);
-                                convoList.appendChild(item);
-                                if(convo.unread_count>0) unreadCount += convo.unread_count;
-                            });
-                            liveChatBadge.style.display = unreadCount>0?'inline-flex':'none';
-                            liveChatBadge.textContent = unreadCount;
-                        });
-                }
-
-                function selectConversation(convoId, requesterName) {
-                    selectedConvoId = convoId;
-                    chatHeaderTitle.textContent = requesterName ? `Chat with ${requesterName}` : 'Chat';
-                    chatInput.disabled = false;
-                    sendBtn.disabled = false;
-                    fetchMessages();
-                    fetchConversations();
-                }
-
-                function renderMessages(messages) {
-                   
-
-                function fetchMessages() {
-                    if(!selectedConvoId) return;
-                    fetch(`/api/registrar/conversations/${selectedConvoId}/messages`, { headers: { 'Accept': 'application/json' } })
-                        .then(res => res.json())
-                        .then(renderMessages);
-                }
-
-                chatForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    if(!selectedConvoId) return;
-                    const msg = chatInput.value.trim();
-                    if(!msg) return;
-                    fetch(`/api/registrar/conversations/${selectedConvoId}/messages`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify({ message: msg })
-                    })
-                    .then(res => res.json())
-                    .then(() => {
-                        chatInput.value
-                        fetchMessages();
-                        fetchConversations();
-                    });
-                });
-
-                // Poll for new messages/convos every 10s
-                setInterval(() => {
-                    fetchConversations();
-                    if(selectedConvoId) fetchMessages();
-                }, 10000);
-
-                // Live Chat specific initialization
-                // Note: Main navigation is handled in the main script section below
-                // This section only handles live chat specific setup when the section is activated
-
-                // Initial fetch
-                fetchConversations();
-            });
-            </script>
-        </div>
+        <!-- Live Chat/Inquiries UI removed per request (UI-only). Placeholder kept to prevent JS errors if referenced elsewhere. -->
+        <div id="liveChatUI" class="feature-ui" style="display:none;"></div>
     </main>
     <script>
         document.querySelector('.toggle-btn').addEventListener('click', function() {

@@ -13,6 +13,7 @@ use App\Http\Controllers\CashierController;
 use App\Http\Controllers\GoogleDriveBackupController;
 
 use App\Http\Controllers\AlumniController;
+use App\Http\Controllers\AdminController;
 
 Route::post('/students/store', [RegistrarController::class, 'storeStudent'])->name('students.store');
 
@@ -126,13 +127,53 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/registrar/backup', [RegistrarController::class, 'backup'])->name('registrar.backup');
     Route::post('/registrar/complete/{id}', [RegistrarController::class, 'complete'])->name('registrar.complete');
 
-    Route::get('/admin/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
+    // Admin Routes - Only accessible by admin users
+    Route::middleware(['auth', 'admin'])->group(function () {
+        Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+        
+        // Admin User Management
+        Route::get('/admin/users', [AdminController::class, 'getUsers'])->name('admin.users');
+        Route::get('/admin/users/{id}', [AdminController::class, 'getUser'])->name('admin.users.show');
+        Route::post('/admin/users', [AdminController::class, 'createUser'])->name('admin.users.create');
+        Route::put('/admin/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');
+        Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
+        Route::post('/admin/users/{id}/reset-password', [AdminController::class, 'resetPassword'])->name('admin.users.reset-password');
+        Route::get('/admin/users/export', [AdminController::class, 'exportUsers'])->name('admin.users.export');
+        
+            // Admin Document Management
+            Route::get('/admin/documents', [AdminController::class, 'getDocumentTypes'])->name('admin.documents');
+            Route::get('/admin/documents/{id}', [AdminController::class, 'getDocumentType'])->name('admin.documents.show');
+            Route::post('/admin/documents', [AdminController::class, 'createDocumentType'])->name('admin.documents.create');
+            Route::put('/admin/documents/{id}', [AdminController::class, 'updateDocumentType'])->name('admin.documents.update');
+            Route::delete('/admin/documents/{id}', [AdminController::class, 'deleteDocumentType'])->name('admin.documents.delete');
+        
+        // Admin System Logs
+        Route::get('/admin/system-logs', [AdminController::class, 'getSystemLogs'])->name('admin.system-logs');
+        Route::get('/admin/cashier-logs', [AdminController::class, 'getCashierLogs'])->name('admin.cashier-logs');
+        Route::get('/admin/system-logs/export', [AdminController::class, 'exportLogs'])->name('admin.system-logs.export');
+        
+        // Admin Reports
+        Route::get('/admin/reports', [AdminController::class, 'getReportsData'])->name('admin.reports');
+        Route::get('/admin/reports/cashier-detailed', [AdminController::class, 'getCashierDetailedReport'])->name('admin.reports.cashier-detailed');
+        Route::get('/admin/reports/registrar-detailed', [AdminController::class, 'getRegistrarDetailedReport'])->name('admin.reports.registrar-detailed');
+        Route::get('/admin/reports/document-breakdown', [AdminController::class, 'getDocumentBreakdownReport'])->name('admin.reports.document-breakdown');
+        
+        // Admin Report Exports
+        Route::get('/admin/reports/cashier-detailed/export', [AdminController::class, 'exportCashierDetailedReport'])->name('admin.reports.cashier-detailed.export');
+        Route::get('/admin/reports/registrar-detailed/export', [AdminController::class, 'exportRegistrarDetailedReport'])->name('admin.reports.registrar-detailed.export');
+        Route::get('/admin/reports/document-breakdown/export', [AdminController::class, 'exportDocumentBreakdownReport'])->name('admin.reports.document-breakdown.export');
+        
+        // Admin Profile
+        Route::post('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
+        
+        // Admin Test (temporary for debugging)
+        Route::get('/admin/test-password', [AdminController::class, 'testPasswordHashing'])->name('admin.test-password');
+    });
 
     Route::get('/cashier/dashboard', [CashierController::class, 'dashboard'])->name('cashier.dashboard');
     Route::get('/cashier/reports', [CashierController::class, 'reportsData'])->name('cashier.reports');
     Route::post('/cashier/export', [CashierController::class, 'exportRecords'])->name('cashier.export');
+    Route::get('/cashier/export', [CashierController::class, 'exportRecords'])->name('cashier.export.get'); // Temporary GET route
     Route::get('/cashier/test-export', [CashierController::class, 'testExport'])->name('cashier.test-export');
     Route::post('/cashier/profile', [CashierController::class, 'updateProfile'])->name('cashier.profile.update');
 
@@ -141,6 +182,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/registrar/report/document-requests', [RegistrarController::class, 'reportDocumentRequests']);
     Route::get('/registrar/report/student-records', [RegistrarController::class, 'reportStudentRecords']);
     Route::get('/registrar/report/user-activity', [RegistrarController::class, 'reportUserActivity']);
+
+    // Registrar live chat endpoints (session/web auth ensures Auth::user() is available)
+    Route::get('/registrar/conversations', [\App\Http\Controllers\ChatController::class, 'conversationsForRegistrar']);
+    Route::get('/registrar/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'index']);
 
     Route::get('/registrar/pending-count', [RegistrarController::class, 'pendingCount']);
 

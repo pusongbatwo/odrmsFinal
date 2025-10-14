@@ -1928,47 +1928,164 @@
                             </div>
                             <div class="doc-type-group" id="documentTypesGroup">
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="doc-tor" name="document_types" value="Transcript of Records">
-                                    <label for="doc-tor">Transcript of Records</label>
+                                    <input type="checkbox" id="doc-tor" name="document_types" value="TRANSCRIPT OF RECORDS">
+                                    <label for="doc-tor">TRANSCRIPT OF RECORDS</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Transcript of Records" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="TRANSCRIPT OF RECORDS" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="doc-diploma" name="document_types" value="Diploma">
-                                    <label for="doc-diploma">Diploma</label>
+                                    <input type="checkbox" id="doc-tor-eval" name="document_types" value="TRANSCRIPT OF RECORDS FOR EVALUATION">
+                                    <label for="doc-tor-eval">TRANSCRIPT OF RECORDS FOR EVALUATION</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Diploma" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="TRANSCRIPT OF RECORDS FOR EVALUATION" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="doc-coe" name="document_types" value="Certificate of Enrollment">
-                                    <label for="doc-coe">Certificate of Enrollment</label>
+                                    <input type="checkbox" id="doc-form137a" name="document_types" value="FORM 137A">
+                                    <label for="doc-form137a">FORM 137A</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Certificate of Enrollment" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="FORM 137A" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="doc-cog" name="document_types" value="Certificate of Graduation">
-                                    <label for="doc-cog">Certificate of Graduation</label>
+                                    <input type="checkbox" id="doc-form138" name="document_types" value="FORM 138">
+                                    <label for="doc-form138">FORM 138</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Certificate of Graduation" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="FORM 138" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="doc-other" name="document_types" value="Other">
-                                    <label for="doc-other">Other</label>
+                                    <input type="checkbox" id="doc-hd" name="document_types" value="HONORABLE DISMISSAL">
+                                    <label for="doc-hd">HONORABLE DISMISSAL</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Other" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="HONORABLE DISMISSAL" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-diploma" name="document_types" value="DIPLOMA">
+                                    <label for="doc-diploma">DIPLOMA</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="DIPLOMA" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-cno" name="document_types" value="CERTIFICATE OF NO OBJECTION">
+                                    <label for="doc-cno">CERTIFICATE OF NO OBJECTION</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF NO OBJECTION" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-cem" name="document_types" value="CERTIFICATE OF ENGLISH AS MEDIUM">
+                                    <label for="doc-cem">CERTIFICATE OF ENGLISH AS MEDIUM</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF ENGLISH AS MEDIUM" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-cgm" name="document_types" value="CERTIFICATE OF GOOD MORAL">
+                                    <label for="doc-cgm">CERTIFICATE OF GOOD MORAL</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF GOOD MORAL" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-cr" name="document_types" value="CERTIFICATE OF REGISTRATION">
+                                    <label for="doc-cr">CERTIFICATE OF REGISTRATION</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF REGISTRATION" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-cc" name="document_types" value="CERTIFICATE OF COMPLETION">
+                                    <label for="doc-cc">CERTIFICATE OF COMPLETION</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF COMPLETION" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-cg" name="document_types" value="CERTIFICATE OF GRADES">
+                                    <label for="doc-cg">CERTIFICATE OF GRADES</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF GRADES" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-soa" name="document_types" value="STATEMENT OF ACCOUNT">
+                                    <label for="doc-soa">STATEMENT OF ACCOUNT</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="STATEMENT OF ACCOUNT" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-sr" name="document_types" value="SERVICE RECORD">
+                                    <label for="doc-sr">SERVICE RECORD</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="SERVICE RECORD" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-employment" name="document_types" value="EMPLOYMENT">
+                                    <label for="doc-employment">EMPLOYMENT</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="EMPLOYMENT" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-pr" name="document_types" value="PERFORMANCE RATING">
+                                    <label for="doc-pr">PERFORMANCE RATING</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="PERFORMANCE RATING" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-gwa" name="document_types" value="GWA CERTIFICATE">
+                                    <label for="doc-gwa">GWA CERTIFICATE</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="GWA CERTIFICATE" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="doc-cav" name="document_types" value="CAV ENDORSEMENT">
+                                    <label for="doc-cav">CAV ENDORSEMENT</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CAV ENDORSEMENT" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
@@ -2169,47 +2286,164 @@
                             </div>
                             <div class="doc-type-group" id="alumniDocumentTypesGroup">
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="alumni-doc-tor" name="alumni_document_types" value="Transcript of Records">
-                                    <label for="alumni-doc-tor">Transcript of Records</label>
+                                    <input type="checkbox" id="alumni-doc-tor" name="alumni_document_types" value="TRANSCRIPT OF RECORDS">
+                                    <label for="alumni-doc-tor">TRANSCRIPT OF RECORDS</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Transcript of Records" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="TRANSCRIPT OF RECORDS" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="alumni-doc-diploma" name="alumni_document_types" value="Diploma">
-                                    <label for="alumni-doc-diploma">Diploma</label>
+                                    <input type="checkbox" id="alumni-doc-tor-eval" name="alumni_document_types" value="TRANSCRIPT OF RECORDS FOR EVALUATION">
+                                    <label for="alumni-doc-tor-eval">TRANSCRIPT OF RECORDS FOR EVALUATION</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Diploma" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="TRANSCRIPT OF RECORDS FOR EVALUATION" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="alumni-doc-coe" name="alumni_document_types" value="Certificate of Enrollment">
-                                    <label for="alumni-doc-coe">Certificate of Enrollment</label>
+                                    <input type="checkbox" id="alumni-doc-form137a" name="alumni_document_types" value="FORM 137A">
+                                    <label for="alumni-doc-form137a">FORM 137A</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Certificate of Enrollment" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="FORM 137A" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="alumni-doc-cog" name="alumni_document_types" value="Certificate of Graduation">
-                                    <label for="alumni-doc-cog">Certificate of Graduation</label>
+                                    <input type="checkbox" id="alumni-doc-form138" name="alumni_document_types" value="FORM 138">
+                                    <label for="alumni-doc-form138">FORM 138</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Certificate of Graduation" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="FORM 138" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
                                 <div class="doc-type-checkbox">
-                                    <input type="checkbox" id="alumni-doc-other" name="alumni_document_types" value="Other">
-                                    <label for="alumni-doc-other">Other</label>
+                                    <input type="checkbox" id="alumni-doc-hd" name="alumni_document_types" value="HONORABLE DISMISSAL">
+                                    <label for="alumni-doc-hd">HONORABLE DISMISSAL</label>
                                     <div class="quantity-selector">
                                         <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
-                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="Other" disabled>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="HONORABLE DISMISSAL" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-diploma" name="alumni_document_types" value="DIPLOMA">
+                                    <label for="alumni-doc-diploma">DIPLOMA</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="DIPLOMA" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-cno" name="alumni_document_types" value="CERTIFICATE OF NO OBJECTION">
+                                    <label for="alumni-doc-cno">CERTIFICATE OF NO OBJECTION</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF NO OBJECTION" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-cem" name="alumni_document_types" value="CERTIFICATE OF ENGLISH AS MEDIUM">
+                                    <label for="alumni-doc-cem">CERTIFICATE OF ENGLISH AS MEDIUM</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF ENGLISH AS MEDIUM" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-cgm" name="alumni_document_types" value="CERTIFICATE OF GOOD MORAL">
+                                    <label for="alumni-doc-cgm">CERTIFICATE OF GOOD MORAL</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF GOOD MORAL" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-cr" name="alumni_document_types" value="CERTIFICATE OF REGISTRATION">
+                                    <label for="alumni-doc-cr">CERTIFICATE OF REGISTRATION</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF REGISTRATION" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-cc" name="alumni_document_types" value="CERTIFICATE OF COMPLETION">
+                                    <label for="alumni-doc-cc">CERTIFICATE OF COMPLETION</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF COMPLETION" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-cg" name="alumni_document_types" value="CERTIFICATE OF GRADES">
+                                    <label for="alumni-doc-cg">CERTIFICATE OF GRADES</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CERTIFICATE OF GRADES" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-soa" name="alumni_document_types" value="STATEMENT OF ACCOUNT">
+                                    <label for="alumni-doc-soa">STATEMENT OF ACCOUNT</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="STATEMENT OF ACCOUNT" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-sr" name="alumni_document_types" value="SERVICE RECORD">
+                                    <label for="alumni-doc-sr">SERVICE RECORD</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="SERVICE RECORD" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-employment" name="alumni_document_types" value="EMPLOYMENT">
+                                    <label for="alumni-doc-employment">EMPLOYMENT</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="EMPLOYMENT" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-pr" name="alumni_document_types" value="PERFORMANCE RATING">
+                                    <label for="alumni-doc-pr">PERFORMANCE RATING</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="PERFORMANCE RATING" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-gwa" name="alumni_document_types" value="GWA CERTIFICATE">
+                                    <label for="alumni-doc-gwa">GWA CERTIFICATE</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="GWA CERTIFICATE" disabled>
+                                        <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                                <div class="doc-type-checkbox">
+                                    <input type="checkbox" id="alumni-doc-cav" name="alumni_document_types" value="CAV ENDORSEMENT">
+                                    <label for="alumni-doc-cav">CAV ENDORSEMENT</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="qty-btn minus" disabled><i class="fas fa-minus"></i></button>
+                                        <input type="number" min="1" value="1" class="doc-qty" data-doc="CAV ENDORSEMENT" disabled>
                                         <button type="button" class="qty-btn plus" disabled><i class="fas fa-plus"></i></button>
                                     </div>
                                 </div>
@@ -3435,6 +3669,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('Cooldown check response:', data);
                     updateDocumentTypeAvailability(data.available_document_types, data.cooldown_information, isAlumni);
                 }
             } catch (error) {
@@ -3444,6 +3679,12 @@
 
         // Update document type availability in the UI
         function updateDocumentTypeAvailability(availableTypes, cooldownInfo, isAlumni) {
+            console.log('Updating document availability:', {
+                availableTypes: availableTypes,
+                cooldownInfo: cooldownInfo,
+                isAlumni: isAlumni
+            });
+            
             const formId = isAlumni ? 'alumniDocumentTypesGroup' : 'documentTypesGroup';
             const container = document.getElementById(formId);
             

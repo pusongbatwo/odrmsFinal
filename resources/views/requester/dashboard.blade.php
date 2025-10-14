@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Document Request Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -1064,7 +1065,10 @@
 
             async function fetchMessages() {
                 try {
-                    const res = await fetch(`{{ route('chat.fetch') }}?reference_number=${encodeURIComponent(reference)}`, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
+                    const res = await fetch(`{{ route('chat.fetch') }}?reference_number=${encodeURIComponent(reference)}&mark_read=1`, { 
+                        headers: { 'X-Requested-With':'XMLHttpRequest' },
+                        credentials: 'same-origin'
+                    });
                     if (!res.ok) return;
                     const data = await res.json();
                     if (!data.success) return;
@@ -1085,20 +1089,43 @@
                 const text = (chatInput.value || '').trim();
                 if (!text) return;
                 try {
+                    // disable input/button while sending
+                    const sendBtn = chatForm.querySelector('button');
+                    sendBtn.disabled = true;
+                    chatInput.disabled = true;
+
                     const res = await fetch(`{{ route('chat.send') }}`, {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'X-Requested-With': 'XMLHttpRequest'
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ reference_number: reference, sender_type: 'requester', message: text })
+                        body: JSON.stringify({ 
+                            reference_number: reference, 
+                            sender_type: 'requester', 
+                            message: text,
+                            sender_email: '{{ $document->email }}',
+                            sender_mobile: '{{ $document->mobile_number }}'
+                        })
                     });
-                    const data = await res.json();
-                    if (data.success) {
+
+                    let data;
+                    try { data = await res.json(); } catch (err) { data = null }
+                    if (!res.ok) {
+                        console.error('Chat send failed', res.status, data);
+                        alert((data && data.message) ? data.message : 'Failed to send message.');
+                    } else if (data && data.success) {
                         chatInput.value = '';
                         fetchMessages();
+                    } else {
+                        console.error('Unexpected chat send response', data);
+                        alert('Failed to send message.');
                     }
+                    sendBtn.disabled = false;
+                    chatInput.disabled = false;
                 } catch (_) {}
             });
 

@@ -166,6 +166,11 @@
             padding: 2px 6px;
             border-radius: 10px;
         }
+        .menu-badge.pulse {
+            box-shadow: 0 0 0 6px rgba(212,175,55,0.12);
+            transform: scale(1.03);
+            transition: transform 150ms ease;
+        }
 
         .sidebar-footer {
             padding: 1rem 1.5rem;
@@ -871,7 +876,7 @@
                     <a href="#" class="menu-link" data-section="documentRequests">
                         <i class="fas fa-file-alt menu-icon"></i>
                         <span class="menu-text">Document Requests</span>
-                        <span class="menu-badge">12</span>
+                        <span id="docRequestsBadge" class="menu-badge" style="display:none;">0</span>
                     </a>
                 </li>
                 <li class="menu-item">
@@ -917,10 +922,7 @@
             <div class="page-title">
                 <h1 id="pageTitle">Document Request Payments</h1>
             </div>
-            <div class="search-bar">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" placeholder="Search requests...">
-            </div>
+           
            
         </div>
 
@@ -1034,7 +1036,7 @@
                             <th>Document Types</th>
                             <th>Amount</th>
                             <th>Payment Status</th>
-                            <th>Actions</th>
+                           
                         </tr>
                     </thead>
                     <tbody>
@@ -1064,10 +1066,7 @@
                                 @endphp
                                 <span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                             </td>
-                            <td>
-                                <button class="action-btn"><i class="fas fa-receipt"></i></button>
-                                <button class="action-btn"><i class="fas fa-print"></i></button>
-                            </td>
+                          
                         </tr>
                         @endforeach
                     </tbody>
@@ -1126,19 +1125,20 @@
                     <h2 class="section-title">Document Requests</h2>
                 </div>
                 <div class="request-filters" style="position: sticky; top: 3.5rem; z-index: 2; background: var(--light); padding-bottom: 0.5rem; margin-bottom: 0;">
-                    <select class="filter-select">
-                        <option>All Statuses</option>
-                        <option>Pending</option>
-                        <option>Paid</option>
-                        <option>Cancelled</option>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="cancelled">Cancelled</option>
                     </select>
-                    <select class="filter-select">
-                        <option>All Document Types</option>
-                        <option>Transcript</option>
-                        <option>Diploma</option>
-                        <option>Certificate</option>
+                    <select id="docTypeFilter" class="filter-select">
+                        <option value="all">All Document Types</option>
+                        <option value="transcript">Transcript</option>
+                        <option value="diploma">Diploma</option>
+                        <option value="certificate">Certificate</option>
                     </select>
-                    <input type="date" class="filter-select" placeholder="Filter by date">
+                    <input type="text" id="globalRequestSearch" class="filter-select" placeholder="Search reference, student, or document..." style="min-width:220px;">
+                    <input type="date" id="dateFilter" class="filter-select" placeholder="Filter by date">
                 </div>
                 <div style="flex: 1 1 auto; overflow-y: auto; min-height: 0;">
                     <table style="width: 100%; border-collapse: collapse;">
@@ -1154,7 +1154,7 @@
                         </thead>
                         <tbody>
                             @foreach($document_requests as $req)
-                            <tr data-reference="{{ $req->reference_number }}">
+                            <tr data-reference="{{ $req->reference_number }}" data-payment-status="{{ $req->payment_status }}" data-doc-types="{{ $req->requestedDocuments->pluck('document_type')->implode('|') }}" data-created-at="{{ $req->created_at->toDateString() }}">
                                 <td class="request-id">{{ $req->reference_number }}</td>
                                 <td>{{ $req->first_name }} {{ $req->last_name }}</td>
                                 <td>
@@ -1180,7 +1180,7 @@
                                     <span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                                 </td>
                                 <td>
-                                    <button class="action-btn"><i class="fas fa-receipt"></i></button>
+                                    
                                     <button class="action-btn"><i class="fas fa-print"></i></button>
                                 </td>
                             </tr>
@@ -1311,6 +1311,7 @@
                 </div>
                 
                 <form id="exportForm">
+                @csrf
                 <div class="form-row">
                         <label class="form-label">Date Range (Optional)</label>
                     <div style="display: flex; gap: 1rem;">
@@ -1502,6 +1503,8 @@
                 } else if (sectionId === 'documentRequests') {
                     document.getElementById('documentRequestsUI').style.display = 'block';
                     pageTitle.textContent = 'Document Requests';
+                    // Apply filters when showing Document Requests
+                    setTimeout(() => { if (typeof applyDocumentRequestFilters === 'function') applyDocumentRequestFilters(); }, 20);
                 } else if (sectionId === 'transactions') {
                     document.getElementById('transactionsUI').style.display = 'block';
                     pageTitle.textContent = 'System Logs';
@@ -1778,6 +1781,71 @@
         const changeInput = document.getElementById('changeInput');
         let selectedRequest = null;
 
+        // Make action buttons in the Document Requests table functional (UI-only)
+        document.addEventListener('DOMContentLoaded', function() {
+            const docTable = document.querySelector('#documentRequestsUI table');
+            if (!docTable) return;
+
+            // Delegate clicks on action buttons inside the table body
+            docTable.addEventListener('click', function(e) {
+                const btn = e.target.closest('button.action-btn');
+                if (!btn) return;
+                const row = btn.closest('tr');
+                if (!row) return;
+                const reference = row.getAttribute('data-reference');
+
+                // Find the request data from approvedRequests or document_requests (approvedRequests is for payments)
+                const req = approvedRequests.find(r => r.reference_number === reference) || null;
+
+                // Identify which button was clicked by icon class
+                if (btn.querySelector('.fa-receipt')) {
+                    // Open Process Payment UI and populate fields
+                    if (req) {
+                        selectedRequest = req;
+                        referenceInput.value = req.reference_number;
+                        studentNameInput.value = (req.first_name || '') + ' ' + (req.last_name || '');
+                        documentTypeInput.value = (req.requested_documents || []).map(d => `${d.document_type} (${d.quantity})`).join(', ');
+                        amountDueInput.value = '₱' + (formatAmount(req)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        amountReceivedInput.value = '';
+                        changeInput.value = '₱0.00';
+                        // Switch to processPayment section
+                        showSection('processPayment');
+                        // Scroll to top of the payment UI so fields are visible
+                        const ui = document.getElementById('processPaymentUI'); if (ui) ui.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        alert('Request data not available for payment. Try searching the reference in the payment panel.');
+                    }
+                } else if (btn.querySelector('.fa-print')) {
+                    // Simple print: open a new window with a printable receipt of the row
+                    const cells = Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim());
+                    const receiptHtml = `
+                        <html><head><title>Receipt - ${cells[0]}</title>
+                        <style>body{font-family:Segoe UI,Arial; padding:20px;} h2{color:#8B0000;} table{width:100%;border-collapse:collapse;} td{padding:8px;border-bottom:1px solid #eee;}</style>
+                        </head><body>
+                        <h2>Payment Receipt</h2>
+                        <table>
+                        <tr><td><strong>Reference #</strong></td><td>${cells[0]}</td></tr>
+                        <tr><td><strong>Student</strong></td><td>${cells[1]}</td></tr>
+                        <tr><td><strong>Documents</strong></td><td>${cells[2]}</td></tr>
+                        <tr><td><strong>Amount</strong></td><td>${cells[3]}</td></tr>
+                        <tr><td><strong>Payment Status</strong></td><td>${cells[4]}</td></tr>
+                        </table>
+                        <p style="margin-top:20px;">Generated: ${new Date().toLocaleString()}</p>
+                        </body></html>`;
+                    const w = window.open('', '_blank', 'width=600,height=700');
+                    if (w) {
+                        w.document.open();
+                        w.document.write(receiptHtml);
+                        w.document.close();
+                        w.focus();
+                        w.print();
+                    } else {
+                        alert('Popup blocked. Please allow popups for this site to print receipts.');
+                    }
+                }
+            });
+        });
+
         searchInput.addEventListener('input', function() {
             const query = this.value.toLowerCase();
             if (!query) {
@@ -1904,11 +1972,79 @@
             }
         });
 
+        // Document Requests client-side filters
+        function normalizeDocType(str) {
+            if (!str) return '';
+            return str.toLowerCase();
+        }
+
+        function applyDocumentRequestFilters() {
+            const status = (document.getElementById('statusFilter')?.value || 'all').toLowerCase();
+            const docType = (document.getElementById('docTypeFilter')?.value || 'all').toLowerCase();
+            const date = document.getElementById('dateFilter')?.value || '';
+            const searchQuery = (document.getElementById('globalRequestSearch')?.value || '').trim().toLowerCase();
+
+            const rows = document.querySelectorAll('#documentRequestsUI tbody tr');
+            rows.forEach(row => {
+                const pStatus = (row.getAttribute('data-payment-status') || '').toLowerCase();
+                const docTypes = (row.getAttribute('data-doc-types') || '').toLowerCase();
+                const createdAt = row.getAttribute('data-created-at') || '';
+
+                let visible = true;
+
+                if (status !== 'all') {
+                    if (status === 'pending') {
+                        visible = visible && (pStatus === 'unpaid');
+                    } else if (status === 'paid') {
+                        visible = visible && (pStatus === 'paid');
+                    } else if (status === 'cancelled') {
+                        visible = visible && (pStatus === 'cancelled' || pStatus === 'canceled');
+                    }
+                }
+
+                if (docType !== 'all') {
+                    visible = visible && docTypes.includes(docType);
+                }
+
+                if (date) {
+                    visible = visible && (createdAt === date);
+                }
+
+                // Global text search across reference, student name, and document types
+                if (searchQuery) {
+                    const ref = (row.querySelector('.request-id')?.innerText || '').toLowerCase();
+                    const student = (row.children[1]?.innerText || '').toLowerCase();
+                    const docs = docTypes.toLowerCase();
+                    const matchesSearch = ref.includes(searchQuery) || student.includes(searchQuery) || docs.includes(searchQuery);
+                    visible = visible && matchesSearch;
+                }
+
+                row.style.display = visible ? '' : 'none';
+            });
+        }
+
+        // Attach filter event listeners
+        ['statusFilter','docTypeFilter','dateFilter'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', applyDocumentRequestFilters);
+        });
+        const globalSearchEl = document.getElementById('globalRequestSearch');
+        if (globalSearchEl) {
+            globalSearchEl.addEventListener('input', function() {
+                // small debounce
+                if (globalSearchEl._timer) clearTimeout(globalSearchEl._timer);
+                globalSearchEl._timer = setTimeout(() => applyDocumentRequestFilters(), 150);
+            });
+        }
+
         // Export Records functionality
         document.getElementById('exportForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
+            // Add CSRF token to form data
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            
             const exportBtn = document.getElementById('exportBtn');
             const originalText = exportBtn.innerHTML;
             
@@ -1917,13 +2053,39 @@
             exportBtn.disabled = true;
             
             try {
-                const response = await fetch('/cashier/export', {
+                // Debug: Log the form data and CSRF token
+                console.log('CSRF Token:', document.querySelector('meta[name="csrf-token"]').content);
+                console.log('Form Data:', Array.from(formData.entries()));
+                
+                let response = await fetch('/cashier/export', {
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                // If POST fails with 419 (CSRF error), try GET request as fallback
+                if (response.status === 419) {
+                    console.log('CSRF error detected, trying GET request as fallback...');
+                    const params = new URLSearchParams();
+                    formData.forEach((value, key) => {
+                        params.append(key, value);
+                    });
+                    
+                    response = await fetch(`/cashier/export?${params.toString()}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    console.log('GET Response status:', response.status);
+                }
                 
                 if (response.ok) {
                     // Check if response is JSON (error) or file (success)
@@ -1987,6 +2149,7 @@
             });
         });
 
+
         // Save Profile
         const saveProfileBtn = document.getElementById('saveProfileBtn');
         const profileForm = document.getElementById('profileForm');
@@ -2021,6 +2184,75 @@
                 }
             });
         }
+
+        // Real-time unpaid badge updater (UI-only)
+        (function() {
+            const badge = document.getElementById('docRequestsBadge');
+            if (!badge) return;
+
+            let interval = 10000; // 10s default
+            let backoff = 1;
+            let timer = null;
+
+            async function fetchPending() {
+                try {
+                    // compute recent window (last 7 days)
+                    const end = new Date();
+                    const start = new Date(); start.setDate(end.getDate() - 6);
+                    const fmt = d => d.toISOString().slice(0,10);
+                    const url = `/cashier/reports?start_date=${fmt(start)}&end_date=${fmt(end)}`;
+                    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (!res.ok) throw new Error('Network');
+                    const data = await res.json();
+
+                    // Prefer 'unpaid' from status_distribution (counts payment_status == 'unpaid')
+                    // Fallback to 'pending' (approved-but-unpaid) if status_distribution isn't provided
+                    let pending = 0;
+                    if (data.status_distribution && (data.status_distribution.unpaid !== undefined)) {
+                        pending = Number(data.status_distribution.unpaid || 0);
+                    } else if (data.status_distribution && (data.status_distribution['unpaid'] !== undefined)) {
+                        pending = Number(data.status_distribution['unpaid'] || 0);
+                    } else {
+                        pending = Number(data.pending || 0);
+                    }
+
+                    if (pending > 0) {
+                        badge.textContent = pending;
+                        badge.style.display = 'inline-block';
+                        badge.classList.add('pulse');
+                    } else {
+                        badge.style.display = 'none';
+                        badge.classList.remove('pulse');
+                    }
+
+                    // Reset backoff on success
+                    backoff = 1;
+                } catch (err) {
+                    // Exponential backoff up to 5x
+                    backoff = Math.min(5, backoff * 2);
+                } finally {
+                    // Schedule next run, but only if page is visible
+                    clearTimeout(timer);
+                    if (document.visibilityState === 'visible') {
+                        timer = setTimeout(fetchPending, interval * backoff);
+                    } else {
+                        // check again when page becomes visible
+                    }
+                }
+            }
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    // immediate fetch when returning to tab
+                    fetchPending();
+                } else {
+                    clearTimeout(timer);
+                }
+            });
+
+            // initial fetch
+            fetchPending();
+        })();
     </script>
 </body>
 </html>

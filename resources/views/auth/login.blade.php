@@ -37,13 +37,7 @@
             
             <h2 class="form-title">LOGIN</h2>
             
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            @endif
+            {{-- Field-specific validation messages will appear next to each input. --}}
             
             <div class="form-group">
                 <label for="username">Username</label>
@@ -51,7 +45,10 @@
                     <i class="fas fa-user"></i>
                     <!-- Hidden dummy to defeat browser autofill -->
                     <input type="text" style="display:none" autocomplete="username">
-                    <input type="text" id="username" name="username" required placeholder="Enter your username" autocomplete="off" inputmode="text">
+                    <input type="text" id="username" name="username" required placeholder="Enter your username" autocomplete="off" inputmode="text" value="{{ old('username') }}" class="{{ $errors->has('username') ? 'is-invalid' : '' }}">
+                    @if ($errors->has('username'))
+                        <div class="invalid-feedback" style="display:block">{{ $errors->first('username') }}</div>
+                    @endif
                 </div>
             </div>
             
@@ -61,7 +58,10 @@
                     <i class="fas fa-lock"></i>
                     <!-- Hidden dummy to defeat browser autofill -->
                     <input type="password" style="display:none" autocomplete="new-password">
-                    <input type="password" id="password" name="password" required placeholder="Enter your password" autocomplete="new-password">
+                    <input type="password" id="password" name="password" required placeholder="Enter your password" autocomplete="new-password" class="{{ $errors->has('password') ? 'is-invalid' : '' }}">
+                    @if ($errors->has('password'))
+                        <div class="invalid-feedback" style="display:block">{{ $errors->first('password') }}</div>
+                    @endif
                 </div>
             </div>
             

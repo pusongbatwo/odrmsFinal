@@ -22,6 +22,34 @@ use Carbon\Carbon;
 class DocumentRequestController extends Controller
 {
     /**
+     * Get all available document types
+     * @return array
+     */
+    private function getAllDocumentTypes()
+    {
+        return [
+            'TRANSCRIPT OF RECORDS',
+            'TRANSCRIPT OF RECORDS FOR EVALUATION',
+            'FORM 137A',
+            'FORM 138',
+            'HONORABLE DISMISSAL',
+            'DIPLOMA',
+            'CERTIFICATE OF NO OBJECTION',
+            'CERTIFICATE OF ENGLISH AS MEDIUM',
+            'CERTIFICATE OF GOOD MORAL',
+            'CERTIFICATE OF REGISTRATION',
+            'CERTIFICATE OF COMPLETION',
+            'CERTIFICATE OF GRADES',
+            'STATEMENT OF ACCOUNT',
+            'SERVICE RECORD',
+            'EMPLOYMENT',
+            'PERFORMANCE RATING',
+            'GWA CERTIFICATE',
+            'CAV ENDORSEMENT'
+        ];
+    }
+
+    /**
      * Check if a user is on cooldown for specific document types
      * @param string $identifier - Student ID or Alumni email
      * @param array $documentTypes - Array of document types to check
@@ -77,43 +105,44 @@ class DocumentRequestController extends Controller
      */
     private function getAvailableDocumentTypes($identifier, $isAlumni = false)
     {
-        $allDocumentTypes = [
-            'Transcript of Records',
-            'Diploma',
-            'Certificate of Enrollment',
-            'Certificate of Graduation',
-            'Other'
-        ];
+        $allDocumentTypes = $this->getAllDocumentTypes();
         
         $availableTypes = [];
         
-        foreach ($allDocumentTypes as $docType) {
-            // Find the last request for this document type by this user
-            $lastRequest = DocumentRequest::where(function($query) use ($identifier, $isAlumni) {
-                if ($isAlumni) {
-                    $query->where('email', $identifier);
-                } else {
-                    $query->where('student_id', $identifier);
-                }
-            })
-            ->whereHas('requestedDocuments', function($query) use ($docType) {
-                $query->where('document_type', $docType);
-            })
-            ->orderBy('request_date', 'desc')
-            ->first();
-            
-            if (!$lastRequest) {
-                // No previous request for this document type
-                $availableTypes[] = $docType;
-            } else {
-                $lastRequestDate = Carbon::parse($lastRequest->request_date);
-                $daysSinceLastRequest = Carbon::now()->diffInDays($lastRequestDate);
+        try {
+            foreach ($allDocumentTypes as $docType) {
+                // Find the last request for this document type by this user
+                $lastRequest = DocumentRequest::where(function($query) use ($identifier, $isAlumni) {
+                    if ($isAlumni) {
+                        $query->where('email', $identifier);
+                    } else {
+                        $query->where('student_id', $identifier);
+                    }
+                })
+                ->whereHas('requestedDocuments', function($query) use ($docType) {
+                    $query->where('document_type', $docType);
+                })
+                ->orderBy('request_date', 'desc')
+                ->first();
                 
-                if ($daysSinceLastRequest >= 40) {
-                    // Cooldown period has passed
+                if (!$lastRequest) {
+                    // No previous request for this document type - available
                     $availableTypes[] = $docType;
+                } else {
+                    $lastRequestDate = Carbon::parse($lastRequest->request_date);
+                    $daysSinceLastRequest = Carbon::now()->diffInDays($lastRequestDate);
+                    
+                    if ($daysSinceLastRequest >= 40) {
+                        // Cooldown period has passed - available
+                        $availableTypes[] = $docType;
+                    }
+                    // If daysSinceLastRequest < 40, document type is NOT added to available types
                 }
             }
+        } catch (\Exception $e) {
+            Log::error('Database error in getAvailableDocumentTypes: ' . $e->getMessage());
+            // If there's a database error, return all types as available
+            return $allDocumentTypes;
         }
         
         return $availableTypes;
@@ -429,27 +458,60 @@ class DocumentRequestController extends Controller
      */
     public function checkAvailableDocumentTypes(Request $request)
     {
-        $request->validate([
-            'identifier' => 'required|string',
-            'is_alumni' => 'required|boolean'
-        ]);
+        try {
+            $request->validate([
+                'identifier' => 'required|string',
+                'is_alumni' => 'required|boolean'
+            ]);
 
-        $availableTypes = $this->getAvailableDocumentTypes(
-            $request->identifier, 
-            $request->is_alumni
-        );
+            Log::info('Checking available documents', [
+                'identifier' => $request->identifier,
+                'is_alumni' => $request->is_alumni
+            ]);
 
-        // Get cooldown information for unavailable types
-        $cooldownInfo = $this->getCooldownInformation(
-            $request->identifier, 
-            $request->is_alumni
-        );
+            $availableTypes = $this->getAvailableDocumentTypes(
+                $request->identifier, 
+                $request->is_alumni
+            );
 
-        return response()->json([
-            'success' => true,
-            'available_document_types' => $availableTypes,
-            'cooldown_information' => $cooldownInfo
-        ]);
+            // Get cooldown information for all document types
+            $cooldownInfo = $this->getCooldownInformation(
+                $request->identifier, 
+                $request->is_alumni
+            );
+
+            Log::info('Available document types result', [
+                'available_count' => count($availableTypes),
+                'cooldown_count' => count($cooldownInfo),
+                'available_types' => $availableTypes
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'available_document_types' => $availableTypes,
+                'cooldown_information' => $cooldownInfo
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error checking available documents: ' . $e->getMessage());
+            
+            // Return all document types as available if there's an error (like DB connection)
+            $allDocumentTypes = $this->getAllDocumentTypes();
+            
+            $cooldownInfo = [];
+            foreach ($allDocumentTypes as $docType) {
+                $cooldownInfo[$docType] = [
+                    'last_request_date' => null,
+                    'remaining_days' => 0,
+                    'is_on_cooldown' => false
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'available_document_types' => $allDocumentTypes,
+                'cooldown_information' => $cooldownInfo
+            ]);
+        }
     }
 
     /**
@@ -460,50 +522,57 @@ class DocumentRequestController extends Controller
      */
     private function getCooldownInformation($identifier, $isAlumni = false)
     {
-        $allDocumentTypes = [
-            'Transcript of Records',
-            'Diploma',
-            'Certificate of Enrollment',
-            'Certificate of Graduation',
-            'Other'
-        ];
+        $allDocumentTypes = $this->getAllDocumentTypes();
         
         $cooldownInfo = [];
         
-        foreach ($allDocumentTypes as $docType) {
-            // Find the last request for this document type by this user
-            $lastRequest = DocumentRequest::where(function($query) use ($identifier, $isAlumni) {
-                if ($isAlumni) {
-                    $query->where('email', $identifier);
-                } else {
-                    $query->where('student_id', $identifier);
-                }
-            })
-            ->whereHas('requestedDocuments', function($query) use ($docType) {
-                $query->where('document_type', $docType);
-            })
-            ->orderBy('request_date', 'desc')
-            ->first();
-            
-            if ($lastRequest) {
-                $lastRequestDate = Carbon::parse($lastRequest->request_date);
-                $daysSinceLastRequest = Carbon::now()->diffInDays($lastRequestDate);
+        try {
+            foreach ($allDocumentTypes as $docType) {
+                // Find the last request for this document type by this user
+                $lastRequest = DocumentRequest::where(function($query) use ($identifier, $isAlumni) {
+                    if ($isAlumni) {
+                        $query->where('email', $identifier);
+                    } else {
+                        $query->where('student_id', $identifier);
+                    }
+                })
+                ->whereHas('requestedDocuments', function($query) use ($docType) {
+                    $query->where('document_type', $docType);
+                })
+                ->orderBy('request_date', 'desc')
+                ->first();
                 
-                if ($daysSinceLastRequest < 40) {
-                    $remainingDays = 40 - $daysSinceLastRequest;
-                    $cooldownInfo[$docType] = [
-                        'last_request_date' => $lastRequestDate->format('M d, Y'),
-                        'remaining_days' => $remainingDays,
-                        'is_on_cooldown' => true
-                    ];
+                if ($lastRequest) {
+                    $lastRequestDate = Carbon::parse($lastRequest->request_date);
+                    $daysSinceLastRequest = Carbon::now()->diffInDays($lastRequestDate);
+                    
+                    if ($daysSinceLastRequest < 40) {
+                        $remainingDays = 40 - $daysSinceLastRequest;
+                        $cooldownInfo[$docType] = [
+                            'last_request_date' => $lastRequestDate->format('M d, Y'),
+                            'remaining_days' => $remainingDays,
+                            'is_on_cooldown' => true
+                        ];
+                    } else {
+                        $cooldownInfo[$docType] = [
+                            'last_request_date' => $lastRequestDate->format('M d, Y'),
+                            'remaining_days' => 0,
+                            'is_on_cooldown' => false
+                        ];
+                    }
                 } else {
+                    // No previous request - not on cooldown
                     $cooldownInfo[$docType] = [
-                        'last_request_date' => $lastRequestDate->format('M d, Y'),
+                        'last_request_date' => null,
                         'remaining_days' => 0,
                         'is_on_cooldown' => false
                     ];
                 }
-            } else {
+            }
+        } catch (\Exception $e) {
+            Log::error('Database error in getCooldownInformation: ' . $e->getMessage());
+            // If there's a database error, return all types as not on cooldown
+            foreach ($allDocumentTypes as $docType) {
                 $cooldownInfo[$docType] = [
                     'last_request_date' => null,
                     'remaining_days' => 0,
