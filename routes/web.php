@@ -115,7 +115,7 @@ Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-    return redirect('/'); // Redirect to landing page
+    return redirect()->route('login'); // Redirect to login page
 })->name('logout');
     
 Route::middleware(['auth'])->group(function () {

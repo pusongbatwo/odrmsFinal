@@ -960,20 +960,8 @@
                         <i class="fas fa-peso-sign"></i>
                         </div>
                         <div>
-                            <div class="card-title">Total Collected (This Month)</div>
-                            <div class="card-value">₱{{ number_format($total_collected_month, 2) }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="card-header">
-                        <div class="card-icon requests">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div>
-                            <div class="card-title">Total Approved Requests</div>
-                            <div class="card-value">{{ $total_approved }}</div>
+                            <div class="card-title">Total Amount Collected (All Time)</div>
+                            <div class="card-value">₱{{ number_format($total_collected_all_time, 2) }}</div>
                         </div>
                     </div>
                 </div>

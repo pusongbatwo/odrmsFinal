@@ -51,6 +51,10 @@ class CashierController extends Controller
             ->whereBetween('paid_at', [$monthStart, $monthEnd])
             ->sum('amount_paid');
 
+        // Total collected from ALL transactions (all time)
+        $total_collected_all_time = DocumentRequest::where('payment_status', 'paid')
+            ->sum('amount_paid');
+
         // Document type counts (from requested_documents joined with document_requests, filtered by approved, paid, completed status)
         $document_type_counts = RequestedDocument::join('document_requests', 'requested_documents.request_id', '=', 'document_requests.id')
             ->whereIn('document_requests.status', ['approved', 'paid', 'completed'])
@@ -76,6 +80,7 @@ class CashierController extends Controller
             'pending_payments',
             'paid_today',
             'total_collected_month',
+            'total_collected_all_time',
             'document_type_counts',
             'approved_requests',
             'document_requests',

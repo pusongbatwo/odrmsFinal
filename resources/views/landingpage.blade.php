@@ -569,6 +569,12 @@
             animation: fadeIn 0.3s ease;
         }
         
+        /* Ensure modal shows properly when active */
+        .modal.active,
+        .modal[style*="flex"] {
+            display: flex !important;
+        }
+        
         .modal-content {
             background-color: var(--white);
             border-radius: 10px;
@@ -648,6 +654,13 @@
         
         .form-input.error {
             border-color: #dc3545;
+            animation: shake 0.4s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
         }
         
         .form-input:focus {
@@ -1241,7 +1254,7 @@
             position: fixed;
             right: 30px;
             bottom: 30px;
-            z-index: 9999;
+            z-index: 1400;
             background: #fff;
             box-shadow: 0 4px 16px rgba(0,0,0,0.15);
             border-radius: 50px;
@@ -1249,7 +1262,12 @@
             display: flex;
             align-items: center;
             cursor: pointer;
-            transition: box-shadow 0.2s;
+            transition: box-shadow 0.2s, opacity 0.3s ease;
+        }
+        
+        .floating-chatbot-bottom.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
         
         .floating-chatbot-bottom:hover {
@@ -2592,6 +2610,19 @@
             });
         });
         
+        // Chatbot visibility management
+        const floatingChatbot = document.getElementById('floatingChatbot');
+        function hideChatbot() {
+            if (floatingChatbot) {
+                floatingChatbot.classList.add('hidden');
+            }
+        }
+        function showChatbot() {
+            if (floatingChatbot) {
+                floatingChatbot.classList.remove('hidden');
+            }
+        }
+        
         // Modal Handling
         const trackDocumentBtn = document.getElementById('trackDocumentBtn');
         const trackDocumentModal = document.getElementById('trackDocumentModal');
@@ -2600,17 +2631,23 @@
         
         trackDocumentBtn.addEventListener('click', function() {
             trackDocumentModal.style.display = 'flex';
+            trackDocumentModal.classList.add('active');
             document.body.style.overflow = 'hidden';
+            hideChatbot();
         });
         
         closeTrackModal.addEventListener('click', function() {
             trackDocumentModal.style.display = 'none';
+            trackDocumentModal.classList.remove('active');
             document.body.style.overflow = 'auto';
+            showChatbot();
         });
         
         cancelTrackModal.addEventListener('click', function() {
             trackDocumentModal.style.display = 'none';
+            trackDocumentModal.classList.remove('active');
             document.body.style.overflow = 'auto';
+            showChatbot();
         });
         
         // Terms Modal Handling
@@ -2623,17 +2660,23 @@
         
         requestDocumentBtn.addEventListener('click', function() {
             termsModal.style.display = 'flex';
+            termsModal.classList.add('active');
             document.body.style.overflow = 'hidden';
+            hideChatbot();
         });
         
         closeTermsModal.addEventListener('click', function() {
             termsModal.style.display = 'none';
+            termsModal.classList.remove('active');
             document.body.style.overflow = 'auto';
+            showChatbot();
         });
         
         cancelTermsModal.addEventListener('click', function() {
             termsModal.style.display = 'none';
+            termsModal.classList.remove('active');
             document.body.style.overflow = 'auto';
+            showChatbot();
         });
         
         agreeTermsCheckbox.addEventListener('change', function() {
@@ -2649,20 +2692,25 @@
         
         agreeTermsBtn.addEventListener('click', function() {
             termsModal.style.display = 'none';
+            termsModal.classList.remove('active');
             requestFormModal.style.display = 'flex';
+            requestFormModal.classList.add('active');
             // Show selection screen by default
             selectionScreen.style.display = 'block';
             studentForm.style.display = 'none';
             alumniForm.style.display = 'none';
+            // Keep chatbot hidden since request modal is open
         });
         
         closeRequestModal.addEventListener('click', function() {
             requestFormModal.style.display = 'none';
+            requestFormModal.classList.remove('active');
             document.body.style.overflow = 'auto';
             // Reset to selection screen
             selectionScreen.style.display = 'block';
             studentForm.style.display = 'none';
             alumniForm.style.display = 'none';
+            showChatbot();
         });
         
         // Selection Screen Logic
@@ -2802,40 +2850,100 @@
         });
         
         function validateStep(step) {
-            // Simple validation - in a real app you'd want more robust validation
             let isValid = true;
+            let missingFields = [];
             
             if (step === 1) {
-                const requiredFields = ['studentId', 'course', 'firstName', 'lastName'];
+                const requiredFields = [
+                    { id: 'studentId', label: 'Student ID' },
+                    { id: 'course', label: 'Course' },
+                    { id: 'firstName', label: 'First Name' },
+                    { id: 'lastName', label: 'Last Name' }
+                ];
+                
                 requiredFields.forEach(field => {
-                    const input = document.getElementById(field);
+                    const input = document.getElementById(field.id);
                     if (!input.value.trim()) {
                         isValid = false;
+                        missingFields.push(field.label);
                         input.classList.add('error');
                     } else {
                         input.classList.remove('error');
                     }
                 });
+                
+                if (!isValid) {
+                    // Scroll to first error field
+                    const firstError = document.querySelector('.form-input.error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    Swal.fire({
+                        title: "Missing Required Fields",
+                        html: `<div style="text-align: left; padding: 10px;">
+                            <p style="margin-bottom: 15px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i> Please fill in the following required fields:</p>
+                            <ul style="text-align: left; list-style-position: inside;">
+                                ${missingFields.map(field => `<li style="color: #333; margin-bottom: 8px;">${field}</li>`).join('')}
+                            </ul>
+                        </div>`,
+                        icon: "warning",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#8B0000"
+                    });
+                }
             } else if (step === 2) {
-                const requiredFields = ['province', 'city', 'barangay', 'mobile', 'email'];
+                const requiredFields = [
+                    { id: 'province', label: 'Province' },
+                    { id: 'city', label: 'City/Municipality' },
+                    { id: 'barangay', label: 'Barangay' },
+                    { id: 'mobile', label: 'Mobile Number' },
+                    { id: 'email', label: 'Email Address' }
+                ];
+                
                 requiredFields.forEach(field => {
-                    const input = document.getElementById(field);
+                    const input = document.getElementById(field.id);
                     if (!input.value.trim()) {
                         isValid = false;
+                        missingFields.push(field.label);
                         input.classList.add('error');
                     } else {
                         input.classList.remove('error');
                     }
                     
                     // Additional email validation
-                    if (field === 'email') {
+                    if (field.id === 'email') {
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!emailRegex.test(input.value.trim())) {
+                        if (input.value.trim() && !emailRegex.test(input.value.trim())) {
                             isValid = false;
+                            if (!missingFields.includes('Email Address (Invalid format)')) {
+                                missingFields.push('Email Address (Invalid format)');
+                            }
                             input.classList.add('error');
                         }
                     }
                 });
+                
+                if (!isValid) {
+                    // Scroll to first error field
+                    const firstError = document.querySelector('.form-input.error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    Swal.fire({
+                        title: "Missing Required Fields",
+                        html: `<div style="text-align: left; padding: 10px;">
+                            <p style="margin-bottom: 15px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i> Please fill in the following required fields:</p>
+                            <ul style="text-align: left; list-style-position: inside;">
+                                ${missingFields.map(field => `<li style="color: #333; margin-bottom: 8px;">${field}</li>`).join('')}
+                            </ul>
+                        </div>`,
+                        icon: "warning",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#8B0000"
+                    });
+                }
             } else if (step === 3) {
                 // Check if at least one document type is selected
                 const selectedDocs = document.querySelectorAll('#documentTypesGroup input[type="checkbox"]:checked');
@@ -2845,7 +2953,8 @@
                         title: "No Document Types Selected",
                         text: "Please select at least one document type to request.",
                         icon: "warning",
-                        confirmButtonText: "OK"
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#8B0000"
                     });
                 }
                 
@@ -2857,7 +2966,8 @@
                         title: "Document Types on Cooldown",
                         text: "Some selected document types are currently on cooldown. Please deselect them or choose different document types.",
                         icon: "warning",
-                        confirmButtonText: "OK"
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#8B0000"
                     });
                 }
             }
@@ -2916,13 +3026,17 @@
             `;
 
             document.getElementById('summaryContent').innerHTML = summaryHtml;
-            document.getElementById('summaryModal').style.display = 'flex';
+            const summaryModal = document.getElementById('summaryModal');
+            summaryModal.style.display = 'flex';
+            summaryModal.classList.add('active');
             document.body.style.overflow = 'hidden';
         });
 
         // Edit Request button
         document.getElementById('editRequestBtn').addEventListener('click', function() {
-            document.getElementById('summaryModal').style.display = 'none';
+            const summaryModal = document.getElementById('summaryModal');
+            summaryModal.style.display = 'none';
+            summaryModal.classList.remove('active');
             document.body.style.overflow = 'auto';
         });
 
@@ -2982,9 +3096,13 @@
                     if (resultText) errorMessage = resultText;
                 }
 
-                document.getElementById('summaryModal').style.display = 'none';
+                const summaryModal = document.getElementById('summaryModal');
+                summaryModal.style.display = 'none';
+                summaryModal.classList.remove('active');
                 requestFormModal.style.display = 'none';
+                requestFormModal.classList.remove('active');
                 document.body.style.overflow = 'auto';
+                showChatbot();
 
                 if (response.ok) {
                     const responseData = JSON.parse(resultText);
@@ -3123,7 +3241,9 @@
                 }
 
                 requestFormModal.style.display = 'none';
+                requestFormModal.classList.remove('active');
                 document.body.style.overflow = 'auto';
+                showChatbot();
 
                 if (response.ok) {
                     const responseData = JSON.parse(resultText);
@@ -3265,38 +3385,99 @@
         
         function validateAlumniStep(step) {
             let isValid = true;
+            let missingFields = [];
             
             if (step === 1) {
-                const requiredFields = ['alumniFirstName', 'alumniLastName', 'alumniCourse', 'alumniGraduationYear'];
+                const requiredFields = [
+                    { id: 'alumniFirstName', label: 'First Name' },
+                    { id: 'alumniLastName', label: 'Last Name' },
+                    { id: 'alumniCourse', label: 'Course' },
+                    { id: 'alumniGraduationYear', label: 'School Year Graduated' }
+                ];
+                
                 requiredFields.forEach(field => {
-                    const input = document.getElementById(field);
+                    const input = document.getElementById(field.id);
                     if (!input.value.trim()) {
                         isValid = false;
+                        missingFields.push(field.label);
                         input.classList.add('error');
                     } else {
                         input.classList.remove('error');
                     }
                 });
+                
+                if (!isValid) {
+                    // Scroll to first error field
+                    const firstError = document.querySelector('#alumniForm .form-input.error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    Swal.fire({
+                        title: "Missing Required Fields",
+                        html: `<div style="text-align: left; padding: 10px;">
+                            <p style="margin-bottom: 15px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i> Please fill in the following required fields:</p>
+                            <ul style="text-align: left; list-style-position: inside;">
+                                ${missingFields.map(field => `<li style="color: #333; margin-bottom: 8px;">${field}</li>`).join('')}
+                            </ul>
+                        </div>`,
+                        icon: "warning",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#8B0000"
+                    });
+                }
             } else if (step === 2) {
-                const requiredFields = ['alumniProvince', 'alumniCity', 'alumniBarangay', 'alumniMobile', 'alumniEmail'];
+                const requiredFields = [
+                    { id: 'alumniProvince', label: 'Province' },
+                    { id: 'alumniCity', label: 'City/Municipality' },
+                    { id: 'alumniBarangay', label: 'Barangay' },
+                    { id: 'alumniMobile', label: 'Mobile Number' },
+                    { id: 'alumniEmail', label: 'Email Address' }
+                ];
+                
                 requiredFields.forEach(field => {
-                    const input = document.getElementById(field);
+                    const input = document.getElementById(field.id);
                     if (!input.value.trim()) {
                         isValid = false;
+                        missingFields.push(field.label);
                         input.classList.add('error');
                     } else {
                         input.classList.remove('error');
                     }
                     
                     // Additional email validation
-                    if (field === 'alumniEmail') {
+                    if (field.id === 'alumniEmail') {
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!emailRegex.test(input.value.trim())) {
+                        if (input.value.trim() && !emailRegex.test(input.value.trim())) {
                             isValid = false;
+                            if (!missingFields.includes('Email Address (Invalid format)')) {
+                                missingFields.push('Email Address (Invalid format)');
+                            }
                             input.classList.add('error');
                         }
                     }
                 });
+                
+                if (!isValid) {
+                    // Scroll to first error field
+                    const firstError = document.querySelector('#alumniForm .form-input.error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    Swal.fire({
+                        title: "Missing Required Fields",
+                        html: `<div style="text-align: left; padding: 10px;">
+                            <p style="margin-bottom: 15px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i> Please fill in the following required fields:</p>
+                            <ul style="text-align: left; list-style-position: inside;">
+                                ${missingFields.map(field => `<li style="color: #333; margin-bottom: 8px;">${field}</li>`).join('')}
+                            </ul>
+                        </div>`,
+                        icon: "warning",
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#8B0000"
+                    });
+                }
             } else if (step === 3) {
                 // Check if at least one document type is selected
                 const selectedDocs = document.querySelectorAll('#alumniDocumentTypesGroup input[type="checkbox"]:checked');
@@ -3306,7 +3487,8 @@
                         title: "No Document Types Selected",
                         text: "Please select at least one document type to request.",
                         icon: "warning",
-                        confirmButtonText: "OK"
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#8B0000"
                     });
                 }
                 
@@ -3318,7 +3500,8 @@
                         title: "Document Types on Cooldown",
                         text: "Some selected document types are currently on cooldown. Please deselect them or choose different document types.",
                         icon: "warning",
-                        confirmButtonText: "OK"
+                        confirmButtonText: "OK",
+                        confirmButtonColor: "#8B0000"
                     });
                 }
             }
@@ -3363,8 +3546,11 @@
 
         // Close summary modal with X
         document.getElementById('closeSummaryModal').addEventListener('click', function() {
-            document.getElementById('summaryModal').style.display = 'none';
+            const summaryModal = document.getElementById('summaryModal');
+            summaryModal.style.display = 'none';
+            summaryModal.classList.remove('active');
             document.body.style.overflow = 'auto';
+            showChatbot();
         });
 
         // PSGC API base URL
@@ -3520,7 +3706,6 @@
         };
 
         // Chatbot Modal Logic
-        const floatingChatbot = document.getElementById('floatingChatbot');
         const chatbotModal = document.getElementById('chatbotModal');
         const closeChatbotModal = document.getElementById('closeChatbotModal');
         const chatMessages = document.getElementById('chatMessages');
@@ -3528,18 +3713,24 @@
         
         if (floatingChatbot) {
             floatingChatbot.addEventListener('click', function() {
-                chatbotModal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-                // Scroll to bottom of chat
-                setTimeout(() => {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }, 100);
+                if (chatbotModal) {
+                    chatbotModal.style.display = 'flex';
+                    chatbotModal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                    // Scroll to bottom of chat
+                    setTimeout(() => {
+                        if (chatMessages) {
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
+                    }, 100);
+                }
             });
         }
         
-        if (closeChatbotModal) {
+        if (closeChatbotModal && chatbotModal) {
             closeChatbotModal.addEventListener('click', function() {
                 chatbotModal.style.display = 'none';
+                chatbotModal.classList.remove('active');
                 document.body.style.overflow = 'auto';
             });
         }

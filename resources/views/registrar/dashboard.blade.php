@@ -1495,10 +1495,7 @@
             <div class="page-title">
                 <h1 id="pageTitle">Document Request Dashboard</h1>
             </div>
-            <div class="search-bar">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" placeholder="Search requests...">
-            </div>
+            
 
         </div>
 
@@ -2023,30 +2020,45 @@ backSyncBtn.addEventListener('click', function() {
                 </div>
                 <!-- Student Records Table (always visible) -->
                 <div id="studentRecordsTableSection" style="display:none;">
-                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
-                        <label for="schoolYearFilter" style="font-weight:600;color:#8B0000;">School Year:</label>
-                        <select id="schoolYearFilter" name="schoolYearFilter" class="filter-select" style="min-width:140px; border:1.5px solid #8B0000; border-radius:8px; padding:6px 12px; font-size:1rem;">
-                            @php
-                                $startYear = 2022;
-                                $currentYear = date('Y');
-                                $schoolYears = [];
-                                for ($y = $startYear; $y <= $currentYear; $y++) {
-                                    $schoolYears[] = $y . '-' . ($y+1);
-                                }
-                            @endphp
-                            @foreach(array_reverse($schoolYears) as $sy)
-                                <option value="{{ $sy }}">{{ $sy }}</option>
-                            @endforeach
-                        </select>
-                        <button id="exportStudentRecordsBtn" style="background:#4CAF50;color:#fff;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
-                            <i class="fas fa-file-export"></i> Export Records
-                        </button>
-                        <button id="printStudentRecordsBtn" style="background:#FFC107;color:#222;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
-                            <i class="fas fa-print"></i> Print Records
-                        </button>
-                        <button id="backSyncStudentRecordsBtn" style="background:#8B0000;color:#fff;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
-                            <i class="fas fa-sync-alt"></i> Back/Sync
-                        </button>
+                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <label for="schoolYearFilter" style="font-weight:600;color:#8B0000;">School Year:</label>
+                            <select id="schoolYearFilter" name="schoolYearFilter" class="filter-select" style="min-width:140px; border:1.5px solid #8B0000; border-radius:8px; padding:6px 12px; font-size:1rem;">
+                                <option value="all">All Years</option>
+                                @php
+                                    $startYear = 2022;
+                                    $currentYear = date('Y');
+                                    $schoolYears = [];
+                                    for ($y = $startYear; $y <= $currentYear; $y++) {
+                                        $schoolYears[] = $y . '-' . ($y+1);
+                                    }
+                                @endphp
+                                @foreach(array_reverse($schoolYears) as $sy)
+                                    <option value="{{ $sy }}">{{ $sy }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <label for="yearLevelFilter" style="font-weight:600;color:#8B0000;">Year Level:</label>
+                            <select id="yearLevelFilter" name="yearLevelFilter" class="filter-select" style="min-width:140px; border:1.5px solid #8B0000; border-radius:8px; padding:6px 12px; font-size:1rem;">
+                                <option value="all">All Levels</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                            <button id="exportStudentRecordsBtn" style="background:#4CAF50;color:#fff;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
+                                <i class="fas fa-file-export"></i> Export Records
+                            </button>
+                            <button id="printStudentRecordsBtn" style="background:#FFC107;color:#222;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
+                                <i class="fas fa-print"></i> Print Records
+                            </button>
+                            <button id="backSyncStudentRecordsBtn" style="background:#8B0000;color:#fff;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
+                                <i class="fas fa-sync-alt"></i> Back/Sync
+                            </button>
+                        </div>
                     </div>
                     <div style="max-height:60vh;overflow-y:auto;">
                         <table style="width:100%;border-collapse:collapse;">
@@ -2186,11 +2198,13 @@ backSyncBtn.addEventListener('click', function() {
 document.addEventListener('DOMContentLoaded', function() {
     let students = @json($students);
     let selectedDepartment = null;
-    let selectedSchoolYear = document.getElementById('schoolYearFilter').value;
+    let selectedSchoolYear = 'all';
+    let selectedYearLevel = 'all';
     const tableSection = document.getElementById('studentRecordsTableSection');
     const tableBody = document.getElementById('studentRecordsTableBody');
     const departmentGrid = document.getElementById('departmentGrid');
     const schoolYearFilter = document.getElementById('schoolYearFilter');
+    const yearLevelFilter = document.getElementById('yearLevelFilter');
     const backBtn = document.getElementById('backToGridBtn');
 
     // Helper: flatten all students for a department
@@ -2206,8 +2220,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return all;
     }
 
-    // Render table for selected department, optionally filtered by school year
-    function renderTable(filterBySchoolYear = false) {
+    // Render table for selected department, filtered by school year and year level
+    function renderTable() {
         if (!selectedDepartment) {
             tableSection.style.display = 'none';
             return;
@@ -2215,17 +2229,28 @@ document.addEventListener('DOMContentLoaded', function() {
         tableSection.style.display = 'block';
         tableBody.innerHTML = '';
         let records = [];
-        if (filterBySchoolYear && students[selectedDepartment] && students[selectedDepartment][selectedSchoolYear]) {
+        
+        // Get all students for the selected department
+        if (selectedSchoolYear !== 'all' && students[selectedDepartment] && students[selectedDepartment][selectedSchoolYear]) {
             records = students[selectedDepartment][selectedSchoolYear];
         } else {
             records = getAllStudentsForDepartment(selectedDepartment);
         }
+        
+        // Filter by year level if not 'all'
+        if (selectedYearLevel !== 'all') {
+            records = records.filter(function(student) {
+                return student.year_level === selectedYearLevel;
+            });
+        }
+        
         if (!records || records.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">No records found.</td></tr>';
             return;
         }
+        
         records.forEach(function(student) {
-            let schoolYearDisplay = student.school_year || (student.school_years ? student.school_years.join(', ') : selectedSchoolYear);
+            let schoolYearDisplay = student.school_year || (student.school_years ? student.school_years.join(', ') : '');
             let row = document.createElement('tr');
             row.innerHTML = `
                 <td>${student.student_id || ''}</td>
@@ -2243,16 +2268,24 @@ document.addEventListener('DOMContentLoaded', function() {
         departmentGrid.querySelectorAll('.department-logo-card').forEach(function(card) {
             card.addEventListener('click', function() {
                 selectedDepartment = card.getAttribute('data-department');
-                renderTable(false); // Show all students for department
+                renderTable(); // Show all students for department
             });
         });
     }
 
-    // School year filter (optional: add a button to filter by year)
+    // School year filter
     if (schoolYearFilter) {
         schoolYearFilter.addEventListener('change', function() {
             selectedSchoolYear = this.value;
-            renderTable(true); // Filter by school year
+            renderTable();
+        });
+    }
+
+    // Year level filter
+    if (yearLevelFilter) {
+        yearLevelFilter.addEventListener('change', function() {
+            selectedYearLevel = this.value;
+            renderTable();
         });
     }
 
@@ -2260,6 +2293,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (backBtn) {
         backBtn.addEventListener('click', function() {
             selectedDepartment = null;
+            selectedSchoolYear = 'all';
+            selectedYearLevel = 'all';
+            if (schoolYearFilter) schoolYearFilter.value = 'all';
+            if (yearLevelFilter) yearLevelFilter.value = 'all';
             tableSection.style.display = 'none';
         });
     }
