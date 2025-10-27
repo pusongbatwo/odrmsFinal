@@ -15,8 +15,6 @@ use App\Http\Controllers\GoogleDriveBackupController;
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\AdminController;
 
-Route::post('/students/store', [RegistrarController::class, 'storeStudent'])->name('students.store');
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -126,6 +124,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/registrar/reject/{id}', [RegistrarController::class, 'reject'])->name('registrar.reject');
     Route::post('/registrar/backup', [RegistrarController::class, 'backup'])->name('registrar.backup');
     Route::post('/registrar/complete/{id}', [RegistrarController::class, 'complete'])->name('registrar.complete');
+
+    // Student routes
+    Route::post('/students/store', [RegistrarController::class, 'storeStudent'])->name('students.store');
+    Route::post('/students/{id}/update', [RegistrarController::class, 'updateStudent'])->name('students.update');
 
     // Admin Routes - Only accessible by admin users
     Route::middleware(['auth', 'admin'])->group(function () {

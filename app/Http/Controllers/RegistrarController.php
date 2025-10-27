@@ -390,6 +390,49 @@ class RegistrarController extends Controller
         return redirect()->back()->with('student_added', 'Student record added successfully!');
     }
 
+    public function updateStudent(Request $request, $id)
+    {
+        try {
+            $student = Student::findOrFail($id);
+
+            $validated = $request->validate([
+                'student_id' => 'sometimes|string|unique:students,student_id,' . $id,
+                'first_name' => 'sometimes|string|max:255',
+                'middle_name' => 'nullable|string|max:255',
+                'last_name' => 'sometimes|string|max:255',
+                'program' => 'sometimes|string|max:255',
+                'year_level' => 'sometimes|string|max:50',
+                'school_year' => 'sometimes|string|max:50',
+                'status' => 'sometimes|string|max:50',
+            ]);
+
+            $student->update($validated);
+
+            // Log student updated
+            SystemLogHelper::log('student_updated', 'Student record for ' . $student->first_name . ' ' . $student->last_name . ' updated by registrar.');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student record updated successfully',
+                'student' => $student->fresh()
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Student update failed: ' . $e->getMessage(), ['id' => $id, 'request' => $request->all()]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update student record: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function registrarDashboard(Request $request)
     {
         // Dashboard summary: top 5, not paginated
@@ -417,7 +460,8 @@ class RegistrarController extends Controller
         })->toArray();
 
         // Load students from students table, grouped by program and year_level
-        $students = \App\Models\Student::all()->groupBy(['program', 'year_level']);
+        $studentsRaw = \App\Models\Student::select('id', 'student_id', 'first_name', 'middle_name', 'last_name', 'program', 'year_level', 'school_year', 'status')->get();
+        $students = $studentsRaw->groupBy(['program', 'year_level']);
 
         // Load system logs
         $systemLogs = \App\Models\SystemLog::orderBy('created_at', 'desc')->take(50)->get();

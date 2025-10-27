@@ -1379,6 +1379,78 @@
             overflow: hidden !important;
         }
         
+        /* Editable cell styles */
+        .editable-cell {
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .editable-cell:hover {
+            background-color: #f0f8ff !important;
+        }
+        
+        .editable-cell.editing {
+            background-color: #fff3cd !important;
+            padding: 0 !important;
+        }
+        
+        .editable-input {
+            width: 100%;
+            height: 100%;
+            padding: 8px 12px;
+            border: 2px solid #8B0000;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+            outline: none;
+        }
+        
+        .editable-select {
+            width: 100%;
+            height: 100%;
+            padding: 8px 12px;
+            border: 2px solid #8B0000;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .edit-icon {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 10px;
+            color: #8B0000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .editable-cell:hover .edit-icon {
+            opacity: 1;
+        }
+        
+        .save-indicator {
+            display: inline-block;
+            margin-left: 8px;
+            font-size: 12px;
+        }
+        
+        .save-indicator.saving {
+            color: #FFC107;
+        }
+        
+        .save-indicator.saved {
+            color: #4CAF50;
+        }
+        
+        .save-indicator.error {
+            color: #F44336;
+        }
 
     </style>
 </head>
@@ -2251,16 +2323,294 @@ document.addEventListener('DOMContentLoaded', function() {
         
         records.forEach(function(student) {
             let schoolYearDisplay = student.school_year || (student.school_years ? student.school_years.join(', ') : '');
+            let dbId = student.id; // Use the database id for updates
+            let studentIdValue = student.student_id || '';
             let row = document.createElement('tr');
+            row.setAttribute('data-student-id', dbId);
             row.innerHTML = `
-                <td>${student.student_id || ''}</td>
-                <td>${student.first_name || ''} ${student.last_name || ''}</td>
-                <td>${student.program || ''}</td>
-                <td>${student.year_level || ''}</td>
-                <td>${schoolYearDisplay}</td>
+                <td class="editable-cell" data-field="student_id" data-student-id="${dbId}">
+                    ${studentIdValue}
+                    <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                </td>
+                <td>
+                    <div class="editable-cell" data-field="first_name" data-student-id="${dbId}">
+                        ${student.first_name || ''} 
+                        <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                    </div>
+                    <div class="editable-cell" data-field="last_name" data-student-id="${dbId}">
+                        ${student.last_name || ''}
+                        <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                    </div>
+                </td>
+                <td class="editable-cell" data-field="program" data-student-id="${dbId}">
+                    ${student.program || ''}
+                    <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                </td>
+                <td class="editable-cell" data-field="year_level" data-student-id="${dbId}">
+                    ${student.year_level || ''}
+                    <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                </td>
+                <td class="editable-cell" data-field="school_year" data-student-id="${dbId}">
+                    ${schoolYearDisplay}
+                    <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                </td>
             `;
             tableBody.appendChild(row);
         });
+        
+        // Attach inline editing handlers after rendering
+        attachInlineEditing();
+    }
+
+    // Inline editing functionality
+    function attachInlineEditing() {
+        const editableCells = document.querySelectorAll('#studentRecordsTableBody .editable-cell');
+        
+        editableCells.forEach(function(cell) {
+            cell.addEventListener('click', function() {
+                if (this.classList.contains('editing')) return;
+                
+                const field = this.getAttribute('data-field');
+                const studentId = this.getAttribute('data-student-id');
+                const currentValue = this.textContent.trim();
+                
+                // Add editing class
+                this.classList.add('editing');
+                
+                // Determine input type based on field
+                let inputElement;
+                if (field === 'program') {
+                    inputElement = createProgramSelect(currentValue);
+                } else if (field === 'year_level') {
+                    inputElement = createYearLevelSelect(currentValue);
+                } else if (field === 'school_year') {
+                    inputElement = createSchoolYearSelect(currentValue);
+                } else {
+                    inputElement = document.createElement('input');
+                    inputElement.type = 'text';
+                    inputElement.className = 'editable-input';
+                    inputElement.value = currentValue;
+                }
+                
+                // Save original value for comparison
+                const originalValue = currentValue;
+                const cellElement = this;
+                
+                // Replace cell content
+                this.innerHTML = '';
+                this.appendChild(inputElement);
+                
+                // Focus input
+                inputElement.focus();
+                
+                // Save on blur or Enter
+                function saveValue() {
+                    const newValue = inputElement.value || inputElement.options[inputElement.selectedIndex].text;
+                    
+                    if (newValue !== originalValue) {
+                        updateStudentRecord(studentId, field, newValue, cellElement);
+                    } else {
+                        // Cancel editing
+                        cellElement.classList.remove('editing');
+                        cellElement.textContent = originalValue;
+                    }
+                }
+                
+                inputElement.addEventListener('blur', saveValue);
+                inputElement.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        saveValue();
+                    } else if (e.key === 'Escape') {
+                        cellElement.classList.remove('editing');
+                        cellElement.textContent = originalValue;
+                    }
+                });
+            });
+        });
+    }
+    
+    // Create program select dropdown
+    function createProgramSelect(currentValue) {
+        const select = document.createElement('select');
+        select.className = 'editable-select';
+        
+        const programs = [
+            'BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY',
+            'BACHELOR OF SCIENCE IN ENTREPRENEURSHIP',
+            'BACHELOR OF SCIENCE IN CRIMINOLOGY',
+            'BACHELOR OF ELEMENTARY EDUCATION',
+            'BACHELOR OF EARLY CHILDHOOD EDUCATION',
+            'BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT',
+            'BACHELOR OF PUBLIC ADMINISTRATION'
+        ];
+        
+        programs.forEach(program => {
+            const option = document.createElement('option');
+            option.value = program;
+            option.textContent = program;
+            if (program === currentValue) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        
+        return select;
+    }
+    
+    // Create year level select dropdown
+    function createYearLevelSelect(currentValue) {
+        const select = document.createElement('select');
+        select.className = 'editable-select';
+        
+        const yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+        
+        yearLevels.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            if (year === currentValue) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        
+        return select;
+    }
+    
+    // Create school year select dropdown
+    function createSchoolYearSelect(currentValue) {
+        const select = document.createElement('select');
+        select.className = 'editable-select';
+        
+        // Generate school years from 2022 to current
+        const startYear = 2022;
+        const currentYear = new Date().getFullYear();
+        
+        for (let year = startYear; year <= currentYear; year++) {
+            const option = document.createElement('option');
+            option.value = year + '-' + (year + 1);
+            option.textContent = year + '-' + (year + 1);
+            if (option.value === currentValue) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        }
+        
+        return select;
+    }
+    
+    // Update student record via AJAX
+    function updateStudentRecord(studentId, field, value, cellElement) {
+        console.log('Updating student:', { studentId, field, value });
+        
+        // Show saving indicator
+        cellElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        // Prepare data
+        const data = {};
+        data[field] = value;
+        
+        console.log('Sending data:', data);
+        
+        // Send AJAX request
+        fetch('/students/' + studentId + '/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            if (!response.ok) {
+                return response.json().then(err => {
+                    console.error('Error response:', err);
+                    return Promise.reject(err);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Success response:', data);
+            if (data.success) {
+                // Show success
+                cellElement.classList.remove('editing');
+                cellElement.innerHTML = value + '<span class="edit-icon"><i class="fas fa-edit"></i></span>';
+                
+                // Show success message temporarily
+                showSaveIndicator(cellElement, 'saved');
+                
+                // Reattach event listener
+                attachInlineEditing();
+                
+                // Show success notification
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: 'Student record updated successfully',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            } else {
+                throw new Error('Update failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating student record:', error);
+            
+            // Extract error message
+            let errorMessage = 'Failed to update student record';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.errors && Object.keys(error.errors).length > 0) {
+                errorMessage = Object.values(error.errors)[0][0];
+            }
+            
+            // Show error
+            cellElement.classList.remove('editing');
+            cellElement.innerHTML = value + '<span class="edit-icon"><i class="fas fa-edit"></i></span>';
+            
+            showSaveIndicator(cellElement, 'error');
+            
+            // Reattach event listener
+            attachInlineEditing();
+            
+            // Show error notification
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMessage,
+                timer: 3000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+    }
+    
+    // Show save indicator
+    function showSaveIndicator(cellElement, status) {
+        const indicator = document.createElement('span');
+        indicator.className = 'save-indicator ' + status;
+        
+        if (status === 'saving') {
+            indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        } else if (status === 'saved') {
+            indicator.innerHTML = '<i class="fas fa-check"></i> Saved';
+        } else if (status === 'error') {
+            indicator.innerHTML = '<i class="fas fa-times"></i> Error';
+        }
+        
+        cellElement.appendChild(indicator);
+        
+        setTimeout(() => {
+            indicator.remove();
+        }, 2000);
     }
 
     // Department selection
