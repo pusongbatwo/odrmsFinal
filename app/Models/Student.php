@@ -18,6 +18,7 @@ class Student extends Model
         'program',
         'year_level',
         'school_year',
+        'alumni_school_year',
         'status',
     ];
 }

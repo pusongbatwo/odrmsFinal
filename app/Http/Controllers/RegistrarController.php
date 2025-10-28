@@ -13,6 +13,7 @@ use App\Helpers\SystemLogHelper;
 use App\Models\SystemLog;
 use App\Models\Student;
 use App\Models\CashierLog;
+use App\Models\Alumni;
 
 
 class RegistrarController extends Controller
@@ -433,6 +434,95 @@ class RegistrarController extends Controller
         }
     }
 
+    public function storeAlumni(Request $request)
+    {
+        $validated = $request->validate([
+            'student_id' => 'nullable|string|unique:students,student_id',
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'program' => 'required|string|max:255',
+            'year_graduated' => 'required|string|max:50',
+        ]);
+
+        // Convert empty string to null for student_id
+        if (empty($validated['student_id'])) {
+            $validated['student_id'] = null;
+        }
+
+        // Store alumni in students table with year_level as 'Alumni'
+        $studentData = [
+            'student_id' => $validated['student_id'],
+            'first_name' => $validated['first_name'],
+            'middle_name' => $validated['middle_name'],
+            'last_name' => $validated['last_name'],
+            'program' => $validated['program'],
+            'year_level' => 'Alumni',
+            'alumni_school_year' => $validated['year_graduated'],
+            'status' => 'graduated',
+        ];
+
+        Student::create($studentData);
+
+        // Log alumni added
+        SystemLogHelper::log('alumni_added', 'Alumni record for ' . $validated['first_name'] . ' ' . $validated['last_name'] . ' added by registrar.');
+
+        return redirect()->back()->with('alumni_added', 'Alumni record added successfully!');
+    }
+
+    public function updateAlumni(Request $request, $id)
+    {
+        try {
+            $student = Student::findOrFail($id);
+
+            $validated = $request->validate([
+                'student_id' => 'sometimes|string|unique:students,student_id,' . $id,
+                'first_name' => 'sometimes|string|max:255',
+                'middle_name' => 'nullable|string|max:255',
+                'last_name' => 'sometimes|string|max:255',
+                'program' => 'sometimes|string|max:255',
+                'year_graduated' => 'sometimes|string|max:50',
+            ]);
+
+            // Convert empty string to null for student_id
+            if (isset($validated['student_id']) && empty($validated['student_id'])) {
+                $validated['student_id'] = null;
+            }
+
+            // Map year_graduated to alumni_school_year
+            $updateData = $validated;
+            if (isset($validated['year_graduated'])) {
+                $updateData['alumni_school_year'] = $validated['year_graduated'];
+                unset($updateData['year_graduated']);
+            }
+
+            $student->update($updateData);
+
+            // Log alumni updated
+            SystemLogHelper::log('alumni_updated', 'Alumni record for ' . $student->first_name . ' ' . $student->last_name . ' updated by registrar.');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Alumni record updated successfully',
+                'alumni' => $student->fresh()
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Alumni update failed: ' . $e->getMessage(), ['id' => $id, 'request' => $request->all()]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update alumni record: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function registrarDashboard(Request $request)
     {
         // Dashboard summary: top 5, not paginated
@@ -463,10 +553,16 @@ class RegistrarController extends Controller
         $studentsRaw = \App\Models\Student::select('id', 'student_id', 'first_name', 'middle_name', 'last_name', 'program', 'year_level', 'school_year', 'status')->get();
         $students = $studentsRaw->groupBy(['program', 'year_level']);
 
+        // Load alumni from students table where year_level = 'Alumni', grouped by program and alumni_school_year
+        $alumniRaw = \App\Models\Student::select('id', 'student_id', 'first_name', 'middle_name', 'last_name', 'program', 'alumni_school_year as year_graduated', 'status')
+            ->where('year_level', 'Alumni')
+            ->get();
+        $alumni = $alumniRaw->groupBy(['program', 'year_graduated']);
+
         // Load system logs
         $systemLogs = \App\Models\SystemLog::orderBy('created_at', 'desc')->take(50)->get();
 
-        return view('registrar.dashboard', compact('dashboardRequests', 'requests', 'analytics', 'departmentLogos', 'students', 'systemLogs'));
+        return view('registrar.dashboard', compact('dashboardRequests', 'requests', 'analytics', 'departmentLogos', 'students', 'alumni', 'systemLogs'));
     }
 
     public function approve($id)

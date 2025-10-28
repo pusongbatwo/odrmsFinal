@@ -129,6 +129,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/students/store', [RegistrarController::class, 'storeStudent'])->name('students.store');
     Route::post('/students/{id}/update', [RegistrarController::class, 'updateStudent'])->name('students.update');
 
+    // Alumni routes
+    Route::post('/alumni/store', [RegistrarController::class, 'storeAlumni'])->name('alumni.store');
+    Route::post('/alumni/{id}/update', [RegistrarController::class, 'updateAlumni'])->name('alumni.update');
+
     // Admin Routes - Only accessible by admin users
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');

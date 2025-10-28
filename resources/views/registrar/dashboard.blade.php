@@ -2060,7 +2060,7 @@ backSyncBtn.addEventListener('click', function() {
 <div id="studentTableSection" style="display: none;">
     <div class="student-actions" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-bottom:1.5rem;">
         <button class="action-btn primary" id="openAddStudentModalBtn" style="background:#8B0000;color:#fff;font-weight:600;letter-spacing:1px;">
-            <i class="fas fa-user-plus"></i> Add Student Manually
+            <i class="fas fa-user-plus"></i> Add Records
         </button>
         <button class="import-btn" id="openImportStudentModalBtn">
             <i class="fas fa-file-import"></i> Import Student Records
@@ -2118,6 +2118,7 @@ backSyncBtn.addEventListener('click', function() {
                                 <option value="2nd Year">2nd Year</option>
                                 <option value="3rd Year">3rd Year</option>
                                 <option value="4th Year">4th Year</option>
+                                <option value="Alumni">Alumni</option>
                             </select>
                         </div>
                         <div style="display:flex;gap:0.5rem;margin-left:auto;">
@@ -2156,18 +2157,30 @@ backSyncBtn.addEventListener('click', function() {
                 </div>
                 <!-- Hidden file input for logo upload -->
                 <input type="file" id="logoFileInput" accept="image/*" style="display:none;">
-<!-- Add Student Modal -->
+<!-- Add Student/Alumni Modal -->
 <div id="addStudentModal" class="import-modal" style="display:none;z-index:2001;">
     <div class="import-modal-content" style="border-top:6px solid #8B0000;">
         <div class="import-modal-header">
-            <h3 class="import-modal-title" style="color:#8B0000;">Add Student Record</h3>
+            <h3 class="import-modal-title" style="color:#8B0000;" id="modalTitle">Add Record</h3>
             <button class="import-modal-close" onclick="closeAddStudentModal()">&times;</button>
         </div>
-        <form method="POST" action="{{ route('students.store') }}">
+        <!-- Record Type Toggle -->
+        <div style="margin-bottom:1rem;display:flex;gap:1rem;align-items:center;justify-content:center;padding:0.75rem;background:#f5f5f5;border-radius:8px;">
+            <label style="font-weight:600;color:#8B0000;">Record Type:</label>
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                <input type="radio" name="record_type" id="record_type_student" value="student" checked onchange="changeRecordType('student')">
+                <span>Student</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                <input type="radio" name="record_type" id="record_type_alumni" value="alumni" onchange="changeRecordType('alumni')">
+                <span>Alumni</span>
+            </label>
+        </div>
+        <form method="POST" id="addRecordForm" action="{{ route('students.store') }}">
             @csrf
             <div style="margin-bottom:1rem;">
                 <label for="student_id_modal" style="font-weight:600;color:#8B0000;">Student ID</label>
-                <input type="text" name="student_id" id="student_id_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;">
+                <input type="text" name="student_id" id="student_id_modal" class="form-control" style="border:1.5px solid #8B0000;border-radius:8px;">
             </div>
             <div class="row" style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
                 <div class="col" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:0.5rem;">
@@ -2204,22 +2217,21 @@ backSyncBtn.addEventListener('click', function() {
                     <option value="2nd Year">2nd Year</option>
                     <option value="3rd Year">3rd Year</option>
                     <option value="4th Year">4th Year</option>
+                    <option value="Alumni">Alumni</option>
                 </select>
             </div>
             <div style="margin-bottom:1rem;">
                 <label for="school_year_modal" style="font-weight:600;color:#8B0000;">School Year</label>
-                <select name="school_year" id="school_year_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;">
+                <select name="school_year" id="school_year_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
+                    <option value="">Select School Year</option>
                     @php
-                        $startYear = 2022;
+                        $startYear = 2020;
                         $currentYear = date('Y');
-                        $schoolYears = [];
-                        for ($y = $startYear; $y <= $currentYear; $y++) {
-                            $schoolYears[] = $y . '-' . ($y+1);
+                        for ($y = $currentYear; $y >= $startYear; $y--) {
+                            $schoolYear = $y . '-' . ($y+1);
+                            echo '<option value="' . $schoolYear . '">' . $schoolYear . '</option>';
                         }
                     @endphp
-                    @foreach(array_reverse($schoolYears) as $sy)
-                        <option value="{{ $sy }}">{{ $sy }}</option>
-                    @endforeach
                 </select>
             </div>
             <div style="margin-bottom:1.5rem;">
@@ -2231,7 +2243,82 @@ backSyncBtn.addEventListener('click', function() {
                     <option value="dropped">Dropped</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;padding:0.75rem 0;font-size:1rem;background:#8B0000;color:#fff;border:none;border-radius:8px;font-weight:600;letter-spacing:1px;box-shadow:0 2px 8px rgba(139,0,0,0.10);transition:background 0.2s;">Add Student</button>
+            <!-- Alumni-specific fields (initially hidden) -->
+            <div id="alumniFields" style="display:none;">
+                <div style="margin-bottom:1.5rem;">
+                    <label for="year_graduated_modal" style="font-weight:600;color:#8B0000;">Year Graduated</label>
+                    <select name="year_graduated" id="year_graduated_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
+                        <option value="">Select Year Graduated</option>
+                        @php
+                            $startYear = 2020;
+                            $currentYear = date('Y');
+                        @endphp
+                        @for ($y = $currentYear; $y >= $startYear; $y--)
+                            <option value="{{ $y }}-{{ $y+1 }}">{{ $y }}-{{ $y+1 }}</option>
+                        @endfor
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="submitButton" style="width:100%;padding:0.75rem 0;font-size:1rem;background:#8B0000;color:#fff;border:none;border-radius:8px;font-weight:600;letter-spacing:1px;box-shadow:0 2px 8px rgba(139,0,0,0.10);transition:background 0.2s;">Add Record</button>
+        </form>
+    </div>
+</div>
+
+
+<!-- Add Alumni Modal -->
+<div id="addAlumniModal" class="import-modal" style="display:none;z-index:2001;">
+    <div class="import-modal-content" style="border-top:6px solid #8B0000;">
+        <div class="import-modal-header">
+            <h3 class="import-modal-title" style="color:#8B0000;">Add Alumni Record</h3>
+            <button class="import-modal-close" onclick="closeAddAlumniModal()">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('alumni.store') }}">
+            @csrf
+            <div style="margin-bottom:1rem;">
+                <label for="alumni_student_id_modal" style="font-weight:600;color:#8B0000;">Student ID</label>
+                <input type="text" name="student_id" id="alumni_student_id_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;">
+            </div>
+            <div class="row" style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
+                <div class="col" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:0.5rem;">
+                    <label for="alumni_first_name_modal" style="font-weight:600;color:#8B0000;">First Name</label>
+                    <input type="text" name="first_name" id="alumni_first_name_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
+                </div>
+                <div class="col" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:0.5rem;">
+                    <label for="alumni_middle_name_modal" style="font-weight:600;color:#8B0000;">Middle Name</label>
+                    <input type="text" name="middle_name" id="alumni_middle_name_modal" class="form-control" style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
+                </div>
+                <div class="col" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:0.5rem;">
+                    <label for="alumni_last_name_modal" style="font-weight:600;color:#8B0000;">Last Name</label>
+                    <input type="text" name="last_name" id="alumni_last_name_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
+                </div>
+            </div>
+            <div style="margin-bottom:1rem;display:flex;flex-direction:column;gap:0.5rem;">
+                <label for="alumni_program_modal" style="font-weight:600;color:#8B0000;">Program</label>
+                <select name="program" id="alumni_program_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
+                    <option value="">Select Program</option>
+                    <option value="BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY">BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY</option>
+                    <option value="BACHELOR OF SCIENCE IN ENTREPRENEURSHIP">BACHELOR OF SCIENCE IN ENTREPRENEURSHIP</option>
+                    <option value="BACHELOR OF SCIENCE IN CRIMINOLOGY">BACHELOR OF SCIENCE IN CRIMINOLOGY</option>
+                    <option value="BACHELOR OF ELEMENTARY EDUCATION">BACHELOR OF ELEMENTARY EDUCATION</option>
+                    <option value="BACHELOR OF EARLY CHILDHOOD EDUCATION">BACHELOR OF EARLY CHILDHOOD EDUCATION</option>
+                    <option value="BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT">BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT</option>
+                    <option value="BACHELOR OF PUBLIC ADMINISTRATION">BACHELOR OF PUBLIC ADMINISTRATION</option>
+                </select>
+            </div>
+            <div style="margin-bottom:1.5rem;">
+                <label for="year_graduated_modal" style="font-weight:600;color:#8B0000;">Year Graduated</label>
+                <select name="year_graduated" id="year_graduated_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
+                    <option value="">Select Year Graduated</option>
+                    @php
+                        $startYear = 2020;
+                        $currentYear = date('Y');
+                    @endphp
+                    @for ($y = $currentYear; $y >= $startYear; $y--)
+                        <option value="{{ $y }}-{{ $y+1 }}">{{ $y }}-{{ $y+1 }}</option>
+                    @endfor
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:0.75rem 0;font-size:1rem;background:#8B0000;color:#fff;border:none;border-radius:8px;font-weight:600;letter-spacing:1px;box-shadow:0 2px 8px rgba(139,0,0,0.10);transition:background 0.2s;">Add Alumni</button>
         </form>
     </div>
 </div>
@@ -2246,6 +2333,17 @@ backSyncBtn.addEventListener('click', function() {
             icon: 'success',
             title: 'Student Added!',
             text: "{{ session('student_added') }}",
+            confirmButtonColor: '#8B0000',
+        });
+    </script>
+@endif
+
+@if(session('alumni_added'))
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Alumni Added!',
+            text: "{{ session('alumni_added') }}",
             confirmButtonColor: '#8B0000',
         });
     </script>
@@ -2462,7 +2560,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const select = document.createElement('select');
         select.className = 'editable-select';
         
-        const yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+        const yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Alumni'];
         
         yearLevels.forEach(year => {
             const option = document.createElement('option');
@@ -2482,11 +2580,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const select = document.createElement('select');
         select.className = 'editable-select';
         
-        // Generate school years from 2022 to current
-        const startYear = 2022;
+        // Generate school years from 2020 to current (in reverse order, most recent first)
+        const startYear = 2020;
         const currentYear = new Date().getFullYear();
         
-        for (let year = startYear; year <= currentYear; year++) {
+        for (let year = currentYear; year >= startYear; year--) {
             const option = document.createElement('option');
             option.value = year + '-' + (year + 1);
             option.textContent = year + '-' + (year + 1);
@@ -2655,7 +2753,7 @@ document.addEventListener('DOMContentLoaded', function() {
     tableSection.style.display = 'none';
 });
 
-// Modal logic for Add Student
+// Modal logic for Add Student/Alumni
 function openAddStudentModal() {
     var modal = document.getElementById('addStudentModal');
     if (modal) modal.style.display = 'flex';
@@ -2663,9 +2761,70 @@ function openAddStudentModal() {
 function closeAddStudentModal() {
     var modal = document.getElementById('addStudentModal');
     if (modal) modal.style.display = 'none';
+    // Reset form
+    document.getElementById('addRecordForm').reset();
+    document.getElementById('record_type_student').checked = true;
+    changeRecordType('student');
 }
 var addBtn = document.getElementById('openAddStudentModalBtn');
 if (addBtn) addBtn.addEventListener('click', openAddStudentModal);
+
+// Change record type function
+function changeRecordType(type) {
+    const alumniFields = document.getElementById('alumniFields');
+    const yearLevel = document.getElementById('year_level_modal');
+    const schoolYear = document.getElementById('school_year_modal');
+    const studentId = document.getElementById('student_id_modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const form = document.getElementById('addRecordForm');
+    const submitButton = document.getElementById('submitButton');
+    
+    if (type === 'alumni') {
+        // Show alumni fields
+        alumniFields.style.display = 'block';
+        
+        // Change form action to alumni
+        form.action = '{{ route("alumni.store") }}';
+        
+        // Update title
+        modalTitle.textContent = 'Add Alumni Record';
+        submitButton.textContent = 'Add Alumni';
+        
+        // Make year level and school year inactive for alumni
+        yearLevel.required = false;
+        yearLevel.disabled = true;
+        yearLevel.style.opacity = '0.5';
+        
+        schoolYear.required = false;
+        schoolYear.disabled = true;
+        schoolYear.style.opacity = '0.5';
+        
+        // Make student ID optional for alumni
+        studentId.required = false;
+    } else {
+        // Hide alumni fields
+        alumniFields.style.display = 'none';
+        
+        // Change form action to student
+        form.action = '{{ route("students.store") }}';
+        
+        // Update title
+        modalTitle.textContent = 'Add Student Record';
+        submitButton.textContent = 'Add Student';
+        
+        // Make year level and school year required for students
+        yearLevel.required = true;
+        yearLevel.disabled = false;
+        yearLevel.style.opacity = '1';
+        
+        schoolYear.required = true;
+        schoolYear.disabled = false;
+        schoolYear.style.opacity = '1';
+        
+        // Make student ID required for students
+        studentId.required = true;
+    }
+}
 // Modal logic for Import Student
 var importBtn = document.getElementById('openImportStudentModalBtn');
 if (importBtn) importBtn.addEventListener('click', function() {
@@ -2673,6 +2832,461 @@ if (importBtn) importBtn.addEventListener('click', function() {
     if (importModal) importModal.style.display = 'flex';
 });
 </script>
+
+<script>
+// Alumni Records Table Logic (similar to student records)
+document.addEventListener('DOMContentLoaded', function() {
+    let alumni = @json($alumni);
+    let selectedAlumniDepartment = null;
+    let selectedAlumniSchoolYear = 'all';
+    let selectedAlumniYearGraduated = 'all';
+    const alumniTableSection = document.getElementById('alumniRecordsTableSection');
+    const alumniTableBody = document.getElementById('alumniRecordsTableBody');
+    const alumniDepartmentGrid = document.getElementById('alumniDepartmentGrid');
+    const alumniSchoolYearFilter = document.getElementById('alumniSchoolYearFilter');
+    const alumniYearGraduatedFilter = document.getElementById('alumniYearGraduatedFilter');
+    const alumniBackBtn = document.getElementById('backToAlumniGridBtn');
+
+    // Helper: flatten all alumni for a department
+    function getAllAlumniForDepartment(dept) {
+        let all = [];
+        if (alumni[dept]) {
+            Object.values(alumni[dept]).forEach(function(records) {
+                if (Array.isArray(records)) {
+                    all = all.concat(records);
+                }
+            });
+        }
+        return all;
+    }
+
+    // Render alumni table for selected department, filtered by school year and year graduated
+    function renderAlumniTable() {
+        if (!selectedAlumniDepartment) {
+            alumniTableSection.style.display = 'none';
+            return;
+        }
+        alumniTableSection.style.display = 'block';
+        alumniTableBody.innerHTML = '';
+        let records = [];
+        
+        // Get all alumni for the selected department
+        if (selectedAlumniSchoolYear !== 'all' && alumni[selectedAlumniDepartment] && alumni[selectedAlumniDepartment][selectedAlumniSchoolYear]) {
+            records = alumni[selectedAlumniDepartment][selectedAlumniSchoolYear];
+        } else {
+            records = getAllAlumniForDepartment(selectedAlumniDepartment);
+        }
+        
+        // Filter by year graduated if not 'all'
+        if (selectedAlumniYearGraduated !== 'all') {
+            records = records.filter(function(alumni) {
+                return alumni.year_graduated == selectedAlumniYearGraduated;
+            });
+        }
+        
+        if (!records || records.length === 0) {
+            alumniTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;">No records found.</td></tr>';
+            return;
+        }
+        
+        records.forEach(function(alumni) {
+            let dbId = alumni.id; // Use the database id for updates
+            let studentIdValue = alumni.student_id || '';
+            let row = document.createElement('tr');
+            row.setAttribute('data-alumni-id', dbId);
+            row.innerHTML = `
+                <td class="editable-cell" data-field="student_id" data-alumni-id="${dbId}">
+                    ${studentIdValue}
+                    <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                </td>
+                <td>
+                    <div class="editable-cell" data-field="first_name" data-alumni-id="${dbId}">
+                        ${alumni.first_name || ''} 
+                        <span class="edit-icon"><i class="fas fa-edit"></i></span>
+            </div>
+                    <div class="editable-cell" data-field="last_name" data-alumni-id="${dbId}">
+                        ${alumni.last_name || ''}
+                        <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                    </div>
+                </td>
+                <td class="editable-cell" data-field="program" data-alumni-id="${dbId}">
+                    ${alumni.program || ''}
+                    <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                </td>
+                <td class="editable-cell" data-field="year_graduated" data-alumni-id="${dbId}">
+                    ${alumni.year_graduated || ''}
+                    <span class="edit-icon"><i class="fas fa-edit"></i></span>
+                </td>
+            `;
+            alumniTableBody.appendChild(row);
+        });
+        
+        // Attach inline editing handlers after rendering
+        attachAlumniInlineEditing();
+    }
+
+    // Alumni inline editing functionality
+    function attachAlumniInlineEditing() {
+        const editableCells = document.querySelectorAll('#alumniRecordsTableBody .editable-cell');
+        
+        editableCells.forEach(function(cell) {
+            cell.addEventListener('click', function() {
+                if (this.classList.contains('editing')) return;
+                
+                const field = this.getAttribute('data-field');
+                const alumniId = this.getAttribute('data-alumni-id');
+                const currentValue = this.textContent.trim();
+                
+                // Add editing class
+                this.classList.add('editing');
+                
+                // Determine input type based on field
+                let inputElement;
+                if (field === 'program') {
+                    inputElement = createProgramSelect(currentValue);
+                } else if (field === 'year_graduated') {
+                    // Create year graduated dropdown
+                    inputElement = document.createElement('select');
+                    inputElement.className = 'editable-select';
+                    
+                    const startYear = 2020;
+                    const currentYear = new Date().getFullYear();
+                    
+                    for (let year = currentYear; year >= startYear; year--) {
+                        const option = document.createElement('option');
+                        option.value = year + '-' + (year + 1);
+                        option.textContent = year + '-' + (year + 1);
+                        if (option.value === currentValue) {
+                            option.selected = true;
+                        }
+                        inputElement.appendChild(option);
+                    }
+                } else {
+                    inputElement = document.createElement('input');
+                    inputElement.type = 'text';
+                    inputElement.className = 'editable-input';
+                    inputElement.value = currentValue;
+                }
+                
+                // Save original value for comparison
+                const originalValue = currentValue;
+                const cellElement = this;
+                
+                // Replace cell content
+                this.innerHTML = '';
+                this.appendChild(inputElement);
+                
+                // Focus input
+                inputElement.focus();
+                
+                // Save on blur or Enter
+                function saveValue() {
+                    const newValue = inputElement.value || inputElement.options[inputElement.selectedIndex].text;
+                    
+                    if (newValue !== originalValue) {
+                        updateAlumniRecord(alumniId, field, newValue, cellElement);
+                    } else {
+                        // Cancel editing
+                        cellElement.classList.remove('editing');
+                        cellElement.textContent = originalValue;
+                    }
+                }
+                
+                inputElement.addEventListener('blur', saveValue);
+                inputElement.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        saveValue();
+                    } else if (e.key === 'Escape') {
+                        cellElement.classList.remove('editing');
+                        cellElement.textContent = originalValue;
+                    }
+                });
+            });
+        });
+    }
+    
+    // Update alumni record via AJAX
+    function updateAlumniRecord(alumniId, field, value, cellElement) {
+        console.log('Updating alumni:', { alumniId, field, value });
+        
+        // Show saving indicator
+        cellElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        // Prepare data - map year_graduated to alumni_school_year
+        const data = {};
+        if (field === 'year_graduated') {
+            data['alumni_school_year'] = value;
+        } else {
+            data[field] = value;
+        }
+        
+        console.log('Sending alumni data:', data);
+        
+        // Send AJAX request
+        fetch('/alumni/' + alumniId + '/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            console.log('Alumni response status:', response.status);
+            if (!response.ok) {
+                return response.json().then(err => {
+                    console.error('Alumni error response:', err);
+                    return Promise.reject(err);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Alumni success response:', data);
+            if (data.success) {
+                // Show success
+                cellElement.classList.remove('editing');
+                cellElement.innerHTML = value + '<span class="edit-icon"><i class="fas fa-edit"></i></span>';
+                
+                // Show success message temporarily
+                showAlumniSaveIndicator(cellElement, 'saved');
+                
+                // Reattach event listener
+                attachAlumniInlineEditing();
+                
+                // Show success notification
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: 'Alumni record updated successfully',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            } else {
+                throw new Error('Update failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating alumni record:', error);
+            
+            // Extract error message
+            let errorMessage = 'Failed to update alumni record';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.errors && Object.keys(error.errors).length > 0) {
+                errorMessage = Object.values(error.errors)[0][0];
+            }
+            
+            // Show error
+            cellElement.classList.remove('editing');
+            cellElement.innerHTML = value + '<span class="edit-icon"><i class="fas fa-edit"></i></span>';
+            
+            showAlumniSaveIndicator(cellElement, 'error');
+            
+            // Reattach event listener
+            attachAlumniInlineEditing();
+            
+            // Show error notification
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMessage,
+                timer: 3000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+    }
+    
+    // Show alumni save indicator
+    function showAlumniSaveIndicator(cellElement, status) {
+        const indicator = document.createElement('span');
+        indicator.className = 'save-indicator ' + status;
+        
+        if (status === 'saving') {
+            indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        } else if (status === 'saved') {
+            indicator.innerHTML = '<i class="fas fa-check"></i> Saved';
+        } else if (status === 'error') {
+            indicator.innerHTML = '<i class="fas fa-times"></i> Error';
+        }
+        
+        cellElement.appendChild(indicator);
+        
+        setTimeout(() => {
+            indicator.remove();
+        }, 2000);
+    }
+
+    // Alumni department selection
+    if (alumniDepartmentGrid) {
+        alumniDepartmentGrid.querySelectorAll('.department-logo-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                selectedAlumniDepartment = card.getAttribute('data-department');
+                renderAlumniTable(); // Show all alumni for department
+            });
+        });
+    }
+
+    // Alumni school year filter
+    if (alumniSchoolYearFilter) {
+        alumniSchoolYearFilter.addEventListener('change', function() {
+            selectedAlumniSchoolYear = this.value;
+            renderAlumniTable();
+        });
+    }
+
+    // Alumni year graduated filter
+    if (alumniYearGraduatedFilter) {
+        alumniYearGraduatedFilter.addEventListener('change', function() {
+            selectedAlumniYearGraduated = this.value;
+            renderAlumniTable();
+        });
+    }
+
+    // Alumni back button logic
+    if (alumniBackBtn) {
+        alumniBackBtn.addEventListener('click', function() {
+            selectedAlumniDepartment = null;
+            selectedAlumniSchoolYear = 'all';
+            selectedAlumniYearGraduated = 'all';
+            if (alumniSchoolYearFilter) alumniSchoolYearFilter.value = 'all';
+            if (alumniYearGraduatedFilter) alumniYearGraduatedFilter.value = 'all';
+            alumniTableSection.style.display = 'none';
+        });
+    }
+
+    // Initial state: alumni table hidden
+    alumniTableSection.style.display = 'none';
+});
+
+// Alumni Modal logic
+function openAddAlumniModal() {
+    var modal = document.getElementById('addAlumniModal');
+    if (modal) modal.style.display = 'flex';
+}
+function closeAddAlumniModal() {
+    var modal = document.getElementById('addAlumniModal');
+    if (modal) modal.style.display = 'none';
+}
+var addAlumniBtn = document.getElementById('openAddAlumniModalBtn');
+if (addAlumniBtn) addAlumniBtn.addEventListener('click', openAddAlumniModal);
+
+// Alumni Import Modal logic
+var importAlumniBtn = document.getElementById('openImportAlumniModalBtn');
+if (importAlumniBtn) importAlumniBtn.addEventListener('click', function() {
+    var importModal = document.getElementById('importModal');
+    if (importModal) importModal.style.display = 'flex';
+});
+</script>
+            </div>
+        </div>
+
+        <!-- Alumni Records UI -->
+        <div id="alumniRecordsUI" class="feature-ui">
+            <div class="recent-requests">
+                <div class="section-header">
+                    <h2 class="section-title">Alumni Records Management</h2>
+                </div>
+                <!-- Alumni Table and Filters (hidden by default) -->
+                <div id="alumniTableSection" style="display: none;">
+                    <div class="alumni-actions" style="display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-bottom:1.5rem;">
+                        <button class="action-btn primary" id="openAddAlumniModalBtn" style="background:#8B0000;color:#fff;font-weight:600;letter-spacing:1px;">
+                            <i class="fas fa-user-plus"></i> Add Alumni Manually
+                        </button>
+                        <button class="import-btn" id="openImportAlumniModalBtn">
+                            <i class="fas fa-file-import"></i> Import Alumni Records
+                        </button>
+                        <button class="action-btn secondary" id="backToAlumniGridBtn" style="margin-left: 10px;">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                    </div>
+                </div>
+                <!-- Department Logo Grid for Alumni -->
+                <div id="alumniDepartmentGrid" style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; margin-bottom: 2rem;">
+                    @php
+                        $departments = [
+                            ["name" => "BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY", "img" => "/images/it.png"],
+                            ["name" => "BACHELOR OF SCIENCE IN ENTREPRENEURSHIP", "img" => "/images/bse.png"],
+                            ["name" => "BACHELOR OF SCIENCE IN CRIMINOLOGY", "img" => "/images/CRIM.png"],
+                            ["name" => "BACHELOR OF ELEMENTARY EDUCATION", "img" => "/images/beed.png"],
+                            ["name" => "BACHELOR OF EARLY CHILDHOOD EDUCATION", "img" => "/images/beced.png"],
+                            ["name" => "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT", "img" => "/images/hm.png"],
+                            ["name" => "BACHELOR OF PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
+                        ];
+                    @endphp
+                    @foreach($departments as $dept)
+                    <div class="department-logo-card" data-department="{{ $dept['name'] }}" style="text-align: center; cursor: pointer; width: 180px; padding-bottom: 1rem;">
+                        <img src="{{ $dept['img'] }}" alt="{{ $dept['name'] }}" class="department-logo-img">
+                        <div style="margin-top: 0.5rem; font-weight: 600; font-size: 13px;">{{ $dept['name'] }}</div>
+                    </div>
+                    @endforeach
+                </div>
+                <!-- Alumni Records Table (always visible) -->
+                <div id="alumniRecordsTableSection" style="display:none;">
+                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <label for="alumniSchoolYearFilter" style="font-weight:600;color:#8B0000;">School Year:</label>
+                            <select id="alumniSchoolYearFilter" name="alumniSchoolYearFilter" class="filter-select" style="min-width:140px; border:1.5px solid #8B0000; border-radius:8px; padding:6px 12px; font-size:1rem;">
+                                <option value="all">All Years</option>
+                                @php
+                                    $startYear = 2022;
+                                    $currentYear = date('Y');
+                                    $schoolYears = [];
+                                    for ($y = $startYear; $y <= $currentYear; $y++) {
+                                        $schoolYears[] = $y . '-' . ($y+1);
+                                    }
+                                @endphp
+                                @foreach(array_reverse($schoolYears) as $sy)
+                                    <option value="{{ $sy }}">{{ $sy }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <label for="alumniYearGraduatedFilter" style="font-weight:600;color:#8B0000;">Year Graduated:</label>
+                            <select id="alumniYearGraduatedFilter" name="alumniYearGraduatedFilter" class="filter-select" style="min-width:140px; border:1.5px solid #8B0000; border-radius:8px; padding:6px 12px; font-size:1rem;">
+                                <option value="all">All Years</option>
+                                @php
+                                    $startYear = 2020;
+                                    $currentYear = date('Y');
+                                @endphp
+                                @for ($y = $currentYear; $y >= $startYear; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div style="display:flex;gap:0.5rem;margin-left:auto;">
+                            <button id="exportAlumniRecordsBtn" style="background:#4CAF50;color:#fff;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
+                                <i class="fas fa-file-export"></i> Export Records
+                            </button>
+                            <button id="printAlumniRecordsBtn" style="background:#FFC107;color:#222;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
+                                <i class="fas fa-print"></i> Print Records
+                            </button>
+                            <button id="backSyncAlumniRecordsBtn" style="background:#8B0000;color:#fff;font-weight:600;padding:8px 18px;border:none;border-radius:8px;cursor:pointer;">
+                                <i class="fas fa-sync-alt"></i> Back/Sync
+                            </button>
+                        </div>
+                    </div>
+                    <div style="max-height:60vh;overflow-y:auto;">
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#f5f5f5;">
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Program</th>
+                                    <th>Year Graduated</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alumniRecordsTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
