@@ -109,12 +109,13 @@ Route::post('/chat/send', [\App\Http\Controllers\ChatController::class, 'send'])
 Route::get('/chat/fetch', [\App\Http\Controllers\ChatController::class, 'fetch'])->name('chat.fetch');
    
    // Fix Logout Route
-Route::post('/logout', function () {
+   Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-    return redirect()->route('login'); // Redirect to login page
+    return redirect()->route('landingpage'); // Redirect to landing page
 })->name('logout');
+
     
 Route::middleware(['auth'])->group(function () {
     Route::get('/registrar/verify-modal/{id}', [RegistrarController::class, 'verifyModal']);

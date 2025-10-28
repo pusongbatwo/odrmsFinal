@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Document Request Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -275,7 +277,7 @@
         }
         
         .tab-button {
-            padding: 16px 0;
+            padding: 16px 8px;
             flex: 1;
             background: none;
             border: none;
@@ -289,6 +291,32 @@
             justify-content: center;
             gap: 8px;
             min-width: 0;
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .tab-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .tab-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .tab-subtitle {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--dark-gray);
+            opacity: 0.9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+            line-height: 1.2;
         }
         
         .tab-button:hover {
@@ -296,9 +324,23 @@
             background: rgba(139, 0, 0, 0.05);
         }
         
+        .tab-button:hover .tab-subtitle {
+            color: var(--dark-red);
+            opacity: 1;
+        }
+        
         .tab-button.active {
             color: var(--dark-red);
             background: var(--white);
+        }
+        
+        .tab-button.active .tab-subtitle {
+            color: var(--dark-red);
+            opacity: 1;
+        }
+        
+        .tab-button.active .tab-title {
+            color: var(--dark-red);
         }
         
         .tab-button.active::after {
@@ -528,6 +570,12 @@
                 gap: 15px;
             }
             
+            .dashboard-header > div > div {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+            }
+            
             .header-right {
                 width: 100%;
                 justify-content: space-between;
@@ -551,6 +599,12 @@
                 flex: 1;
                 min-width: 120px;
                 justify-content: center;
+                padding: 12px 8px;
+            }
+            
+            .tab-subtitle {
+                font-size: 11px;
+                max-width: 100px;
             }
         }
     </style>
@@ -611,13 +665,25 @@
             <div class="tab-container">
                 <div class="tab-header">
                     <button class="tab-button active" data-tab="requester">
-                        <i class="fas fa-user"></i> Requester Info
+                        <i class="fas fa-user"></i> 
+                        <div class="tab-content-wrapper">
+                            <div class="tab-title">Requester Info</div>
+                            <div class="tab-subtitle">{{ $document->first_name }} {{ $document->last_name }}</div>
+                        </div>
                     </button>
                     <button class="tab-button" data-tab="details">
-                        <i class="fas fa-info-circle"></i> Details
+                        <i class="fas fa-info-circle"></i> 
+                        <div class="tab-content-wrapper">
+                            <div class="tab-title">Details</div>
+                            <div class="tab-subtitle">{{ $document->document_type }}</div>
+                        </div>
                     </button>
                     <button class="tab-button" data-tab="payment">
-                        <i class="fas fa-credit-card"></i> Payment
+                        <i class="fas fa-credit-card"></i> 
+                        <div class="tab-content-wrapper">
+                            <div class="tab-title">Payment</div>
+                            <div class="tab-subtitle">₱{{ number_format($document->amount ?? 0, 2) }}</div>
+                        </div>
                     </button>
                 </div>
                 
@@ -805,13 +871,40 @@
             try {
                 const documentData = await fetchDocumentData(documentId);
                 
+                console.log('Document data loaded:', documentData);
+                
                 if (!documentData) {
                     // If not found in simulated store, rely on Blade-rendered content and continue
+                    console.log('No document data found, using Blade template data');
                     return;
                 }
 
                 // Update reference number
                 document.getElementById('reference-number').innerHTML = `Reference: ${documentData.reference_number}`;
+                
+                // Update tab button content
+                const requesterTab = document.querySelector('[data-tab="requester"] .tab-subtitle');
+                const detailsTab = document.querySelector('[data-tab="details"] .tab-subtitle');
+                const paymentTab = document.querySelector('[data-tab="payment"] .tab-subtitle');
+                
+                console.log('Updating tab content:', {
+                    requesterTab: requesterTab,
+                    detailsTab: detailsTab,
+                    paymentTab: paymentTab
+                });
+                
+                if (requesterTab) {
+                    requesterTab.textContent = `${documentData.first_name} ${documentData.last_name}`;
+                }
+                if (detailsTab) {
+                    detailsTab.textContent = documentData.document_type;
+                }
+                if (paymentTab) {
+                    paymentTab.textContent = `₱${documentData.amount.toLocaleString('en-US', { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                    })}`;
+                }
                 
                 // Update status badge
                 const statusBadge = document.getElementById('status-badge');
@@ -898,19 +991,25 @@
                 document.getElementById('request-details').innerHTML = `
                     <div class="detail-item">
                         <span class="detail-label">Document Type:</span>
-                        <span class="detail-value">{{ $document->document_type }}</span>
+                        <span class="detail-value">${documentData.document_type}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Request Date:</span>
-                        <span class="detail-value">{{ $document->created_at ? $document->created_at->format('M d, Y h:i A') : '' }}</span>
+                        <span class="detail-value">${requestDate.toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Purpose:</span>
-                        <span class="detail-value">{{ $document->purpose }}</span>
+                        <span class="detail-value">${documentData.purpose}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Special Instructions:</span>
-                        <span class="detail-value">{{ $document->special_instructions ?? 'None' }}</span>
+                        <span class="detail-value">${documentData.special_instructions || 'None'}</span>
                     </div>
                 `;
                 
@@ -919,15 +1018,18 @@
                 document.getElementById('payment-info').innerHTML = `
                     <div class="payment-row">
                         <span class="payment-label">Status:</span>
-                        <span class="payment-value payment-pending">{{ $document->payment_status }}</span>
+                        <span class="payment-value ${paymentStatusClass}">${documentData.payment_status}</span>
                     </div>
                     <div class="payment-row">
-                        <span class="payment-label">Amount:</span>
-                        <span class="payment-value">₱{{ number_format($document->amount ?? 0, 2) }}</span>
+                        <span class="payment-label">Total Amount:</span>
+                        <span class="payment-value">₱${documentData.amount.toLocaleString('en-US', { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                        })}</span>
                     </div>
                     <div class="payment-row">
                         <span class="payment-label">Method:</span>
-                        <span class="payment-value">{{ $document->payment_method ?? 'Not selected' }}</span>
+                        <span class="payment-value">${documentData.payment_method || 'Not selected'}</span>
                     </div>
                 `;
                 
