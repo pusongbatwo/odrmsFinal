@@ -728,7 +728,7 @@
                             <div class="details-grid" id="request-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Document Type:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ $document->document_type ?? (optional($document->requestedDocuments->first())->document_type) }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Request Date:</span>
@@ -756,8 +756,8 @@
                                     <span class="payment-value"><span class="loading"></span></span>
                                 </div>
                                 <div class="payment-row">
-                                    <span class="payment-label">Amount:</span>
-                                    <span class="payment-value"><span class="loading"></span></span>
+                                    <span class="payment-label">Total Amount:</span>
+                                    <span class="payment-value">₱{{ number_format((isset($totalAmount) ? $totalAmount : ($document->amount_paid ?? 0)), 2) }}</span>
                                 </div>
                                 <div class="payment-row">
                                     <span class="payment-label">Method:</span>
@@ -991,7 +991,7 @@
                 document.getElementById('request-details').innerHTML = `
                     <div class="detail-item">
                         <span class="detail-label">Document Type:</span>
-                        <span class="detail-value">${documentData.document_type}</span>
+                        <span class="detail-value">${documentData.document_type || `{{ optional($document->requestedDocuments->first())->document_type }}`}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Request Date:</span>
@@ -1022,7 +1022,7 @@
                     </div>
                     <div class="payment-row">
                         <span class="payment-label">Total Amount:</span>
-                        <span class="payment-value">₱${documentData.amount.toLocaleString('en-US', { 
+                        <span class="payment-value">₱${((documentData.amount ?? undefined) || {{ (int)($totalAmount ?? 0) }}).toLocaleString('en-US', { 
                             minimumFractionDigits: 2, 
                             maximumFractionDigits: 2 
                         })}</span>

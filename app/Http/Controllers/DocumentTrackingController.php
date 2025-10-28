@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\DocumentRequest;
+use App\Models\DocumentType;
+use Illuminate\Support\Facades\Schema;
 use App\Models\PersonalInformation;
 use App\Models\ContactInformation;
 use Illuminate\Http\Request;
@@ -31,9 +33,28 @@ class DocumentTrackingController extends Controller
     public function showRequesterDashboard($reference_number)
     {
         $document = DocumentRequest::where('reference_number', $reference_number)
+            ->with('requestedDocuments')
             ->firstOrFail();
 
-        return view('requester.dashboard', compact('document'));
+        // Compute total from requested documents using prices.
+        // Prefer DB-backed document_types; fall back to config if table missing.
+        $totalAmount = 0;
+        $priceLookup = [];
+        try {
+            if (Schema::hasTable('document_types')) {
+                $priceLookup = DocumentType::pluck('price', 'type')->toArray();
+            }
+        } catch (\Throwable $e) {
+            $priceLookup = [];
+        }
+
+        $fallbackFees = config('services.document_fees', []);
+        foreach ($document->requestedDocuments as $reqDoc) {
+            $price = $priceLookup[$reqDoc->document_type] ?? $fallbackFees[$reqDoc->document_type] ?? 250;
+            $totalAmount += (float) $price * (int) $reqDoc->quantity;
+        }
+
+        return view('requester.dashboard', compact('document', 'totalAmount'));
     }
 
     public function status($reference_number)
