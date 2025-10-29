@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\DocumentRequest;
-use App\Models\DocumentType;
-use Illuminate\Support\Facades\Schema;
 use App\Models\PersonalInformation;
 use App\Models\ContactInformation;
 use Illuminate\Http\Request;
@@ -32,29 +30,30 @@ class DocumentTrackingController extends Controller
 
     public function showRequesterDashboard($reference_number)
     {
-        $document = DocumentRequest::where('reference_number', $reference_number)
-            ->with('requestedDocuments')
-            ->firstOrFail();
+        $document = DocumentRequest::with(['requestedDocuments' => function($query) {
+            $query->join('document_types', 'requested_documents.document_type', '=', 'document_types.type')
+                  ->select('requested_documents.*', 'document_types.price');
+        }])
+        ->where('reference_number', $reference_number)
+        ->firstOrFail();
 
-        // Compute total from requested documents using prices.
-        // Prefer DB-backed document_types; fall back to config if table missing.
+        // Calculate total amount from requested documents
         $totalAmount = 0;
-        $priceLookup = [];
-        try {
-            if (Schema::hasTable('document_types')) {
-                $priceLookup = DocumentType::pluck('price', 'type')->toArray();
-            }
-        } catch (\Throwable $e) {
-            $priceLookup = [];
+        $documentTypes = [];
+        
+        foreach ($document->requestedDocuments as $requestedDoc) {
+            $subtotal = $requestedDoc->quantity * $requestedDoc->price;
+            $totalAmount += $subtotal;
+            
+            $documentTypes[] = [
+                'type' => $requestedDoc->document_type,
+                'quantity' => $requestedDoc->quantity,
+                'price' => $requestedDoc->price,
+                'subtotal' => $subtotal
+            ];
         }
 
-        $fallbackFees = config('services.document_fees', []);
-        foreach ($document->requestedDocuments as $reqDoc) {
-            $price = $priceLookup[$reqDoc->document_type] ?? $fallbackFees[$reqDoc->document_type] ?? 250;
-            $totalAmount += (float) $price * (int) $reqDoc->quantity;
-        }
-
-        return view('requester.dashboard', compact('document', 'totalAmount'));
+        return view('requester.dashboard', compact('document', 'totalAmount', 'documentTypes'));
     }
 
     public function status($reference_number)

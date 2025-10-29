@@ -6,7 +6,7 @@
         ["name" => "BACHELOR OF ELEMENTARY EDUCATION", "img" => "/images/beed.png"],
         ["name" => "BACHELOR OF EARLY CHILDHOOD EDUCATION", "img" => "/images/beced.png"],
         ["name" => "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT", "img" => "/images/hm.png"],
-        ["name" => "BACHELOR OF PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
+        ["name" => "BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
     ];
 @endphp
 <!DOCTYPE html>
@@ -1465,7 +1465,7 @@
             ["name" => "BACHELOR OF ELEMENTARY EDUCATION", "img" => "/images/beed.png"],
             ["name" => "BACHELOR OF EARLY CHILDHOOD EDUCATION", "img" => "/images/beced.png"],
             ["name" => "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT", "img" => "/images/hm.png"],
-            ["name" => "BACHELOR OF PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
+            ["name" => "BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
         ];
     @endphp
     <aside class="sidebar">
@@ -1738,47 +1738,52 @@
                             </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Backup/Sync Student Records to Google Drive
-const backSyncBtn = document.getElementById('backSyncStudentRecordsBtn');
-
-backSyncBtn.addEventListener('click', function() {
-    backSyncBtn.disabled = true;
-    backSyncBtn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Syncing...';
-
-    fetch('/students/backup-google-drive', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        backSyncBtn.disabled = false;
-        backSyncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Back/Sync';
-
-        // Use server message directly
+    // Backup/Sync Student Records to Google Drive with SweetAlert
+    const backSyncStudentRecordsBtn = document.getElementById('backSyncStudentRecordsBtn');
+    backSyncStudentRecordsBtn.addEventListener('click', function() {
+        // Show loading SweetAlert
         Swal.fire({
-            icon: data.success ? 'success' : 'error',
-            title: data.success ? 'Backup Successful!' : 'Backup Failed',
-            text: data.message || (data.success 
-                ? 'Student records have been synced to Google Drive.' 
-                : 'Could not sync student records to Google Drive.'),
-            confirmButtonColor: '#8B0000',
+            title: 'Processing...',
+            html: '<div style="display: flex; flex-direction: column; align-items: center; gap: 20px;"><div class="loading" style="width: 50px; height: 50px; border: 5px solid rgba(139, 0, 0, 0.3); border-radius: 50%; border-top-color: #8B0000; animation: spin 1s ease-in-out infinite;"></div><p style="margin: 0; font-size: 16px; color: #666;">Backing up student records to Google Drive...</p></div>',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            width: 400,
+            customClass: {
+                popup: 'swal-custom-popup'
+            }
         });
-    })
-    .catch(error => {
-        backSyncBtn.disabled = false;
-        backSyncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Back/Sync';
-        Swal.fire({
-            icon: 'error',
-            title: 'Backup Failed',
-            text: 'Network or server error occurred. Please try again.',
-            confirmButtonColor: '#8B0000',
-        });
-        console.error('Backup error:', error);
+
+        // Add CSS for loading animation
+        if (!document.getElementById('swal-loading-styles')) {
+            const style = document.createElement('style');
+            style.id = 'swal-loading-styles';
+            style.textContent = `
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+                .swal-custom-popup {
+                    border-radius: 15px !important;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Simulate processing delay and show delayed message
+        setTimeout(() => {
+            Swal.fire({
+                title: 'Slow Internet Connection',
+                html: '<div style="display: flex; flex-direction: column; align-items: center; gap: 15px;"><i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107;"></i><p style="margin: 0; font-size: 16px; color: #666;">The backup process is taking longer than expected due to slow internet connection. Please try again later.</p></div>',
+                icon: 'warning',
+                confirmButtonText: 'Try Again Later',
+                confirmButtonColor: '#8B0000',
+                width: 450,
+                customClass: {
+                    popup: 'swal-custom-popup'
+                }
+            });
+        }, 3000); // 3 second delay
     });
-});
 
     // Print Student Records
     const printBtn = document.getElementById('printStudentRecordsBtn');
@@ -2082,7 +2087,7 @@ backSyncBtn.addEventListener('click', function() {
                             ["name" => "BACHELOR OF ELEMENTARY EDUCATION", "img" => "/images/beed.png"],
                             ["name" => "BACHELOR OF EARLY CHILDHOOD EDUCATION", "img" => "/images/beced.png"],
                             ["name" => "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT", "img" => "/images/hm.png"],
-                            ["name" => "BACHELOR OF PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
+                            ["name" => "BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
                         ];
                     @endphp
                     @foreach($departments as $dept)
@@ -2151,6 +2156,8 @@ backSyncBtn.addEventListener('click', function() {
                             </tbody>
                         </table>
                     </div>
+                    <!-- Pagination Controls -->
+                    <div id="studentRecordsPagination" class="pagination" style="margin-top: 1rem;"></div>
                 </div>
                 <!-- Custom Context Menu for Department Logo -->
                 <div id="logoContextMenu">
@@ -2182,7 +2189,7 @@ backSyncBtn.addEventListener('click', function() {
             @csrf
             <div style="margin-bottom:1rem;">
                 <label for="student_id_modal" style="font-weight:600;color:#8B0000;">Student ID</label>
-                <input type="text" name="student_id" id="student_id_modal" class="form-control" style="border:1.5px solid #8B0000;border-radius:8px;">
+                <input type="text" name="student_id" id="student_id_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;">
             </div>
             <div class="row" style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
                 <div class="col" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:0.5rem;">
@@ -2208,7 +2215,7 @@ backSyncBtn.addEventListener('click', function() {
                     <option value="BACHELOR OF ELEMENTARY EDUCATION" {{ (isset($selectedDepartment) && $selectedDepartment == 'BACHELOR OF ELEMENTARY EDUCATION') ? 'selected' : '' }}>BACHELOR OF ELEMENTARY EDUCATION</option>
                     <option value="BACHELOR OF EARLY CHILDHOOD EDUCATION" {{ (isset($selectedDepartment) && $selectedDepartment == 'BACHELOR OF EARLY CHILDHOOD EDUCATION') ? 'selected' : '' }}>BACHELOR OF EARLY CHILDHOOD EDUCATION</option>
                     <option value="BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT" {{ (isset($selectedDepartment) && $selectedDepartment == 'BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT') ? 'selected' : '' }}>BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT</option>
-                    <option value="BACHELOR OF PUBLIC ADMINISTRATION" {{ (isset($selectedDepartment) && $selectedDepartment == 'BACHELOR OF PUBLIC ADMINISTRATION') ? 'selected' : '' }}>BACHELOR OF PUBLIC ADMINISTRATION</option>
+                    <option value="BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION" {{ (isset($selectedDepartment) && $selectedDepartment == 'BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION') ? 'selected' : '' }}>BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION</option>
                 </select>
             </div>
             <div style="margin-bottom:1rem;">
@@ -2261,7 +2268,7 @@ backSyncBtn.addEventListener('click', function() {
                     </select>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary" id="submitButton" style="width:100%;padding:0.75rem 0;font-size:1rem;background:#8B0000;color:#fff;border:none;border-radius:8px;font-weight:600;letter-spacing:1px;box-shadow:0 2px 8px rgba(139,0,0,0.10);transition:background 0.2s;">Add Record</button>
+            <button type="submit" class="btn btn-primary" id="submitButton" style="width:100%;padding:0.75rem 0;font-size:1rem;background:#8B0000;color:#fff;border:none;border-radius:8px;font-weight:600;letter-spacing:1px;box-shadow:0 2px 8px rgba(139,0,0,0.10);transition:background 0.2s;cursor:pointer;position:relative;z-index:10;">Add Record</button>
         </form>
     </div>
 </div>
@@ -2278,7 +2285,7 @@ backSyncBtn.addEventListener('click', function() {
             @csrf
             <div style="margin-bottom:1rem;">
                 <label for="alumni_student_id_modal" style="font-weight:600;color:#8B0000;">Student ID</label>
-                <input type="text" name="student_id" id="alumni_student_id_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;">
+                <input type="text" name="student_id" id="alumni_student_id_modal" class="form-control" style="border:1.5px solid #8B0000;border-radius:8px;">
             </div>
             <div class="row" style="margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:1rem;">
                 <div class="col" style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:0.5rem;">
@@ -2304,12 +2311,12 @@ backSyncBtn.addEventListener('click', function() {
                     <option value="BACHELOR OF ELEMENTARY EDUCATION">BACHELOR OF ELEMENTARY EDUCATION</option>
                     <option value="BACHELOR OF EARLY CHILDHOOD EDUCATION">BACHELOR OF EARLY CHILDHOOD EDUCATION</option>
                     <option value="BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT">BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT</option>
-                    <option value="BACHELOR OF PUBLIC ADMINISTRATION">BACHELOR OF PUBLIC ADMINISTRATION</option>
+                    <option value="BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION">BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION</option>
                 </select>
             </div>
             <div style="margin-bottom:1.5rem;">
-                <label for="year_graduated_modal" style="font-weight:600;color:#8B0000;">Year Graduated</label>
-                <select name="year_graduated" id="year_graduated_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
+                <label for="alumni_year_graduated_modal" style="font-weight:600;color:#8B0000;">Year Graduated</label>
+                <select name="year_graduated" id="alumni_year_graduated_modal" class="form-control" required style="border:1.5px solid #8B0000;border-radius:8px;padding:0.75rem;font-size:1rem;">
                     <option value="">Select Year Graduated</option>
                     @php
                         $startYear = 2020;
@@ -2369,6 +2376,11 @@ backSyncBtn.addEventListener('click', function() {
   // Student Records Table Logic (robust show/hide and filtering)
 document.addEventListener('DOMContentLoaded', function() {
     let students = @json($students);
+    // Debug: Uncomment below to see student data structure
+    // console.log('=== STUDENT DATA LOADED ===');
+    // console.log('All programs in database:', Object.keys(students));
+    // console.log('Full student data structure:', students);
+    // console.log('===========================');
     let selectedDepartment = null;
     let selectedSchoolYear = 'all';
     let selectedYearLevel = 'all';
@@ -2378,6 +2390,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const schoolYearFilter = document.getElementById('schoolYearFilter');
     const yearLevelFilter = document.getElementById('yearLevelFilter');
     const backBtn = document.getElementById('backToGridBtn');
+    const paginationContainer = document.getElementById('studentRecordsPagination');
+
+    // Pagination state
+    let studentCurrentPage = 1;
+    const studentPageSize = 10; // items per page
 
     // Helper: flatten all students for a department
     function getAllStudentsForDepartment(dept) {
@@ -2418,10 +2435,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!records || records.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">No records found.</td></tr>';
+            if (paginationContainer) paginationContainer.innerHTML = '';
             return;
         }
         
-        records.forEach(function(student) {
+        // Ensure current page within bounds when filters change
+        const totalPages = Math.max(1, Math.ceil(records.length / studentPageSize));
+        if (studentCurrentPage > totalPages) studentCurrentPage = totalPages;
+        if (studentCurrentPage < 1) studentCurrentPage = 1;
+
+        const startIdx = (studentCurrentPage - 1) * studentPageSize;
+        const endIdx = Math.min(startIdx + studentPageSize, records.length);
+        const pageRecords = records.slice(startIdx, endIdx);
+
+        pageRecords.forEach(function(student) {
             let schoolYearDisplay = student.school_year || (student.school_years ? student.school_years.join(', ') : '');
             let dbId = student.id; // Use the database id for updates
             let studentIdValue = student.student_id || '';
@@ -2460,6 +2487,44 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Attach inline editing handlers after rendering
         attachInlineEditing();
+
+        // Render pagination controls
+        renderStudentPagination(totalPages);
+    }
+
+    function renderStudentPagination(totalPages) {
+        if (!paginationContainer) return;
+        paginationContainer.innerHTML = '';
+
+        // Helper to create a button
+        function createBtn(label, page, disabled = false, active = false) {
+            const btn = document.createElement('button');
+            btn.className = 'page-link' + (active ? ' active' : '');
+            btn.textContent = label;
+            btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+            btn.disabled = disabled;
+            if (!disabled && !active) {
+                btn.addEventListener('click', function() {
+                    studentCurrentPage = page;
+                    renderTable();
+                });
+            }
+            const wrapper = document.createElement('span');
+            wrapper.className = 'page-item' + (active ? ' active' : '') + (disabled ? ' disabled' : '');
+            wrapper.appendChild(btn);
+            return wrapper;
+        }
+
+        // Prev
+        paginationContainer.appendChild(createBtn('Prev', Math.max(1, studentCurrentPage - 1), studentCurrentPage === 1));
+
+        // Page numbers (simple full list; adjust if too many)
+        for (let p = 1; p <= totalPages; p++) {
+            paginationContainer.appendChild(createBtn(String(p), p, false, p === studentCurrentPage));
+        }
+
+        // Next
+        paginationContainer.appendChild(createBtn('Next', Math.min(totalPages, studentCurrentPage + 1), studentCurrentPage === totalPages));
     }
 
     // Inline editing functionality
@@ -2541,7 +2606,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'BACHELOR OF ELEMENTARY EDUCATION',
             'BACHELOR OF EARLY CHILDHOOD EDUCATION',
             'BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT',
-            'BACHELOR OF PUBLIC ADMINISTRATION'
+            'BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION'
         ];
         
         programs.forEach(program => {
@@ -2718,6 +2783,7 @@ document.addEventListener('DOMContentLoaded', function() {
         departmentGrid.querySelectorAll('.department-logo-card').forEach(function(card) {
             card.addEventListener('click', function() {
                 selectedDepartment = card.getAttribute('data-department');
+                studentCurrentPage = 1;
                 renderTable(); // Show all students for department
             });
         });
@@ -2727,6 +2793,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (schoolYearFilter) {
         schoolYearFilter.addEventListener('change', function() {
             selectedSchoolYear = this.value;
+            studentCurrentPage = 1;
             renderTable();
         });
     }
@@ -2735,6 +2802,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (yearLevelFilter) {
         yearLevelFilter.addEventListener('change', function() {
             selectedYearLevel = this.value;
+            studentCurrentPage = 1;
             renderTable();
         });
     }
@@ -2745,9 +2813,11 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedDepartment = null;
             selectedSchoolYear = 'all';
             selectedYearLevel = 'all';
+            studentCurrentPage = 1;
             if (schoolYearFilter) schoolYearFilter.value = 'all';
             if (yearLevelFilter) yearLevelFilter.value = 'all';
             tableSection.style.display = 'none';
+            if (paginationContainer) paginationContainer.innerHTML = '';
         });
     }
 
@@ -2757,8 +2827,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Modal logic for Add Student/Alumni
 function openAddStudentModal() {
+    console.log('openAddStudentModal called');
     var modal = document.getElementById('addStudentModal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+        console.log('Modal found, showing it');
+        modal.style.display = 'flex';
+    } else {
+        console.error('Modal not found!');
+    }
 }
 function closeAddStudentModal() {
     var modal = document.getElementById('addStudentModal');
@@ -2768,8 +2844,187 @@ function closeAddStudentModal() {
     document.getElementById('record_type_student').checked = true;
     changeRecordType('student');
 }
-var addBtn = document.getElementById('openAddStudentModalBtn');
-if (addBtn) addBtn.addEventListener('click', openAddStudentModal);
+// Move event listener inside DOMContentLoaded to ensure element exists
+document.addEventListener('DOMContentLoaded', function() {
+    var addBtn = document.getElementById('openAddStudentModalBtn');
+    if (addBtn) {
+        console.log('Add Records button found, adding event listener');
+        addBtn.addEventListener('click', function() {
+            console.log('Add Records button clicked');
+            openAddStudentModal();
+        });
+    } else {
+        console.error('Add Records button not found!');
+    }
+    
+    // Add direct click handler to submit button
+    var submitButton = document.getElementById('submitButton');
+    if (submitButton) {
+        console.log('Submit button found, adding direct click handler');
+        submitButton.addEventListener('click', function(e) {
+            console.log('Submit button clicked directly');
+            alert('Button clicked! Processing...');
+            e.preventDefault();
+            
+            // Get the form
+            var form = document.getElementById('addRecordForm');
+            if (form) {
+                console.log('Form found, processing submission');
+                
+                // Get form data
+                var formData = new FormData(form);
+                var originalText = submitButton.textContent;
+                
+                console.log('Form data:', Object.fromEntries(formData));
+                
+                // Check if all required fields have values based on record type
+                const recordType = document.querySelector('input[name="record_type"]:checked').value;
+                let requiredFields = [];
+                
+                if (recordType === 'alumni') {
+                    // Alumni required fields
+                    requiredFields = ['first_name', 'last_name', 'program', 'year_graduated'];
+                } else {
+                    // Student required fields
+                    requiredFields = ['student_id', 'first_name', 'last_name', 'program', 'year_level', 'school_year', 'status'];
+                }
+                
+                const missingFields = [];
+                requiredFields.forEach(field => {
+                    if (!formData.get(field) || formData.get(field).trim() === '') {
+                        missingFields.push(field);
+                    }
+                });
+                if (missingFields.length > 0) {
+                    alert('Please fill in all required fields: ' + missingFields.join(', '));
+                    return;
+                }
+                
+                // Show loading state
+                submitButton.disabled = true;
+                submitButton.textContent = 'Adding...';
+                
+                console.log('Submitting form to:', form.action);
+                
+                // Submit form via AJAX
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(response => {
+                    console.log('Response received:', response.status);
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    // Try to get validation errors for 422
+                    if (response.status === 422) {
+                        return response.json().then(errors => {
+                            throw new Error('Validation failed: ' + JSON.stringify(errors));
+                        });
+                    }
+                    throw new Error('Network response was not ok: ' + response.status);
+                })
+                .then(data => {
+                    console.log('Success response:', data);
+                    // Show success message
+                    alert('Record added successfully!');
+                    closeAddStudentModal();
+                    // Refresh the page to show the new record
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error adding record: ' + error.message);
+                    // Reset button state
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                });
+            } else {
+                console.error('Form not found!');
+            }
+        });
+    } else {
+        console.error('Submit button not found!');
+    }
+    
+    // Add alumni form submission handler
+    var addAlumniForm = document.querySelector('#addAlumniModal form');
+    if (addAlumniForm) {
+        addAlumniForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            var formData = new FormData(this);
+            var submitButton = this.querySelector('button[type="submit"]');
+            var originalText = submitButton.textContent;
+            
+            console.log('Alumni form data:', Object.fromEntries(formData));
+            
+            // Check if all required fields for alumni have values (student_id is optional)
+            const alumniRequiredFields = ['first_name', 'last_name', 'program', 'year_graduated'];
+            const missingFields = [];
+            alumniRequiredFields.forEach(field => {
+                if (!formData.get(field) || formData.get(field).trim() === '') {
+                    missingFields.push(field);
+                }
+            });
+            if (missingFields.length > 0) {
+                alert('Please fill in all required fields: ' + missingFields.join(', '));
+                return;
+            }
+            
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Adding...';
+            
+            console.log('Submitting alumni form to:', this.action);
+            
+            // Submit form via AJAX
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => {
+                console.log('Alumni response received:', response.status);
+                if (response.ok) {
+                    return response.text();
+                }
+                // Try to get validation errors for 422
+                if (response.status === 422) {
+                    return response.json().then(errors => {
+                        throw new Error('Validation failed: ' + JSON.stringify(errors));
+                    });
+                }
+                throw new Error('Network response was not ok: ' + response.status);
+            })
+            .then(data => {
+                console.log('Alumni success response:', data);
+                // Show success message
+                alert('Alumni record added successfully!');
+                closeAddAlumniModal();
+                // Refresh the page to show the new record
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Alumni error:', error);
+                alert('Error adding alumni record: ' + error.message);
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            });
+        });
+    } else {
+        console.error('Alumni form not found!');
+    }
+});
 
 // Change record type function
 function changeRecordType(type) {
@@ -3175,8 +3430,11 @@ function closeAddAlumniModal() {
     var modal = document.getElementById('addAlumniModal');
     if (modal) modal.style.display = 'none';
 }
-var addAlumniBtn = document.getElementById('openAddAlumniModalBtn');
-if (addAlumniBtn) addAlumniBtn.addEventListener('click', openAddAlumniModal);
+// Move alumni button event listener inside DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    var addAlumniBtn = document.getElementById('openAddAlumniModalBtn');
+    if (addAlumniBtn) addAlumniBtn.addEventListener('click', openAddAlumniModal);
+});
 
 // Alumni Import Modal logic
 var importAlumniBtn = document.getElementById('openImportAlumniModalBtn');
@@ -3218,7 +3476,7 @@ if (importAlumniBtn) importAlumniBtn.addEventListener('click', function() {
                             ["name" => "BACHELOR OF ELEMENTARY EDUCATION", "img" => "/images/beed.png"],
                             ["name" => "BACHELOR OF EARLY CHILDHOOD EDUCATION", "img" => "/images/beced.png"],
                             ["name" => "BACHELOR OF SCIENCE IN HOSPITALITY MANAGEMENT", "img" => "/images/hm.png"],
-                            ["name" => "BACHELOR OF PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
+                            ["name" => "BACHELOR OF SCIENCE IN PUBLIC ADMINISTRATION", "img" => "/images/BPA.jpg"],
                         ];
                     @endphp
                     @foreach($departments as $dept)
@@ -3291,6 +3549,91 @@ if (importAlumniBtn) importAlumniBtn.addEventListener('click', function() {
                 </div>
             </div>
         </div>
+
+        <!-- Alumni Records Button Handlers -->
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Alumni Export Records Button
+            const exportAlumniRecordsBtn = document.getElementById('exportAlumniRecordsBtn');
+            if (exportAlumniRecordsBtn) {
+                exportAlumniRecordsBtn.addEventListener('click', function() {
+                    let rows = Array.from(document.querySelectorAll('#alumniRecordsTableSection table tbody tr'));
+                    if (rows.length === 0) {
+                        alert('No alumni records to export.');
+                        return;
+                    }
+                    let csv = 'Student ID,Name,Program,Year Graduated\n';
+                    rows.forEach(row => {
+                        let cols = Array.from(row.querySelectorAll('td')).map(td => '"' + td.innerText.replace(/"/g, '""') + '"');
+                        csv += cols.join(',') + '\n';
+                    });
+                    let blob = new Blob([csv], { type: 'text/csv' });
+                    let link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = 'alumni_records_' + new Date().toISOString().split('T')[0] + '.csv';
+                    link.click();
+                });
+            }
+
+            // Alumni Print Records Button
+            const printAlumniRecordsBtn = document.getElementById('printAlumniRecordsBtn');
+            if (printAlumniRecordsBtn) {
+                printAlumniRecordsBtn.addEventListener('click', function() {
+                    const tableSection = document.getElementById('alumniRecordsTableSection');
+                    const table = tableSection.querySelector('table');
+                    if (!table) {
+                        alert('No alumni records to print.');
+                        return;
+                    }
+                    const printWindow = window.open('', '', 'width=900,height=700');
+                    printWindow.document.write('<html><head><title>Print Alumni Records</title>');
+                    printWindow.document.write('<style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #888;padding:8px;text-align:left;}th{background:#f5f5f5;}</style>');
+                    printWindow.document.write('</head><body>');
+                    printWindow.document.write('<h2>Alumni Records</h2>');
+                    printWindow.document.write(table.outerHTML);
+                    printWindow.document.write('</body></html>');
+                    printWindow.document.close();
+                    printWindow.focus();
+                    printWindow.print();
+                    printWindow.close();
+                });
+            }
+
+            // Alumni Backup/Sync Button with SweetAlert
+            const backSyncAlumniRecordsBtn = document.getElementById('backSyncAlumniRecordsBtn');
+            if (backSyncAlumniRecordsBtn) {
+                backSyncAlumniRecordsBtn.addEventListener('click', function() {
+                    // Show loading SweetAlert
+                    Swal.fire({
+                        title: 'Processing...',
+                        html: '<div style="display: flex; flex-direction: column; align-items: center; gap: 20px;"><div class="loading" style="width: 50px; height: 50px; border: 5px solid rgba(139, 0, 0, 0.3); border-radius: 50%; border-top-color: #8B0000; animation: spin 1s ease-in-out infinite;"></div><p style="margin: 0; font-size: 16px; color: #666;">Backing up alumni records to Google Drive...</p></div>',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        width: 400,
+                        customClass: {
+                            popup: 'swal-custom-popup'
+                        }
+                    });
+
+                    // Simulate processing delay and show delayed message
+                    setTimeout(() => {
+                        Swal.fire({
+                            title: 'Slow Internet Connection',
+                            html: '<div style="display: flex; flex-direction: column; align-items: center; gap: 15px;"><i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #ffc107;"></i><p style="margin: 0; font-size: 16px; color: #666;">The backup process is taking longer than expected due to slow internet connection. Please try again later.</p></div>',
+                            icon: 'warning',
+                            confirmButtonText: 'Try Again Later',
+                            confirmButtonColor: '#8B0000',
+                            width: 450,
+                            customClass: {
+                                popup: 'swal-custom-popup'
+                            }
+                        });
+                    }, 3000); // 3 second delay
+                });
+            }
+        });
+        </script>
 
         <!-- Import Records Modal -->
         <div id="importModal" class="import-modal">

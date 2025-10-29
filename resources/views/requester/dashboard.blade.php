@@ -682,7 +682,7 @@
                         <i class="fas fa-credit-card"></i> 
                         <div class="tab-content-wrapper">
                             <div class="tab-title">Payment</div>
-                            <div class="tab-subtitle">₱{{ number_format($document->amount ?? 0, 2) }}</div>
+                            <div class="tab-subtitle">₱{{ number_format($totalAmount, 2) }}</div>
                         </div>
                     </button>
                 </div>
@@ -695,30 +695,32 @@
                             <div class="details-grid" id="requester-info">
                                 <div class="detail-item">
                                     <span class="detail-label">Student ID:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ $document->student_id }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Full Name:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ $document->first_name }} {{ $document->middle_name }} {{ $document->last_name }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Course:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ $document->course }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Email:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ $document->email }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Phone:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ $document->mobile_number }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Address:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ $document->barangay }}, {{ $document->city }}, {{ $document->province }}</span>
                                 </div>
                             </div>
                         </div>
+                        
+                        
                     </div>
                     
                     <!-- Details Tab -->
@@ -727,23 +729,37 @@
                             <h3><i class="fas fa-info-circle"></i> Request Details</h3>
                             <div class="details-grid" id="request-details">
                                 <div class="detail-item">
-                                    <span class="detail-label">Document Type:</span>
-                                    <span class="detail-value">{{ $document->document_type ?? (optional($document->requestedDocuments->first())->document_type) }}</span>
-                                </div>
-                                <div class="detail-item">
                                     <span class="detail-label">Request Date:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ optional($document->created_at)->format('M d, Y h:i A') ?? 'N/A' }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Purpose:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ $document->purpose ? $document->purpose : 'N/A' }}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Special Instructions:</span>
-                                    <span class="detail-value"><span class="loading"></span></span>
+                                    <span class="detail-value">{{ $document->special_instructions ? $document->special_instructions : 'None' }}</span>
                                 </div>
                             </div>
                         </div>
+
+                        @if(count($documentTypes) > 0)
+                        <div class="tab-card">
+                            <h3><i class="fas fa-file-alt"></i> Requested Documents</h3>
+                            <div class="details-grid">
+                                @foreach($documentTypes as $docType)
+                                <div class="detail-item">
+                                    <span class="detail-label">{{ $docType['type'] }} ({{ $docType['quantity'] }}x):</span>
+                                    <span class="detail-value">₱{{ number_format($docType['subtotal'], 2) }}</span>
+                                </div>
+                                @endforeach
+                                <div class="detail-item" style="border-top: 2px solid var(--dark-red); font-weight: bold; background-color: var(--light-gold); padding: 10px; border-radius: 5px;">
+                                    <span class="detail-label">Total Amount:</span>
+                                    <span class="detail-value">₱{{ number_format($totalAmount, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                     
                     <!-- Payment Tab -->
@@ -753,18 +769,25 @@
                             <div class="payment-details" id="payment-info">
                                 <div class="payment-row">
                                     <span class="payment-label">Status:</span>
-                                    <span class="payment-value"><span class="loading"></span></span>
+                                    <span class="payment-value">{{ ucwords($document->payment_status) }}</span>
                                 </div>
                                 <div class="payment-row">
                                     <span class="payment-label">Total Amount:</span>
-                                    <span class="payment-value">₱{{ number_format((isset($totalAmount) ? $totalAmount : ($document->amount_paid ?? 0)), 2) }}</span>
+                                    <span class="payment-value">₱{{ number_format($totalAmount, 2) }}</span>
                                 </div>
                                 <div class="payment-row">
                                     <span class="payment-label">Method:</span>
-                                    <span class="payment-value"><span class="loading"></span></span>
+                                    <span class="payment-value">{{ $document->payment_method ?? 'Not selected' }}</span>
                                 </div>
                                 <div class="payment-actions" id="payment-actions">
-                                    <!-- Payment buttons will be added here dynamically -->
+                                    @if($document->status === 'approved' || $document->status === 'ready_for_payment')
+                                        <button class="pay-button online-pay" onclick="handleOnlinePayment('{{ $document->reference_number }}')">
+                                            <i class="fas fa-globe"></i> Pay Online
+                                        </button>
+                                        <button class="pay-button walkin-pay" onclick="handleWalkInPayment('{{ $document->reference_number }}')">
+                                            <i class="fas fa-store"></i> Pay In Person
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -774,26 +797,10 @@
         </div>
     </div>
 
-    <!-- Live Chat Widget -->
-    <div id="chat-widget">
-        <div id="chat-header">
-            <i class="fas fa-comments"></i>
-            <span style="font-weight:600;flex:1;">Chat with Registrar</span>
-            <i id="chat-toggle" class="fas fa-chevron-down"></i>
-        </div>
-        <div id="chat-body">
-            <div id="chat-messages"></div>
-            <form id="chat-form">
-                <input id="chat-input" type="text" placeholder="Type your message..." autocomplete="off" />
-                <button type="submit" style="background:#8B0000;color:#fff;border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.2s;">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </form>
-        </div>
-    </div>
+    
 
     <script>
-        // Simulated database (in a real application, this would be server-side)
+        // Server-provided data
         const documentRequestsDB = {
             "{{ $document->reference_number }}": {
                 reference_number: "{{ $document->reference_number }}",
@@ -813,8 +820,9 @@
                 purpose: "{{ $document->purpose }}",
                 special_instructions: "{{ $document->special_instructions }}",
                 payment_status: "{{ ucwords((string)$document->payment_status) }}",
-                amount: {{ (float)($document->amount ?? $document->amount_paid ?? 0) }},
-                payment_method: {{ json_encode($document->payment_method) }}
+                amount: {{ $totalAmount }},
+                payment_method: {{ json_encode($document->payment_method) }},
+                document_types: @json($documentTypes)
             },
             // demo entry remains optional
             "DR-2023-0872": {
@@ -958,95 +966,17 @@
                     });
                 }
                 
-                // Update requester information
-                document.getElementById('requester-info').innerHTML = `
-                    <div class="detail-item">
-                        <span class="detail-label">Student ID:</span>
-                        <span class="detail-value">{{ $document->student_id }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Full Name:</span>
-                        <span class="detail-value">{{ $document->first_name }} {{ $document->middle_name }} {{ $document->last_name }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Course:</span>
-                        <span class="detail-value">{{ $document->course }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Email:</span>
-                        <span class="detail-value">{{ $document->email }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Phone:</span>
-                        <span class="detail-value">{{ $document->mobile_number }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Address:</span>
-                        <span class="detail-value">{{ $document->barangay }}, {{ $document->city }}, {{ $document->province }}</span>
-                    </div>
-                `;
+                // Update requester information (already populated by server-side rendering)
+                // No need to update as it's already rendered by Blade template
                 
-                // Update request details
-                const requestDate = new Date(documentData.created_at);
-                document.getElementById('request-details').innerHTML = `
-                    <div class="detail-item">
-                        <span class="detail-label">Document Type:</span>
-                        <span class="detail-value">${documentData.document_type || `{{ optional($document->requestedDocuments->first())->document_type }}`}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Request Date:</span>
-                        <span class="detail-value">${requestDate.toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Purpose:</span>
-                        <span class="detail-value">${documentData.purpose}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Special Instructions:</span>
-                        <span class="detail-value">${documentData.special_instructions || 'None'}</span>
-                    </div>
-                `;
+                // Update request details (already populated by server-side rendering)
+                // No need to update as it's already rendered by Blade template
                 
-                // Update payment information
-                const paymentStatusClass = documentData.payment_status === 'Paid' ? 'payment-paid' : 'payment-pending';
-                document.getElementById('payment-info').innerHTML = `
-                    <div class="payment-row">
-                        <span class="payment-label">Status:</span>
-                        <span class="payment-value ${paymentStatusClass}">${documentData.payment_status}</span>
-                    </div>
-                    <div class="payment-row">
-                        <span class="payment-label">Total Amount:</span>
-                        <span class="payment-value">₱${((documentData.amount ?? undefined) || {{ (int)($totalAmount ?? 0) }}).toLocaleString('en-US', { 
-                            minimumFractionDigits: 2, 
-                            maximumFractionDigits: 2 
-                        })}</span>
-                    </div>
-                    <div class="payment-row">
-                        <span class="payment-label">Method:</span>
-                        <span class="payment-value">${documentData.payment_method || 'Not selected'}</span>
-                    </div>
-                `;
+                // Update payment information (already populated by server-side rendering)
+                // No need to update as it's already rendered by Blade template
                 
-                // Add payment actions if needed
-                const paymentActions = document.getElementById('payment-actions');
-                paymentActions.innerHTML = '';
-                
-                if (documentData.status === 'Ready for Payment' || documentData.status === 'Approved') {
-                    paymentActions.innerHTML = `
-                        <button class="pay-button online-pay" onclick="handleOnlinePayment('${documentData.reference_number}')">
-                            <i class="fas fa-globe"></i> Pay Online
-                        </button>
-                        <button class="pay-button walkin-pay" onclick="handleWalkInPayment('${documentData.reference_number}')">
-                            <i class="fas fa-store"></i> Pay In Person
-                        </button>
-                    `;
-                }
+                // Payment actions are already rendered by server-side Blade template
+                // No need to update dynamically
                 
             } catch (error) {
                 console.error('Error loading document data:', error);
@@ -1146,101 +1076,12 @@
             });
         }
 
-        // Chat Widget Logic
-        function setupChatWidget() {
-            const chatHeader = document.getElementById('chat-header');
-            const chatBody = document.getElementById('chat-body');
-            const chatToggle = document.getElementById('chat-toggle');
-            let chatOpen = false;
-            
-            chatHeader.addEventListener('click', function() {
-                chatOpen = !chatOpen;
-                chatBody.style.display = chatOpen ? 'flex' : 'none';
-                chatToggle.className = chatOpen ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
-            });
-
-            // Chat send
-            const chatForm = document.getElementById('chat-form');
-            const chatInput = document.getElementById('chat-input');
-            const chatMessages = document.getElementById('chat-messages');
-            const reference = "{{ $document->reference_number }}";
-
-            async function fetchMessages() {
-                try {
-                    const res = await fetch(`{{ route('chat.fetch') }}?reference_number=${encodeURIComponent(reference)}&mark_read=1`, { 
-                        headers: { 'X-Requested-With':'XMLHttpRequest' },
-                        credentials: 'same-origin'
-                    });
-                    if (!res.ok) return;
-                    const data = await res.json();
-                    if (!data.success) return;
-                    chatMessages.innerHTML = data.messages.map(m => `
-                        <div style="display:flex;${m.sender_type==='requester'?'justify-content:flex-end':'justify-content:flex-start'};">
-                            <div style="max-width:75%;padding:8px 12px;border-radius:12px;margin:4px 0;${m.sender_type==='requester'?'background:#8B0000;color:#fff;':'background:#f3f4f6;color:#111827;'}">
-                                ${m.message}
-                                <div style="font-size:11px;opacity:.7;margin-top:4px;">${new Date(m.created_at).toLocaleString()}</div>
-                            </div>
-                        </div>
-                    `).join('');
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                } catch (_) {}
-            }
-
-            chatForm.addEventListener('submit', async function(e){
-                e.preventDefault();
-                const text = (chatInput.value || '').trim();
-                if (!text) return;
-                try {
-                    // disable input/button while sending
-                    const sendBtn = chatForm.querySelector('button');
-                    sendBtn.disabled = true;
-                    chatInput.disabled = true;
-
-                    const res = await fetch(`{{ route('chat.send') }}`, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            reference_number: reference, 
-                            sender_type: 'requester', 
-                            message: text,
-                            sender_email: '{{ $document->email }}',
-                            sender_mobile: '{{ $document->mobile_number }}'
-                        })
-                    });
-
-                    let data;
-                    try { data = await res.json(); } catch (err) { data = null }
-                    if (!res.ok) {
-                        console.error('Chat send failed', res.status, data);
-                        alert((data && data.message) ? data.message : 'Failed to send message.');
-                    } else if (data && data.success) {
-                        chatInput.value = '';
-                        fetchMessages();
-                    } else {
-                        console.error('Unexpected chat send response', data);
-                        alert('Failed to send message.');
-                    }
-                    sendBtn.disabled = false;
-                    chatInput.disabled = false;
-                } catch (_) {}
-            });
-
-            // Poll for new messages every 6s
-            setInterval(fetchMessages, 6000);
-            // initial fetch
-            fetchMessages();
-        }
+        // Chat UI removed
 
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
             setupTabs();
-            setupChatWidget();
+            // Chat UI removed
             
             // Use server-provided reference number
             const documentId = "{{ $document->reference_number }}";

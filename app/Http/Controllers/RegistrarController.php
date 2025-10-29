@@ -373,22 +373,35 @@ class RegistrarController extends Controller
     }
     public function storeStudent(Request $request)
     {
-        $validated = $request->validate([
-            'student_id' => 'required|string|unique:students,student_id',
-            'first_name' => 'required|string|max:255',
-            'middle_name' => 'nullable|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'program' => 'required|string|max:255',
-            'year_level' => 'required|string|max:50',
-            'status' => 'required|string|max:50',
-        ]);
+        try {
+            \Log::info('Store student request received', $request->all());
+            
+            $validated = $request->validate([
+                'student_id' => 'required|string|unique:students,student_id',
+                'first_name' => 'required|string|max:255',
+                'middle_name' => 'nullable|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'program' => 'required|string|max:255',
+                'year_level' => 'required|string|max:50',
+                'school_year' => 'required|string|max:50',
+                'status' => 'required|string|max:50',
+            ]);
 
-        \App\Models\Student::create($validated);
+            \Log::info('Validation passed', $validated);
 
-        // Log student added
-        SystemLogHelper::log('student_added', 'Student record for ' . $validated['first_name'] . ' ' . $validated['last_name'] . ' added by registrar.');
+            \App\Models\Student::create($validated);
 
-        return redirect()->back()->with('student_added', 'Student record added successfully!');
+            // Log student added
+            SystemLogHelper::log('student_added', 'Student record for ' . $validated['first_name'] . ' ' . $validated['last_name'] . ' added by registrar.');
+
+            return redirect()->back()->with('student_added', 'Student record added successfully!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed', ['errors' => $e->errors()]);
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Student creation failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to create student record: ' . $e->getMessage());
+        }
     }
 
     public function updateStudent(Request $request, $id)
@@ -549,9 +562,9 @@ class RegistrarController extends Controller
             return $path ? asset('storage/' . $path) : null;
         })->toArray();
 
-        // Load students from students table, grouped by program and year_level
+        // Load students from students table, grouped by program and school_year
         $studentsRaw = \App\Models\Student::select('id', 'student_id', 'first_name', 'middle_name', 'last_name', 'program', 'year_level', 'school_year', 'status')->get();
-        $students = $studentsRaw->groupBy(['program', 'year_level']);
+        $students = $studentsRaw->groupBy(['program', 'school_year']);
 
         // Load alumni from students table where year_level = 'Alumni', grouped by program and alumni_school_year
         $alumniRaw = \App\Models\Student::select('id', 'student_id', 'first_name', 'middle_name', 'last_name', 'program', 'alumni_school_year as year_graduated', 'status')
