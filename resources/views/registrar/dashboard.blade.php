@@ -813,6 +813,247 @@
             color: var(--danger);
         }
 
+        /* Release Notification Styles */
+        .release-banner {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 4px solid #2196F3;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+            animation: slideInDown 0.5s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .release-banner.urgent {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left-color: #ffc107;
+        }
+
+        .release-banner.overdue {
+            background: linear-gradient(135deg, #ffe5e5 0%, #ffcccb 100%);
+            border-left-color: #f44336;
+        }
+
+        .release-banner-icon {
+            font-size: 24px;
+            color: #2196F3;
+        }
+
+        .release-banner.urgent .release-banner-icon {
+            color: #f57c00;
+        }
+
+        .release-banner.overdue .release-banner-icon {
+            color: #f44336;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .release-banner-content {
+            flex-grow: 1;
+        }
+
+        .release-banner-title {
+            font-weight: 600;
+            color: #2196F3;
+            margin-bottom: 0.25rem;
+        }
+
+        .release-banner.urgent .release-banner-title {
+            color: #f57c00;
+        }
+
+        .release-banner.overdue .release-banner-title {
+            color: #f44336;
+        }
+
+        .release-banner-text {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .release-banner-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .release-banner-close:hover {
+            color: #333;
+        }
+
+        .release-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .release-badge.ready {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+        }
+
+        .release-badge.soon {
+            background: rgba(33, 150, 243, 0.15);
+            color: #2196F3;
+        }
+
+        .release-badge.urgent {
+            background: rgba(255, 193, 7, 0.15);
+            color: #f57c00;
+        }
+
+        .release-badge.overdue {
+            background: rgba(244, 67, 54, 0.15);
+            color: #f44336;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .release-icon {
+            font-size: 10px;
+        }
+
+        .request-row-release-soon {
+            background: rgba(33, 150, 243, 0.05);
+        }
+
+        .request-row-release-urgent {
+            background: rgba(255, 193, 7, 0.05);
+        }
+
+        .request-row-release-overdue {
+            background: rgba(244, 67, 54, 0.08);
+            border-left: 3px solid #f44336;
+        }
+
+        /* Specific Request Reminder Banner Styles */
+        .specific-request-banner {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            border-left: 4px solid #4CAF50;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+            animation: slideInDown 0.5s ease-out;
+        }
+
+        .specific-request-banner.urgent {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left-color: #ffc107;
+        }
+
+        .specific-request-banner.critical {
+            background: linear-gradient(135deg, #ffe5e5 0%, #ffcccb 100%);
+            border-left-color: #f44336;
+        }
+
+        .specific-request-banner-icon {
+            font-size: 24px;
+            color: #4CAF50;
+        }
+
+        .specific-request-banner.urgent .specific-request-banner-icon {
+            color: #f57c00;
+        }
+
+        .specific-request-banner.critical .specific-request-banner-icon {
+            color: #f44336;
+            animation: pulse 2s infinite;
+        }
+
+        .specific-request-banner-content {
+            flex-grow: 1;
+        }
+
+        .specific-request-banner-title {
+            font-weight: 600;
+            color: #4CAF50;
+            margin-bottom: 0.25rem;
+        }
+
+        .specific-request-banner.urgent .specific-request-banner-title {
+            color: #f57c00;
+        }
+
+        .specific-request-banner.critical .specific-request-banner-title {
+            color: #f44336;
+        }
+
+        .specific-request-banner-text {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .specific-request-banner-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .specific-request-banner-close:hover {
+            color: #333;
+        }
+
+        .specific-request-details {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+            font-size: 13px;
+        }
+
+        .requester-name {
+            font-weight: 600;
+            color: #2e7d32;
+        }
+
+        .days-remaining {
+            font-weight: 600;
+            color: #f57c00;
+        }
+
+        .days-remaining.critical {
+            color: #f44336;
+            animation: blink 2s infinite;
+        }
+
         .action-btn {
             display: inline-flex;
             align-items: center;
@@ -825,6 +1066,22 @@
             cursor: pointer;
             transition: background 0.2s, color 0.2s, box-shadow 0.2s;
             box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+
+        .notify-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .notify-btn:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .notify-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .approve-btn {
@@ -1607,6 +1864,12 @@
             };
         });
         </script>
+        <!-- Release Notification Banner -->
+        <div id="releaseBanner" style="display: none;"></div>
+        
+        <!-- Specific Document Request Reminder Banner -->
+        <div id="specificRequestBanner" style="display: none;"></div>
+
         <!-- Dashboard Sections -->
         <div class="dashboard-sections" id="dashboardSections" style="display: block;">
             <div class="dashboard-content">
@@ -1827,6 +2090,379 @@ document.addEventListener('DOMContentLoaded', function() {
         link.click();
         document.body.removeChild(link);
     });
+    // Document Request Release Notification System
+    function applyReleaseStyles() {
+        // Apply release badges and row styles to all release cells
+        document.querySelectorAll('.release-cell').forEach(cell => {
+            const days = parseInt(cell.getAttribute('data-days'));
+            const row = cell.closest('tr');
+            
+            // Remove existing release classes
+            cell.classList.remove('ready', 'soon', 'urgent', 'overdue');
+            if (row) {
+                row.classList.remove('request-row-release-soon', 'request-row-release-urgent', 'request-row-release-overdue');
+            }
+            
+            // Apply styling based on days until release
+            if (days < 0) {
+                // Overdue (past release date) - Red with blinking
+                cell.innerHTML = `<span class="release-badge overdue">
+                    <i class="fas fa-exclamation-triangle release-icon"></i> ${Math.abs(days)} ${Math.abs(days) === 1 ? 'day' : 'days'} overdue
+                </span>`;
+                if (row) row.classList.add('request-row-release-overdue');
+            } else if (days === 0) {
+                // Release today - Urgent
+                cell.innerHTML = `<span class="release-badge urgent">
+                    <i class="fas fa-clock release-icon"></i> Release Today!
+                </span>`;
+                if (row) row.classList.add('request-row-release-urgent');
+            } else if (days <= 2) {
+                // 1-2 days - Urgent (Yellow/Orange)
+                cell.innerHTML = `<span class="release-badge urgent">
+                    <i class="fas fa-hourglass-half release-icon"></i> ${days} ${days === 1 ? 'day' : 'days'} left
+                </span>`;
+                if (row) row.classList.add('request-row-release-urgent');
+            } else if (days <= 4) {
+                // 3-4 days - Soon (Blue)
+                cell.innerHTML = `<span class="release-badge soon">
+                    <i class="fas fa-calendar-check release-icon"></i> ${days} days left
+                </span>`;
+                if (row) row.classList.add('request-row-release-soon');
+            } else {
+                // 5+ days - Ready (Green)
+                cell.innerHTML = `<span class="release-badge ready">
+                    <i class="fas fa-check-circle release-icon"></i> ${days} days left
+                </span>`;
+            }
+        });
+    }
+    
+    // Variable to track if banner was manually dismissed
+    let bannerDismissedAt = null;
+    let bannerReappearTimer = null;
+    let bannerCountdownInterval = null;
+    const BANNER_REAPPEAR_DELAY = 5000; // 5 seconds
+    
+    // Make closeReleaseBanner globally accessible
+    window.closeReleaseBanner = function() {
+        const banner = document.getElementById('releaseBanner');
+        
+        // Clear any existing timers
+        if (bannerReappearTimer) clearTimeout(bannerReappearTimer);
+        if (bannerCountdownInterval) clearInterval(bannerCountdownInterval);
+        
+        bannerDismissedAt = Date.now();
+        
+        // Show a small notification that it will reappear
+        banner.innerHTML = `
+            <div style="background: rgba(33, 150, 243, 0.05); border-left: 3px solid #2196F3; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; font-size: 13px; color: #666;">
+                <i class="fas fa-info-circle" style="color: #2196F3;"></i>
+                <span>Notification dismissed. Will reappear in <strong id="bannerCountdown">5</strong> seconds...</span>
+            </div>
+        `;
+        banner.style.display = 'block';
+        
+        // Countdown timer
+        let secondsLeft = 5;
+        bannerCountdownInterval = setInterval(() => {
+            secondsLeft--;
+            const countdownElement = document.getElementById('bannerCountdown');
+            if (countdownElement) {
+                countdownElement.textContent = secondsLeft;
+            }
+            if (secondsLeft <= 0) {
+                clearInterval(bannerCountdownInterval);
+            }
+        }, 1000);
+        
+        // Schedule reappearance after delay
+        bannerReappearTimer = setTimeout(() => {
+            clearInterval(bannerCountdownInterval);
+            updateReleaseBanner(true);
+        }, BANNER_REAPPEAR_DELAY);
+    };
+    
+    function updateReleaseBanner(forceShow = false) {
+        const allRequests = document.querySelectorAll('#requestTable tbody tr, #documentRequestsTable tbody tr');
+        const completedRequests = Array.from(allRequests).filter(row => {
+            const status = row.getAttribute('data-status');
+            return status && status.toLowerCase() === 'completed';
+        });
+        
+        // Count release urgency
+        let overdueCount = 0;
+        let todayCount = 0;
+        let urgentCount = 0; // 1-2 days
+        let soonCount = 0; // 3-4 days
+        
+        completedRequests.forEach(row => {
+            const days = parseInt(row.getAttribute('data-days-until-release'));
+            if (days < 0) {
+                overdueCount++;
+            } else if (days === 0) {
+                todayCount++;
+            } else if (days <= 2) {
+                urgentCount++;
+            } else if (days <= 4) {
+                soonCount++;
+            }
+        });
+        
+        const totalNeedingAttention = overdueCount + todayCount + urgentCount;
+        const banner = document.getElementById('releaseBanner');
+        
+        if (totalNeedingAttention > 0) {
+            // Check if we should show the banner
+            const shouldShow = forceShow || !bannerDismissedAt || (Date.now() - bannerDismissedAt) >= BANNER_REAPPEAR_DELAY;
+            
+            if (shouldShow) {
+                const isOverdue = overdueCount > 0;
+                const isUrgent = todayCount > 0 || urgentCount > 0;
+                const bannerClass = isOverdue ? 'release-banner overdue' : (isUrgent ? 'release-banner urgent' : 'release-banner');
+                const iconClass = isOverdue ? 'fas fa-exclamation-triangle' : (isUrgent ? 'fas fa-clock' : 'fas fa-box');
+                const title = isOverdue ? 'Overdue: Documents Not Released!' : (todayCount > 0 ? 'Documents Ready for Release Today!' : 'Upcoming Document Releases');
+                
+                let message = '';
+                if (overdueCount > 0) {
+                    message += `<strong>${overdueCount}</strong> document${overdueCount > 1 ? 's' : ''} <strong>overdue for release</strong>`;
+                }
+                if (todayCount > 0) {
+                    if (message) message += ', ';
+                    message += `<strong>${todayCount}</strong> document${todayCount > 1 ? 's' : ''} ready for <strong>release today</strong>`;
+                }
+                if (urgentCount > 0) {
+                    if (message) message += ', ';
+                    message += `<strong>${urgentCount}</strong> document${urgentCount > 1 ? 's' : ''} ready in <strong>1-2 days</strong>`;
+                }
+                
+                banner.innerHTML = `
+                    <div class="${bannerClass}">
+                        <i class="${iconClass} release-banner-icon"></i>
+                        <div class="release-banner-content">
+                            <div class="release-banner-title">${title}</div>
+                            <div class="release-banner-text">${message}</div>
+                        </div>
+                        <button class="release-banner-close" onclick="closeReleaseBanner()" title="Dismiss for 5 seconds">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                banner.style.display = 'block';
+                bannerDismissedAt = null; // Reset dismiss timestamp when showing
+                
+                // Clear countdown interval if it exists
+                if (bannerCountdownInterval) {
+                    clearInterval(bannerCountdownInterval);
+                    bannerCountdownInterval = null;
+                }
+            }
+        } else {
+            banner.style.display = 'none';
+            bannerDismissedAt = null;
+        }
+    }
+    
+    
+    // Specific Document Request Reminder System
+    function updateSpecificRequestBanner() {
+        const allRequests = document.querySelectorAll('#requestTable tbody tr, #documentRequestsTable tbody tr');
+        const completedRequests = Array.from(allRequests).filter(row => {
+            const status = row.getAttribute('data-status');
+            return status && status.toLowerCase() === 'completed';
+        });
+        
+        // Find the request with exactly 6 days remaining
+        let targetRequest = null;
+        let targetDays = 6;
+        
+        // Look for requests with 6 days remaining
+        for (let request of completedRequests) {
+            const daysUntilRelease = parseInt(request.getAttribute('data-days-until-release'));
+            if (daysUntilRelease === targetDays) {
+                targetRequest = request;
+                break;
+            }
+        }
+        
+        // If no 6-day request found, look for the closest one (5-7 days range)
+        if (!targetRequest) {
+            for (let request of completedRequests) {
+                const daysUntilRelease = parseInt(request.getAttribute('data-days-until-release'));
+                if (daysUntilRelease >= 5 && daysUntilRelease <= 7) {
+                    targetRequest = request;
+                    targetDays = daysUntilRelease;
+                    break;
+                }
+            }
+        }
+        
+        const banner = document.getElementById('specificRequestBanner');
+        
+        if (targetRequest) {
+            // Extract request details
+            const requestId = targetRequest.cells[0].textContent;
+            const studentName = targetRequest.cells[1].textContent;
+            const course = targetRequest.cells[2].textContent;
+            
+            // Determine banner style based on urgency
+            let bannerClass = 'specific-request-banner';
+            let iconClass = 'fas fa-calendar-check';
+            let title = 'Document Release Reminder';
+            
+            if (targetDays <= 2) {
+                bannerClass += ' critical';
+                iconClass = 'fas fa-exclamation-triangle';
+                title = 'URGENT: Document Release Due Soon!';
+            } else if (targetDays <= 4) {
+                bannerClass += ' urgent';
+                iconClass = 'fas fa-clock';
+                title = 'Document Release Reminder';
+            }
+            
+            banner.innerHTML = `
+                <div class="${bannerClass}">
+                    <i class="${iconClass} specific-request-banner-icon"></i>
+                    <div class="specific-request-banner-content">
+                        <div class="specific-request-banner-title">${title}</div>
+                        <div class="specific-request-banner-text">
+                            A completed document request is ready for release
+                        </div>
+                        <div class="specific-request-details">
+                            <strong>Request ID:</strong> ${requestId} | 
+                            <strong>Requester:</strong> <span class="requester-name">${studentName}</span> | 
+                            <strong>Course:</strong> ${course} | 
+                            <strong>Days Remaining:</strong> <span class="days-remaining ${targetDays <= 2 ? 'critical' : ''}">${targetDays} ${targetDays === 1 ? 'day' : 'days'}</span>
+                        </div>
+                    </div>
+                    <button class="specific-request-banner-close" onclick="closeSpecificRequestBanner()" title="Dismiss for 5 seconds">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            banner.style.display = 'block';
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+    
+    // Make closeSpecificRequestBanner globally accessible
+    window.closeSpecificRequestBanner = function() {
+        const banner = document.getElementById('specificRequestBanner');
+        banner.style.display = 'none';
+        
+        // Show a small notification that it will reappear
+        banner.innerHTML = `
+            <div style="background: rgba(76, 175, 80, 0.05); border-left: 3px solid #4CAF50; padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem; font-size: 13px; color: #666;">
+                <i class="fas fa-info-circle" style="color: #4CAF50;"></i>
+                <span>Reminder dismissed. Will check for new requests in 5 seconds...</span>
+            </div>
+        `;
+        banner.style.display = 'block';
+        
+        // Schedule reappearance after 5 seconds
+        setTimeout(() => {
+            updateSpecificRequestBanner();
+        }, 5000);
+    };
+    
+    // Send pickup notification function
+    window.sendPickupNotification = function(button) {
+        const requestId = button.getAttribute('data-request-id');
+        const email = button.getAttribute('data-email');
+        const firstName = button.getAttribute('data-first-name');
+        const lastName = button.getAttribute('data-last-name');
+        const daysUntilRelease = button.getAttribute('data-days-until-release');
+        
+        // Disable button to prevent multiple clicks
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        // Send AJAX request to send notification
+        fetch('/registrar/send-pickup-notification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                request_id: requestId,
+                email: email,
+                first_name: firstName,
+                last_name: lastName,
+                days_until_release: daysUntilRelease
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                button.innerHTML = '<i class="fas fa-check"></i> Sent!';
+                button.style.background = '#4CAF50';
+                
+                // Show success notification
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Notification Sent!',
+                        text: `Pickup notification has been sent to ${firstName} ${lastName}`,
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    alert(`Pickup notification sent to ${firstName} ${lastName}`);
+                }
+                
+                // Re-enable button after 3 seconds
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-envelope"></i> Notify Pickup';
+                    button.style.background = '#4CAF50';
+                }, 3000);
+            } else {
+                throw new Error(data.message || 'Failed to send notification');
+            }
+        })
+        .catch(error => {
+            console.error('Error sending notification:', error);
+            
+            // Show error message
+            button.innerHTML = '<i class="fas fa-times"></i> Failed';
+            button.style.background = '#f44336';
+            
+            // Show error notification
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed to Send',
+                    text: 'Could not send pickup notification. Please try again.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert('Failed to send notification. Please try again.');
+            }
+            
+            // Re-enable button after 3 seconds
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-envelope"></i> Notify Pickup';
+                button.style.background = '#4CAF50';
+            }, 3000);
+        });
+    };
+    
+    // Apply release styles on page load
+    applyReleaseStyles();
+    updateReleaseBanner();
+    updateSpecificRequestBanner();
+    
+    // Update every 60 seconds
+    setInterval(() => {
+        applyReleaseStyles();
+        updateReleaseBanner();
+        updateSpecificRequestBanner();
+    }, 60000);
+
     const legendItems = document.querySelectorAll('.legend-item');
     const segments = {
         rejected: document.getElementById('rejectedSegment'),
@@ -1921,17 +2557,34 @@ document.addEventListener('DOMContentLoaded', function() {
                             <th>Student Name</th>
                             <th>Course</th>
                             <th>Status</th>
+                            <th>Release Status</th>
                             <th>Requested Documents</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($dashboardRequests as $req)
-                        <tr>
+                        @php
+                            $createdAt = $req->created_at ?? ($req->request_date ? \Carbon\Carbon::parse($req->request_date) : null);
+                            // Calculate expected release date (7 days from completion for completed requests)
+                            $completedAt = $req->status == 'completed' && $createdAt ? $createdAt->copy()->addDays(7) : null;
+                            $daysUntilRelease = $completedAt ? now()->diffInDays($completedAt, false) : null;
+                            $isCompleted = $req->status == 'completed';
+                        @endphp
+                        <tr data-days-until-release="{{ $daysUntilRelease ?? 0 }}" data-status="{{ $req->status }}" data-completed-at="{{ $completedAt ? $completedAt->toDateString() : '' }}">
                             <td>{{ $req->id }}</td>
                             <td>{{ $req->first_name }} {{ $req->last_name }}</td>
                             <td>{{ $req->course }}</td>
                             <td>{{ ucfirst($req->status) }}</td>
+                            <td>
+                                @if($isCompleted)
+                                    <span class="release-cell" data-days="{{ $daysUntilRelease }}">
+                                        {{ abs($daysUntilRelease) }} {{ abs($daysUntilRelease) == 1 ? 'day' : 'days' }}
+                                    </span>
+                                @else
+                                    <span style="color: #999;">N/A</span>
+                                @endif
+                            </td>
                             <td>
                                 @foreach($req->requestedDocuments as $doc)
                                     {{ $doc->document_type }} ({{ $doc->quantity }})<br>
@@ -1995,6 +2648,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             <option>Diploma</option>
                             <option>Certificate</option>
                         </select>
+                        <select class="filter-select" id="releaseSortSelect">
+                            <option value="">Sort by Date Requested</option>
+                            <option value="urgent">Sort by Most Urgent Release</option>
+                            <option value="latest">Sort by Latest Release</option>
+                        </select>
                         <input type="date" class="filter-date" placeholder="Filter by date">
                     </div>
                 </div>
@@ -2005,16 +2663,25 @@ document.addEventListener('DOMContentLoaded', function() {
                             <th>Student</th>
                             <th>Document Type(s)</th>
                             <th>Date Requested</th>
+                            <th>Release Status</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($requests as $req)
+                        @php
+                            $reqCreatedAt = $req->created_at ?? ($req->request_date ? \Carbon\Carbon::parse($req->request_date) : null);
+                            // Calculate expected release date (7 days from request date for completed requests)
+                            $reqCompletedAt = $req->status == 'completed' && $reqCreatedAt ? $reqCreatedAt->copy()->addDays(7) : null;
+                            $reqDaysUntilRelease = $reqCompletedAt ? now()->diffInDays($reqCompletedAt, false) : null;
+                            $reqIsCompleted = $req->status == 'completed';
+                        @endphp
                         <tr
                             data-status="{{ strtolower($req->status) }}"
                             data-documents="@foreach($req->requestedDocuments as $doc){{ strtolower($doc->document_type) }},@endforeach"
                             data-date="{{ $req->created_at ? $req->created_at->format('Y-m-d') : ($req->request_date ? \Carbon\Carbon::parse($req->request_date)->format('Y-m-d') : '') }}"
+                            data-days-until-release="{{ $reqDaysUntilRelease ?? 0 }}"
                         >
                             <td>{{ $req->id }}</td>
                             <td>{{ $req->first_name }} {{ $req->last_name }}</td>
@@ -2024,6 +2691,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                 @endforeach
                             </td>
                             <td>{{ $req->created_at ? $req->created_at->format('m/d/Y') : ($req->request_date ? \Carbon\Carbon::parse($req->request_date)->format('m/d/Y') : '') }}</td>
+                            <td>
+                                @if($reqIsCompleted)
+                                    <span class="release-cell" data-days="{{ $reqDaysUntilRelease }}">
+                                        {{ abs($reqDaysUntilRelease) }} {{ abs($reqDaysUntilRelease) == 1 ? 'day' : 'days' }}
+                                    </span>
+                                @else
+                                    <span style="color: #999;">N/A</span>
+                                @endif
+                            </td>
                             <td><span class="status-badge status-{{ strtolower($req->status) }}">{{ ucfirst($req->status) }}</span></td>
                             <td>
                                 @if($req->status == 'pending_registrar_approval')
@@ -2043,6 +2719,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 </button>
                                             </form>
                                         @endif
+                                    </div>
+                                @elseif($req->status == 'completed')
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <span style="color: #4CAF50; font-weight: 600;">✅ Completed</span>
+                                        <button type="button" class="action-btn notify-btn" 
+                                            data-request-id="{{ $req->id }}"
+                                            data-email="{{ $req->email }}"
+                                            data-first-name="{{ $req->first_name }}"
+                                            data-last-name="{{ $req->last_name }}"
+                                            data-days-until-release="{{ $reqDaysUntilRelease }}"
+                                            onclick="sendPickupNotification(this)"
+                                            title="Notify requester that document is ready for pickup">
+                                            <i class="fas fa-envelope"></i>
+                                            Notify Pickup
+                                        </button>
                                     </div>
                                 @endif
                             </td>
@@ -4744,21 +5435,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                const rows = table.querySelectorAll('tbody tr');
+                const rows = Array.from(table.querySelectorAll('tbody tr'));
                 const activeTab = document.querySelector('#documentRequestsUI .filter-tab.active');
                 const activeStatus = activeTab ? activeTab.textContent.trim().toLowerCase() : 'all requests';
                 const documentTypeFilter = document.querySelector('#documentRequestsUI .filter-select').value;
                 const dateFilter = document.querySelector('#documentRequestsUI .filter-date').value;
                 const searchQuery = document.querySelector('#documentRequestsUI .search-bar input').value.toLowerCase();
+                const releaseSortSelect = document.getElementById('releaseSortSelect');
+                const releaseSort = releaseSortSelect ? releaseSortSelect.value : '';
                 
-                console.log('Filtering by:', { status: activeStatus, documentType: documentTypeFilter, date: dateFilter, search: searchQuery });
+                console.log('Filtering by:', { status: activeStatus, documentType: documentTypeFilter, date: dateFilter, search: searchQuery, releaseSort });
                 console.log('Found rows:', rows.length);
+                
+                // Sort rows if needed
+                if (releaseSort === 'urgent') {
+                    rows.sort((a, b) => {
+                        const aDays = parseInt(a.getAttribute('data-days-until-release') || '999');
+                        const bDays = parseInt(b.getAttribute('data-days-until-release') || '999');
+                        return aDays - bDays; // Ascending order (most urgent first - lower days until release)
+                    });
+                } else if (releaseSort === 'latest') {
+                    rows.sort((a, b) => {
+                        const aDays = parseInt(a.getAttribute('data-days-until-release') || '0');
+                        const bDays = parseInt(b.getAttribute('data-days-until-release') || '0');
+                        return bDays - aDays; // Descending order (latest release first)
+                    });
+                }
                 
                 let visibleCount = 0;
                 rows.forEach(row => {
                     const status = row.getAttribute('data-status');
                     const documents = row.getAttribute('data-documents');
                     const date = row.getAttribute('data-date');
+                    const daysUntilRelease = parseInt(row.getAttribute('data-days-until-release') || '0');
                     
                     let show = true;
                     
@@ -4795,6 +5504,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (show) visibleCount++;
                 });
                 
+                // Reorder table rows based on sort
+                if (releaseSort) {
+                    const tbody = table.querySelector('tbody');
+                    rows.forEach(row => tbody.appendChild(row));
+                }
+                
                 console.log('Visible rows after filtering:', visibleCount);
                 
                 // Show message if no results
@@ -4803,9 +5518,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!noResultsRow) {
                         noResultsRow = document.createElement('tr');
                         noResultsRow.className = 'no-results-row';
-                        noResultsRow.innerHTML = '<td colspan="6" style="text-align: center; padding: 2rem; color: #666; font-style: italic;">No requests found matching the selected filters.</td>';
                         table.querySelector('tbody').appendChild(noResultsRow);
                     }
+                    
+                    noResultsRow.innerHTML = '<td colspan="7" style="text-align: center; padding: 2rem; color: #666; font-style: italic;">No requests found matching the selected filters.</td>';
                     noResultsRow.style.display = '';
                 } else {
                     if (noResultsRow) {
@@ -4846,6 +5562,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (dateFilter) {
                 dateFilter.addEventListener('change', function() {
                     console.log('Date filter changed:', this.value);
+                    filterTable();
+                });
+            }
+            
+            // Add change handler for release sort
+            const releaseSortSelect = document.getElementById('releaseSortSelect');
+            if (releaseSortSelect) {
+                releaseSortSelect.addEventListener('change', function() {
+                    console.log('Release sort changed:', this.value);
                     filterTable();
                 });
             }
@@ -4986,4 +5711,5 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Verify Modal Placeholder -->
     <div id="verifyModal" class="import-modal" style="display:none;"></div>
     <script src="/js/registrar-verify-modal.js"></script>
+</html>
 </html>

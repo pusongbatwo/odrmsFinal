@@ -28,7 +28,7 @@ class RequestApprovedMail extends Mailable
     public function envelope()
     {
         return new \Illuminate\Mail\Mailables\Envelope(
-            subject: 'Document Request Approved - Reference Number Generated',
+            subject: 'Document Request Approved and Available - Reference Number Generated',
         );
     }
 
@@ -48,18 +48,5 @@ class RequestApprovedMail extends Mailable
     public function attachments()
     {
         return [];
-    }
-
-    /**
-     * Build the message.
-     */
-    public function build()
-    {
-        return $this->view('emails.request_approved')
-                    ->subject('Document Request Approved - Reference Number Generated')
-                    ->with([
-                        'documentRequest' => $this->documentRequest,
-                        'referenceNumber' => $this->referenceNumber
-                    ]);
     }
 }

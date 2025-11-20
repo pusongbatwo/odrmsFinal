@@ -9,6 +9,7 @@ use App\Models\DepartmentLogo;
 use App\Mail\RequestApprovedMail;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RequestRejectedMail;
+use App\Mail\DocumentReadyForPickupMail;
 use App\Helpers\SystemLogHelper;
 use App\Models\SystemLog;
 use App\Models\Student;
@@ -342,11 +343,19 @@ class RegistrarController extends Controller
             foreach ($request->requestedDocuments as $doc) {
                 $availableDocs[] = $doc->document_type;
             }
+            
+            // Check document eligibility based on year level and enrollment status
+            $eligibilityCheck = $this->checkDocumentEligibility($student, $request->requestedDocuments);
+            
             return response()->json([
                 'found' => true,
                 'full_name' => trim($student->first_name . ' ' . ($student->middle_name ? $student->middle_name . ' ' : '') . $student->last_name),
                 'documents' => $availableDocs,
-                'request_id' => $id
+                'request_id' => $id,
+                'year_level' => $student->year_level,
+                'status' => $student->status,
+                'is_enrolled' => $this->isCurrentlyEnrolled($student),
+                'eligibility' => $eligibilityCheck
             ]);
         }
         \Log::warning('verifyModal: no student matched', ['request_id' => $id]);
@@ -580,20 +589,30 @@ class RegistrarController extends Controller
 
     public function approve($id)
     {
-        $documentRequest = DocumentRequest::findOrFail($id);
+        $documentRequest = DocumentRequest::with('requestedDocuments')->findOrFail($id);
 
         // Backend enforcement: requester must exist in Student records (by student_id or by name)
-        $studentExists = false;
+        $student = null;
         if (!empty($documentRequest->student_id)) {
-            $studentExists = Student::where('student_id', $documentRequest->student_id)->exists();
+            $student = Student::where('student_id', $documentRequest->student_id)->first();
         }
-        if (!$studentExists && !empty($documentRequest->first_name) && !empty($documentRequest->last_name)) {
-            $studentExists = Student::where('first_name', $documentRequest->first_name)
+        if (!$student && !empty($documentRequest->first_name) && !empty($documentRequest->last_name)) {
+            $student = Student::where('first_name', $documentRequest->first_name)
                 ->where('last_name', $documentRequest->last_name)
-                ->exists();
+                ->first();
         }
-        if (!$studentExists) {
+        if (!$student) {
             return back()->with('error', 'This request cannot be approved because no matching student record was found in the database.');
+        }
+
+        // Check document eligibility based on year level and enrollment status
+        $eligibilityCheck = $this->checkDocumentEligibility($student, $documentRequest->requestedDocuments);
+        if (!$eligibilityCheck['eligible']) {
+            $errorMessage = 'This request cannot be approved. ' . $eligibilityCheck['message'];
+            if (!empty($eligibilityCheck['invalid_documents'])) {
+                $errorMessage .= ' Invalid documents: ' . implode(', ', $eligibilityCheck['invalid_documents']);
+            }
+            return back()->with('error', $errorMessage);
         }
 
         // Optional registrar notes
@@ -618,17 +637,54 @@ class RegistrarController extends Controller
         ]);
 
         // Send email with reference number
+        $emailSent = false;
+        $emailError = null;
+        
         try {
+            // Validate email address before sending
+            if (empty($documentRequest->email)) {
+                throw new \Exception('No email address found for the requester.');
+            }
+            
+            if (!filter_var($documentRequest->email, FILTER_VALIDATE_EMAIL)) {
+                throw new \Exception('Invalid email address format: ' . $documentRequest->email);
+            }
+            
+            \Log::info('Attempting to send approval email', [
+                'request_id' => $documentRequest->id,
+                'email' => $documentRequest->email,
+                'reference_number' => $documentRequest->reference_number
+            ]);
+            
+            // Send email synchronously (not queued)
             Mail::to($documentRequest->email)->send(new RequestApprovedMail($documentRequest, $documentRequest->reference_number));
+            $emailSent = true;
+            
+            \Log::info('Approval email sent successfully', [
+                'request_id' => $documentRequest->id,
+                'email' => $documentRequest->email
+            ]);
+            
         } catch (\Throwable $e) {
-            // Allow flow to continue even if email fails (logging only)
-            \Log::error('Failed to send RequestApprovedMail: ' . $e->getMessage());
+            $emailError = $e->getMessage();
+            // Log detailed error information
+            \Log::error('Failed to send RequestApprovedMail', [
+                'request_id' => $documentRequest->id,
+                'email' => $documentRequest->email ?? 'N/A',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
 
         // Log approval
         SystemLogHelper::log('approved', 'Request #' . $documentRequest->id . ' approved by registrar.');
 
-        return back()->with('success', 'Request approved. Email notification sent to requester.');
+        // Return appropriate message based on email status
+        if ($emailSent) {
+            return back()->with('success', 'Request approved. Email notification sent to requester.');
+        } else {
+            return back()->with('warning', 'Request approved, but email notification failed to send. Error: ' . ($emailError ?? 'Unknown error') . '. Please check logs for details.');
+        }
     }
 
     public function reject($id)
@@ -707,5 +763,167 @@ class RegistrarController extends Controller
             'success' => true,
             'logo_url' => asset('storage/' . $path),
         ]);
+    }
+
+    /**
+     * Send pickup notification to requester
+     */
+    public function sendPickupNotification(Request $request)
+    {
+        try {
+            $requestId = $request->input('request_id');
+            $email = $request->input('email');
+            $firstName = $request->input('first_name');
+            $lastName = $request->input('last_name');
+            $daysUntilRelease = $request->input('days_until_release');
+
+            // Find the document request
+            $documentRequest = DocumentRequest::with('requestedDocuments')->find($requestId);
+            
+            if (!$documentRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Document request not found'
+                ], 404);
+            }
+
+            // Send email notification
+            Mail::to($email)->send(new DocumentReadyForPickupMail($documentRequest, $daysUntilRelease));
+
+            // Log the notification
+            SystemLogHelper::log('info', 'Pickup notification sent', [
+                'request_id' => $requestId,
+                'requester_email' => $email,
+                'requester_name' => $firstName . ' ' . $lastName,
+                'days_until_release' => $daysUntilRelease
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pickup notification sent successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            // Log the error
+            SystemLogHelper::log('error', 'Failed to send pickup notification', [
+                'request_id' => $request->input('request_id'),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send notification: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check if student is currently enrolled (not alumni or graduated)
+     */
+    private function isCurrentlyEnrolled($student)
+    {
+        // Check if year_level is Alumni
+        if (strtolower(trim($student->year_level)) === 'alumni') {
+            return false;
+        }
+        
+        // Check if status indicates not enrolled
+        $status = strtolower(trim($student->status ?? ''));
+        $nonEnrolledStatuses = ['graduated', 'dropped', 'transferred'];
+        
+        return !in_array($status, $nonEnrolledStatuses);
+    }
+
+    /**
+     * Check document eligibility based on year level and enrollment status
+     * Returns array with 'eligible' boolean, 'message', and 'invalid_documents' array
+     */
+    private function checkDocumentEligibility($student, $requestedDocuments)
+    {
+        $yearLevel = strtolower(trim($student->year_level ?? ''));
+        $isEnrolled = $this->isCurrentlyEnrolled($student);
+        
+        // Define document categories
+        $enrolledDocuments = [
+            'FORM 138',
+            'CERTIFICATE OF REGISTRATION',
+            'CERTIFICATE OF GOOD MORAL',
+            'CERTIFICATE OF GRADES',
+            'STATEMENT OF ACCOUNT'
+        ];
+        
+        $graduatingDocuments = [
+            'TRANSCRIPT OF RECORDS',
+            'TRANSCRIPT OF RECORDS FOR EVALUATION',
+            'FORM 137A',
+            'HONORABLE DISMISSAL',
+            'CERTIFICATE OF COMPLETION',
+            'CERTIFICATE OF NO OBJECTION',
+            'CERTIFICATE OF ENGLISH AS MEDIUM',
+            'GWA CERTIFICATE',
+            'CAV ENDORSEMENT'
+        ];
+        
+        $alumniDocuments = [
+            'TRANSCRIPT OF RECORDS',
+            'TRANSCRIPT OF RECORDS FOR EVALUATION',
+            'FORM 137A',
+            'HONORABLE DISMISSAL',
+            'DIPLOMA',
+            'CERTIFICATE OF NO OBJECTION',
+            'CERTIFICATE OF ENGLISH AS MEDIUM',
+            'CERTIFICATE OF GOOD MORAL',
+            'CERTIFICATE OF COMPLETION',
+            'CERTIFICATE OF GRADES',
+            'SERVICE RECORD',
+            'EMPLOYMENT',
+            'PERFORMANCE RATING'
+        ];
+        
+        // Determine eligible documents based on student status
+        $eligibleDocuments = [];
+        if ($yearLevel === 'alumni' || !$isEnrolled) {
+            // Alumni can only request alumni documents
+            $eligibleDocuments = $alumniDocuments;
+        } elseif ($yearLevel === '4th year') {
+            // 4th year students can request both enrolled and graduating documents
+            $eligibleDocuments = array_merge($enrolledDocuments, $graduatingDocuments);
+        } else {
+            // 1st-3rd year students can only request enrolled documents
+            $eligibleDocuments = $enrolledDocuments;
+        }
+        
+        // Check each requested document
+        $invalidDocuments = [];
+        foreach ($requestedDocuments as $doc) {
+            $docType = strtoupper(trim($doc->document_type ?? ''));
+            if (!in_array($docType, $eligibleDocuments)) {
+                $invalidDocuments[] = $docType;
+            }
+        }
+        
+        if (!empty($invalidDocuments)) {
+            $studentType = ($yearLevel === 'alumni' || !$isEnrolled) ? 'alumni' : 
+                          ($yearLevel === '4th year' ? 'graduating student (4th year)' : 
+                          'currently enrolled student (1st-3rd year)');
+            
+            return [
+                'eligible' => false,
+                'message' => "The student is a {$studentType} and cannot request these documents.",
+                'invalid_documents' => $invalidDocuments,
+                'year_level' => $student->year_level,
+                'status' => $student->status,
+                'is_enrolled' => $isEnrolled
+            ];
+        }
+        
+        return [
+            'eligible' => true,
+            'message' => 'All requested documents are eligible for this student.',
+            'invalid_documents' => [],
+            'year_level' => $student->year_level,
+            'status' => $student->status,
+            'is_enrolled' => $isEnrolled
+        ];
     }
 }

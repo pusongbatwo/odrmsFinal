@@ -14,7 +14,16 @@
                 Hello {{ $documentRequest->first_name }},
             </div>
             <div style="margin-bottom: 24px; font-size: 1rem; line-height: 1.6;">
-                Great news! Your document request has been approved by the Registrar. Your reference number has been generated and you can now track your request status.
+                Great news! Your document request has been <strong>approved</strong> by the Registrar and is now <strong>available</strong> for processing. Your reference number has been generated and you can now track your request status.
+            </div>
+            
+            <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px; padding: 20px; margin: 24px 0; text-align: center;">
+                <div style="font-size: 1.3rem; font-weight: 700; color: #856404; margin-bottom: 8px;">
+                    ✅ Your Request is Available!
+                </div>
+                <div style="font-size: 1rem; color: #856404; line-height: 1.5;">
+                    Your document request has been verified and approved. It is now available in our system and will be processed accordingly.
+                </div>
             </div>
             
             <div style="background: #e8f5e8; border: 2px solid #28a745; border-radius: 10px; padding: 20px; margin: 24px 0; text-align: center;">
@@ -45,6 +54,7 @@
             
             <div style="background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 16px; margin: 24px 0; font-size: 0.9rem; color: #0c5460;">
                 <strong>📋 Next Steps:</strong><br>
+                • Your request is <strong>available</strong> and has been approved by the Registrar<br>
                 • Your request is now being processed<br>
                 • You'll receive updates via email<br>
                 • Use your reference number to track progress<br>

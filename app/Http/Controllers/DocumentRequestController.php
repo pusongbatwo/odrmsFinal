@@ -30,8 +30,6 @@ class DocumentRequestController extends Controller
         return [
             'TRANSCRIPT OF RECORDS',
             'TRANSCRIPT OF RECORDS FOR EVALUATION',
-            'FORM 137A',
-            'FORM 138',
             'HONORABLE DISMISSAL',
             'DIPLOMA',
             'CERTIFICATE OF NO OBJECTION',
@@ -44,8 +42,7 @@ class DocumentRequestController extends Controller
             'SERVICE RECORD',
             'EMPLOYMENT',
             'PERFORMANCE RATING',
-            'GWA CERTIFICATE',
-            'CAV ENDORSEMENT'
+            'GWA CERTIFICATE'
         ];
     }
 
@@ -230,9 +227,9 @@ class DocumentRequestController extends Controller
             'first_name' => 'required|string|max:50',
             'middle_name' => 'nullable|string|max:50',
             'last_name' => 'required|string|max:50',
-            'province' => 'required|string|max:50',
-            'city' => 'required|string|max:50',
-            'barangay' => 'required|string|max:50',
+            'province' => 'nullable|string|max:50',
+            'city' => 'nullable|string|max:50',
+            'barangay' => 'nullable|string|max:50',
             'mobile' => 'nullable|string|max:20',
             'email' => 'required|email|max:50',
             'purpose' => 'nullable|string',
@@ -299,9 +296,9 @@ class DocumentRequestController extends Controller
             'last_name' => 'required|string|max:50',
             'course' => 'required|string|max:100',
             'graduation_year' => 'required|string|max:20',
-            'province' => 'required|string|max:50',
-            'city' => 'required|string|max:50',
-            'barangay' => 'required|string|max:50',
+            'province' => 'nullable|string|max:50',
+            'city' => 'nullable|string|max:50',
+            'barangay' => 'nullable|string|max:50',
             'email' => 'required|email|max:50',
             'mobile' => 'required|string|max:20',
             'alumni_id' => 'nullable|string|max:50',
@@ -391,19 +388,27 @@ class DocumentRequestController extends Controller
             // Now save the actual document request with pending registrar approval status
             $docRequest = null;
             DB::transaction(function() use ($requestData, &$docRequest) {
+                $sanitizedProvince = $requestData['province'] ?? '';
+                $sanitizedCity = $requestData['city'] ?? '';
+                $sanitizedBarangay = $requestData['barangay'] ?? '';
+                $sanitizedPurpose = $requestData['purpose'] ?? 'Not specified';
+                $sanitizedMiddleName = $requestData['middle_name'] ?? null;
+                $sanitizedSpecialInstructions = $requestData['special_instructions'] ?? null;
+                $sanitizedMobile = $requestData['mobile'] ?? ($requestData['mobile_number'] ?? '');
+
                 $docRequest = DocumentRequest::create([
-                    'student_id' => $requestData['student_id'] ?? 'Alumni',
-                    'first_name' => $requestData['first_name'],
-                    'middle_name' => $requestData['middle_name'],
-                    'last_name' => $requestData['last_name'],
-                    'course' => $requestData['course'],
-                    'province' => $requestData['province'],
-                    'city' => $requestData['city'],
-                    'barangay' => $requestData['barangay'],
-                    'mobile_number' => $requestData['mobile'],
-                    'email' => $requestData['email'],
-                    'purpose' => $requestData['purpose'],
-                    'special_instructions' => $requestData['special_instructions'],
+                    'student_id' => $requestData['student_id'] ?? ($requestData['alumni_id'] ?? 'ALUMNI'),
+                    'first_name' => $requestData['first_name'] ?? '',
+                    'middle_name' => $sanitizedMiddleName,
+                    'last_name' => $requestData['last_name'] ?? '',
+                    'course' => $requestData['course'] ?? 'N/A',
+                    'province' => $sanitizedProvince,
+                    'city' => $sanitizedCity,
+                    'barangay' => $sanitizedBarangay,
+                    'mobile_number' => $sanitizedMobile,
+                    'email' => $requestData['email'] ?? '',
+                    'purpose' => $sanitizedPurpose,
+                    'special_instructions' => $sanitizedSpecialInstructions,
                     'reference_number' => null, // No reference number until approved
                     'status' => 'pending_registrar_approval', // New status
                     'payment_status' => 'unpaid',

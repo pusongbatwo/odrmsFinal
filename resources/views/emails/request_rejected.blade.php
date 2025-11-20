@@ -22,7 +22,11 @@
                     📋 Rejection Reason
                 </div>
                 <div style="font-size: 1rem; color: #721c24; line-height: 1.6;">
-                    {{ $rejectionReason }}
+                    @if(!empty(trim($rejectionReason ?? '')))
+                        {!! nl2br(e($rejectionReason)) !!}
+                    @else
+                        The registrar did not provide additional details for this rejection. Please contact the office if you need clarification.
+                    @endif
                 </div>
             </div>
             

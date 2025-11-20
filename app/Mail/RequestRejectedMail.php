@@ -50,16 +50,4 @@ class RequestRejectedMail extends Mailable
         return [];
     }
 
-    /**
-     * Build the message.
-     */
-    public function build()
-    {
-        return $this->view('emails.request_rejected')
-                    ->subject('Document Request Rejected - Action Required')
-                    ->with([
-                        'documentRequest' => $this->documentRequest,
-                        'rejectionReason' => $this->rejectionReason
-                    ]);
-    }
 }
