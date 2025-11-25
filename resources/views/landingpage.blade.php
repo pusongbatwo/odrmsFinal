@@ -2086,8 +2086,15 @@
                                 <option value="Employment">Employment</option>
                                 <option value="Scholarship">Scholarship</option>
                                 <option value="Personal Record">Personal Record</option>
-                                <option value="Other">transfer</option>
+                                <option value="Other">Other</option>
                             </select>
+                        </div>
+                        <div class="form-group" id="customPurposeGroup" style="display: none;">
+                            <label for="customPurpose" class="form-label">
+                                <i class="fas fa-edit"></i> Specify Purpose
+                            </label>
+                            <i class="fas fa-pencil-alt input-icon"></i>
+                            <input type="text" id="customPurpose" class="form-input" placeholder="Please specify your purpose">
                         </div>
                         <div class="form-group">
                             <label for="specialInstructions" class="form-label">
@@ -2396,6 +2403,13 @@
                                 <option value="Personal Record">Personal Record</option>
                                 <option value="Other">Other</option>
                             </select>
+                        </div>
+                        <div class="form-group" id="alumniCustomPurposeGroup" style="display: none;">
+                            <label for="alumniCustomPurpose" class="form-label">
+                                <i class="fas fa-edit"></i> Specify Purpose
+                            </label>
+                            <i class="fas fa-pencil-alt input-icon"></i>
+                            <input type="text" id="alumniCustomPurpose" name="custom_purpose" class="form-input" placeholder="Please specify your purpose">
                         </div>
                         
                         <div class="form-group">
@@ -2760,6 +2774,42 @@
                 }
             }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
         });
+
+        // Handle custom purpose input for student form
+        const purposeSelect = document.getElementById('purpose');
+        const customPurposeGroup = document.getElementById('customPurposeGroup');
+        const customPurposeInput = document.getElementById('customPurpose');
+        
+        if (purposeSelect && customPurposeGroup && customPurposeInput) {
+            purposeSelect.addEventListener('change', function() {
+                if (this.value === 'Other') {
+                    customPurposeGroup.style.display = 'block';
+                    customPurposeInput.required = true;
+                } else {
+                    customPurposeGroup.style.display = 'none';
+                    customPurposeInput.required = false;
+                    customPurposeInput.value = '';
+                }
+            });
+        }
+
+        // Handle custom purpose input for alumni form
+        const alumniPurposeSelect = document.getElementById('alumniPurpose');
+        const alumniCustomPurposeGroup = document.getElementById('alumniCustomPurposeGroup');
+        const alumniCustomPurposeInput = document.getElementById('alumniCustomPurpose');
+        
+        if (alumniPurposeSelect && alumniCustomPurposeGroup && alumniCustomPurposeInput) {
+            alumniPurposeSelect.addEventListener('change', function() {
+                if (this.value === 'Other') {
+                    alumniCustomPurposeGroup.style.display = 'block';
+                    alumniCustomPurposeInput.required = true;
+                } else {
+                    alumniCustomPurposeGroup.style.display = 'none';
+                    alumniCustomPurposeInput.required = false;
+                    alumniCustomPurposeInput.value = '';
+                }
+            });
+        }
         
         nextButton.addEventListener('click', function() {
             if (validateStep(currentStep)) {
@@ -2929,6 +2979,27 @@
                         confirmButtonColor: "#8B0000"
                     });
                 }
+                
+                // Check if purpose is "Other" and custom purpose is filled
+                const purposeValue = document.getElementById('purpose').value;
+                if (purposeValue === 'Other') {
+                    const customPurposeInput = document.getElementById('customPurpose');
+                    const customPurpose = customPurposeInput.value.trim();
+                    if (!customPurpose) {
+                        isValid = false;
+                        missingFields.push('Custom Purpose');
+                        customPurposeInput.classList.add('error');
+                        Swal.fire({
+                            title: "Missing Required Fields",
+                            text: "Please specify your purpose when selecting 'Other'.",
+                            icon: "warning",
+                            confirmButtonText: "OK",
+                            confirmButtonColor: "#8B0000"
+                        });
+                    } else {
+                        customPurposeInput.classList.remove('error');
+                    }
+                }
             }
             
             return isValid;
@@ -2981,7 +3052,7 @@
                 <div class="summary-section">
                     <h5><i class="fas fa-file-alt"></i> Document Information</h5>
                     ${docSummary}
-                    <p><strong>Purpose:</strong> ${document.getElementById('purpose').value}</p>
+                    <p><strong>Purpose:</strong> ${document.getElementById('purpose').value === 'Other' ? document.getElementById('customPurpose').value : document.getElementById('purpose').value}</p>
                     ${document.getElementById('specialInstructions').value ? `<p><strong>Special Instructions:</strong> ${document.getElementById('specialInstructions').value}</p>` : ''}
                 </div>
             `;
@@ -3034,7 +3105,7 @@
                         mobile: document.getElementById('mobile').value,
                         email: document.getElementById('email').value,
                         document_types: docTypes,
-                        purpose: document.getElementById('purpose').value,
+                        purpose: document.getElementById('purpose').value === 'Other' ? document.getElementById('customPurpose').value : document.getElementById('purpose').value,
                         special_instructions: document.getElementById('specialInstructions').value
                     })
                 });
@@ -3181,7 +3252,7 @@
                         mobile: document.getElementById('alumniMobile').value,
                         alumni_id: document.getElementById('alumniId').value,
                         document_types: docTypes,
-                        purpose: document.getElementById('alumniPurpose').value,
+                        purpose: document.getElementById('alumniPurpose').value === 'Other' ? document.getElementById('alumniCustomPurpose').value : document.getElementById('alumniPurpose').value,
                         special_instructions: document.getElementById('alumniSpecialInstructions').value
                     })
                 });
@@ -3462,6 +3533,26 @@
                         confirmButtonText: "OK",
                         confirmButtonColor: "#8B0000"
                     });
+                }
+                
+                // Check if purpose is "Other" and custom purpose is filled
+                const alumniPurposeValue = document.getElementById('alumniPurpose').value;
+                if (alumniPurposeValue === 'Other') {
+                    const alumniCustomPurpose = document.getElementById('alumniCustomPurpose').value.trim();
+                    if (!alumniCustomPurpose) {
+                        isValid = false;
+                        missingFields.push('Custom Purpose');
+                        alumniCustomPurposeInput.classList.add('error');
+                        Swal.fire({
+                            title: "Missing Required Fields",
+                            text: "Please specify your purpose when selecting 'Other'.",
+                            icon: "warning",
+                            confirmButtonText: "OK",
+                            confirmButtonColor: "#8B0000"
+                        });
+                    } else {
+                        alumniCustomPurposeInput.classList.remove('error');
+                    }
                 }
             }
             
